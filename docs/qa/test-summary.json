@@ -1,0 +1,101 @@
+{
+  "source": "pytest-results.xml",
+  "date": "2026-09-07",
+  "total": 1153,
+  "passed": 1153,
+  "failed": 0,
+  "skipped": 0,
+  "permission_probes": 1026,
+  "modules": {
+    "backend.tests.test_admin_panel": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_appointments": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_auth": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_availability": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_booking": {
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_clinic_owner_panel": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_clinics": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_doctor_panel": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_doctors": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_double_booking": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_favorites": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_notifications": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_patient_api": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_permission_matrix": {
+      "passed": 1026,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_permissions": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_responses": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_reviews": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "backend.tests.test_telegram": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}

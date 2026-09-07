@@ -1,0 +1,97 @@
+import os
+from datetime import timedelta
+from pathlib import Path
+
+import dj_database_url
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR.parent / ".env")
+SECRET_KEY = os.environ.get("SECRET_KEY", "development-only-change-this-before-deploying-docnear")
+DEBUG = False
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
+INSTALLED_APPS = [
+    "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
+    "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
+    "django.contrib.postgres", "rest_framework", "rest_framework_simplejwt.token_blacklist",
+    "django_filters", "corsheaders", "drf_spectacular",
+] + [f"apps.{name}" for name in (
+    "accounts", "clinics", "doctors", "specialties", "schedules", "appointments", "favorites",
+    "reviews", "notifications", "analytics", "admin_panel", "doctor_panel", "clinic_owner_panel",
+    "telegram_support",
+)]
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware", "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+ROOT_URLCONF = "config.urls"
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [], "APP_DIRS": True,
+              "OPTIONS": {"context_processors": ["django.template.context_processors.request",
+                          "django.contrib.auth.context_processors.auth", "django.contrib.messages.context_processors.messages"]}}]
+DATABASES = {"default": dj_database_url.parse(os.getenv("DATABASE_URL", "postgresql://docnear:docnear@localhost:5432/docnear"), conn_max_age=60)}
+if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+    raise ValueError("DocNear requires PostgreSQL, including for tests.")
+AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.IdentifierBackend"]
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+AUTH_LOGIN_MODE = os.getenv("AUTH_LOGIN_MODE", "both")
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Asia/Tashkent"
+USE_I18N = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+MEDIA_ROOT = BASE_DIR / "media"
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+CORS_ALLOWED_ORIGINS = [v for v in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",") if v]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_RENDERER_CLASSES": ["common.responses.EnvelopeRenderer"],
+    "DEFAULT_PAGINATION_CLASS": "common.pagination.Pagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend", "rest_framework.filters.SearchFilter", "rest_framework.filters.OrderingFilter"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/min", "user": "300/min", "auth": "10/min"},
+}
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "5"))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
+    "ROTATE_REFRESH_TOKENS": True, "BLACKLIST_AFTER_ROTATION": True, "CHECK_REVOKE_TOKEN": True,
+}
+SPECTACULAR_SETTINGS = {"TITLE": "DocNear API", "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see docs/api-contract.md.", "VERSION": "1.0.0", "SERVE_INCLUDE_SCHEMA": False, "COMPONENT_SPLIT_REQUEST": True, "ENUM_NAME_OVERRIDES": {"AccountRoleEnum": [("patient", "Patient"), ("doctor", "Doctor"), ("clinic_owner", "Clinic Owner"), ("admin", "Admin"), ("super_admin", "Super Admin")], "BroadcastRoleEnum": [("patient", "patient"), ("doctor", "doctor"), ("clinic_owner", "clinic_owner")]}}
+REDIS_URL = os.getenv("REDIS_URL", "")
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}} if REDIS_URL else {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL or "redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL or "redis://localhost:6379/2")
+CELERY_TASK_IGNORE_RESULT = True
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true") == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "DocNear <noreply@docnear.uz>")
+PASSWORD_RESET_URL = os.getenv("PASSWORD_RESET_URL", "http://localhost:5173/reset-password")
+TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "")
+if os.getenv("AWS_STORAGE_BUCKET_NAME"):
+    STORAGES = {"default": {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {
+        "bucket_name": os.environ["AWS_STORAGE_BUCKET_NAME"], "default_acl": None,
+        "querystring_auth": True, "file_overwrite": False,
+        "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL") or None,
+    }}, "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
