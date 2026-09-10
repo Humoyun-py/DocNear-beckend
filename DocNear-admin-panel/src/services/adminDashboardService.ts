@@ -1,0 +1,2 @@
+import { request } from './apiClient';
+export const adminDashboardService = { dashboard: () => request<Record<string, number | null>>({ url: '/admin-panel/dashboard/' }), analytics: () => request<Record<string, any>>({ url: '/admin-panel/analytics/' }), settings: () => request<Record<string, string>>({ url: '/admin-panel/settings/' }), updateSettings: (data: Record<string, string>) => request({ url: '/admin-panel/settings/', method: 'PATCH', data }) };

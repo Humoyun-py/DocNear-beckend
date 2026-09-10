@@ -1,0 +1,6 @@
+# Copy this file to key.properties and replace every value.
+# key.properties and *.jks files are ignored by Git.
+storeFile=/absolute/path/to/docnear-upload-key.jks
+storePassword=replace_with_store_password
+keyAlias=docnear-upload
+keyPassword=replace_with_key_password

@@ -62,3 +62,18 @@ class AppointmentEvent(models.Model):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class WaitlistEntry(TimestampedModel):
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="waitlist_entries")
+    doctor = models.ForeignKey("doctors.DoctorProfile", on_delete=models.CASCADE)
+    clinic = models.ForeignKey("clinics.Clinic", on_delete=models.CASCADE)
+    preferred_date = models.DateField()
+    time_range = models.CharField(max_length=10, choices=[(s, s) for s in ("any", "morning", "afternoon", "evening")], default="any")
+    notes = models.CharField(max_length=2000, blank=True)
+    status = models.CharField(max_length=10, choices=[(s, s) for s in ("waiting", "cancelled", "booked")], default="waiting")
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [models.UniqueConstraint(fields=["patient", "doctor", "clinic", "preferred_date", "time_range"],
+            condition=models.Q(status="waiting"), name="unique_active_waitlist")]

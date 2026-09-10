@@ -55,7 +55,10 @@ MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 MEDIA_ROOT = BASE_DIR / "media"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
-CORS_ALLOWED_ORIGINS = [v for v in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",") if v]
+CORS_ALLOWED_ORIGINS = [v.strip() for v in os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002,http://localhost:3003,http://127.0.0.1:3003,http://localhost:3004,http://127.0.0.1:3004",
+).split(",") if v.strip()]
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],

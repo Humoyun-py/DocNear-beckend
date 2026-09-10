@@ -21,7 +21,7 @@ def test_every_operation_role_boundary(client, world, role, path, method, record
     for key, value in [("endpoint", path), ("method", method), ("role", role), ("expected", expected), ("status", response.status_code)]:
         record_property(key, value)
     if allowed is None:
-        error(response, 403 if path == "/api/telegram/link/" else 401)
+        error(response, 403 if path.replace("/api/v1/", "/api/", 1) == "/api/telegram/link/" else 401)
     elif role not in allowed:
         error(response, 401 if role == "anonymous" else 403)
     else:

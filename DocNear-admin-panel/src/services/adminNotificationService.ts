@@ -1,0 +1,2 @@
+import { list, request } from './apiClient';
+export const adminNotificationService = { list: (params?: Record<string, unknown>) => list<Record<string, unknown>>('/admin-panel/notifications/', params), send: (data: Record<string, unknown>) => request({ url: '/admin-panel/notifications/send/', method: 'POST', data }), broadcast: (data: Record<string, unknown>) => request({ url: '/admin-panel/notifications/broadcast/', method: 'POST', data }) };

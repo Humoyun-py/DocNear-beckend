@@ -10,6 +10,7 @@ def endpoints():
 
 
 def module(path):
+    path = path.replace("/api/v1/", "/api/", 1)
     if path.startswith("/api/auth/"):
         return "Auth"
     if path.startswith("/api/doctor-panel/"):
@@ -33,6 +34,7 @@ def allowed_roles(path, method):
     None means server-to-server bot credentials are required. Super admins operate on
     every clinic/patient/doctor through admin routes; personal routes remain scoped.
     """
+    path = path.replace("/api/v1/", "/api/", 1)
     authenticated = set(ROLES) - {"anonymous"}
     if path.startswith("/api/telegram/appointments/") or path == "/api/telegram/link/":
         return None
@@ -44,7 +46,7 @@ def allowed_roles(path, method):
         return {"doctor"}
     if path.startswith("/api/clinic-owner/"):
         return {"clinic_owner"}
-    if path.startswith("/api/appointments/") or path.startswith("/api/favorites/") or (path == "/api/reviews/" and method == "POST"):
+    if path.startswith("/api/waitlists/") or path.startswith("/api/appointments/") or path.startswith("/api/favorites/") or (path == "/api/reviews/" and method == "POST"):
         return {"patient"}
     if path.startswith("/api/notifications/") or path in {"/api/profile/", "/api/auth/me/", "/api/auth/logout/", "/api/auth/change-password/"}:
         return authenticated

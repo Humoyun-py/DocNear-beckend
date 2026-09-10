@@ -1,0 +1,3242 @@
+[
+  {
+    "path": "/api/admin-panel/admin-users/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/admin-users/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/admin-users/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/admin-users/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/admin-users/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/admin-users/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/affiliations/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/affiliations/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/affiliations/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/affiliations/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/affiliations/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/analytics/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/appointments/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/appointments/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/appointments/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinic-images/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinic-images/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinic-images/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinic-images/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinic-images/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/mark-partner/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/remove-partner/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/clinics/{pk}/verify/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/dashboard/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/activate/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/suspend/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/doctors/{pk}/verify/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/logs/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/logs/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/notifications/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/notifications/broadcast/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/notifications/send/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/notifications/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/owners/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/patients/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/patients/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/patients/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/patients/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/patients/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/reviews/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/reviews/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/reviews/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/reviews/{pk}/approve/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/reviews/{pk}/hide/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/services/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/services/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/services/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/services/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/services/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/settings/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/settings/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/specialties/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/specialties/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/specialties/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/specialties/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/admin-panel/specialties/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/appointments/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/appointments/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/appointments/my/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/appointments/{pk}/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/auth/change-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/forgot-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/login/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/logout/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/me/",
+    "method": "GET",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/me/",
+    "method": "PATCH",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/register/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/reset-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/token/refresh/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/analytics/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/appointments/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/appointments/{pk}/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/clinic/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/clinic/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/clinics/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/dashboard/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/doctors/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/doctors/",
+    "method": "POST",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/doctors/{pk}/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/doctors/{pk}/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/schedule/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/services/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinic-owner/services/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/clinics/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/clinics/emergency/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/clinics/nearby/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/clinics/{pk}/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/docs/",
+    "method": "GET",
+    "module": "Documentation",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/analytics/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/accept/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/complete/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/no-show/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/reject/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/start/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/appointments/{pk}/waiting/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/availability/toggle/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/blocked-times/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/blocked-times/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/blocked-times/{pk}/",
+    "method": "DELETE",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/breaks/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/breaks/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/breaks/{pk}/",
+    "method": "DELETE",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/clinics/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/dashboard/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/patients/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/patients/{pk}/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/profile/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/profile/",
+    "method": "PATCH",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/profile/preview/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/schedule/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctor-panel/schedule/",
+    "method": "PATCH",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/doctors/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/doctors/nearby/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/doctors/{pk}/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/doctors/{pk}/availability/",
+    "method": "GET",
+    "module": "Availability",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/favorites/clinics/",
+    "method": "GET",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/favorites/clinics/{pk}/",
+    "method": "DELETE",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/favorites/clinics/{pk}/",
+    "method": "POST",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/favorites/doctors/",
+    "method": "GET",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/favorites/doctors/{pk}/",
+    "method": "DELETE",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/favorites/doctors/{pk}/",
+    "method": "POST",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/notifications/",
+    "method": "GET",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/notifications/read-all/",
+    "method": "POST",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/notifications/{pk}/",
+    "method": "GET",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/notifications/{pk}/read/",
+    "method": "POST",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/profile/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/profile/",
+    "method": "PATCH",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/reviews/",
+    "method": "GET",
+    "module": "Reviews",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/reviews/",
+    "method": "POST",
+    "module": "Reviews",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/schema/",
+    "method": "GET",
+    "module": "Documentation",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/search/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/services/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/services/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/specialties/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/specialties/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/telegram/appointments/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/by-booking-id/{booking_id}/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/my/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/{pk}/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/clinics/nearby/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/telegram/doctors/{pk}/availability/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/telegram/link-code/",
+    "method": "DELETE",
+    "module": "Telegram",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/telegram/link-code/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/telegram/link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/search/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/admin-users/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/affiliations/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/affiliations/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/affiliations/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/affiliations/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/affiliations/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/analytics/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/appointments/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/appointments/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/appointments/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinic-images/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinic-images/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinic-images/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinic-images/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinic-images/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/mark-partner/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/remove-partner/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/clinics/{pk}/verify/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/dashboard/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/activate/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/suspend/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/doctors/{pk}/verify/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/logs/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/logs/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/notifications/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/notifications/broadcast/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/notifications/send/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/notifications/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/owners/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/patients/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/patients/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/patients/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/patients/{pk}/disable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/patients/{pk}/enable/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/reviews/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/reviews/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/reviews/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/reviews/{pk}/approve/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/reviews/{pk}/hide/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/services/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/services/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/services/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/services/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/services/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/settings/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/settings/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/specialties/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/specialties/",
+    "method": "POST",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/specialties/{pk}/",
+    "method": "DELETE",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/specialties/{pk}/",
+    "method": "GET",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/admin-panel/specialties/{pk}/",
+    "method": "PATCH",
+    "module": "Admin Panel",
+    "allowed_roles": [
+      "admin",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/my/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/{pk}/",
+    "method": "GET",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Appointments",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/change-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/forgot-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/login/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/logout/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/me/",
+    "method": "GET",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/me/",
+    "method": "PATCH",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/register/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/reset-password/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/token/refresh/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/analytics/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/appointments/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/appointments/{pk}/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/clinic/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/clinic/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/clinics/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/dashboard/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/doctors/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/doctors/",
+    "method": "POST",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/doctors/{pk}/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/doctors/{pk}/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/schedule/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/services/",
+    "method": "GET",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinic-owner/services/",
+    "method": "PATCH",
+    "module": "Clinic Owner Panel",
+    "allowed_roles": [
+      "clinic_owner"
+    ]
+  },
+  {
+    "path": "/api/v1/clinics/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/clinics/emergency/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/clinics/nearby/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/clinics/{pk}/",
+    "method": "GET",
+    "module": "Clinics",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/analytics/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/accept/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/complete/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/no-show/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/reject/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/start/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/appointments/{pk}/waiting/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/availability/toggle/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/blocked-times/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/blocked-times/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/blocked-times/{pk}/",
+    "method": "DELETE",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/breaks/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/breaks/",
+    "method": "POST",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/breaks/{pk}/",
+    "method": "DELETE",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/clinics/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/dashboard/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/patients/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/patients/{pk}/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/profile/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/profile/",
+    "method": "PATCH",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/profile/preview/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/schedule/",
+    "method": "GET",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctor-panel/schedule/",
+    "method": "PATCH",
+    "module": "Doctor Panel",
+    "allowed_roles": [
+      "doctor"
+    ]
+  },
+  {
+    "path": "/api/v1/doctors/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/doctors/nearby/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/doctors/{pk}/",
+    "method": "GET",
+    "module": "Doctors",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/doctors/{pk}/availability/",
+    "method": "GET",
+    "module": "Availability",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/clinics/",
+    "method": "GET",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/clinics/{pk}/",
+    "method": "DELETE",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/clinics/{pk}/",
+    "method": "POST",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/doctors/",
+    "method": "GET",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/doctors/{pk}/",
+    "method": "DELETE",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/favorites/doctors/{pk}/",
+    "method": "POST",
+    "module": "Favorites",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/",
+    "method": "GET",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/read-all/",
+    "method": "POST",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/{pk}/",
+    "method": "GET",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/{pk}/read/",
+    "method": "POST",
+    "module": "Notifications",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/profile/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/profile/",
+    "method": "PATCH",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/reviews/",
+    "method": "GET",
+    "module": "Reviews",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/reviews/",
+    "method": "POST",
+    "module": "Reviews",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/search/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/services/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/services/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/specialties/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/specialties/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/telegram/appointments/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/by-booking-id/{booking_id}/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/my/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/{pk}/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/{pk}/cancel/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/appointments/{pk}/reschedule/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/clinics/nearby/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/telegram/doctors/{pk}/availability/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/telegram/link-code/",
+    "method": "DELETE",
+    "module": "Telegram",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/telegram/link-code/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/telegram/link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/search/",
+    "method": "GET",
+    "module": "Telegram",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/waitlists/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/waitlists/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/waitlists/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/waitlists/{pk}/cancel/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/v1/waitlists/{pk}/mark-booked/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/waitlists/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/waitlists/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/waitlists/{pk}/",
+    "method": "GET",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/waitlists/{pk}/cancel/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  },
+  {
+    "path": "/api/waitlists/{pk}/mark-booked/",
+    "method": "POST",
+    "module": "Patient",
+    "allowed_roles": [
+      "patient"
+    ]
+  }
+]

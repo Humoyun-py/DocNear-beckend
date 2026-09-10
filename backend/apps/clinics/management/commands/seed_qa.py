@@ -17,6 +17,13 @@ from apps.schedules.models import DoctorSchedule
 class Command(BaseCommand):
     help = 'Create fictional QA fixtures. Set DOCNEAR_QA_PASSWORD; use only an isolated development DB.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--reset-password',
+            action='store_true',
+            help='Reset existing QA fixture passwords to DOCNEAR_QA_PASSWORD.',
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -33,7 +40,10 @@ class Command(BaseCommand):
                 if user.role != role or not user.first_name.startswith('QA '):
                     raise CommandError(f'Refusing to overwrite a non-QA account at {email}.')
                 if not user.check_password(password):
-                    raise CommandError(f'Existing QA credentials do not match for {email}; use the original password or a fresh QA database.')
+                    if not options['reset_password']:
+                        raise CommandError(f'Existing QA credentials do not match for {email}; use the original password or a fresh QA database.')
+                    user.set_password(password)
+                    user.save(update_fields=['password', 'updated_at'])
             else:
                 user = User.objects.create_user(email=email, password=password, first_name=f'QA {alias.title()}', role=role, is_verified=True)
             accounts[alias] = user

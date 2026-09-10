@@ -1,0 +1,6 @@
+{
+  "name": "DocNear Doctor",
+  "description": "Premium clinical web dashboard for doctors to manage appointments, daily schedule, patient records, analytics, and clinic workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

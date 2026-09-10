@@ -1,0 +1,13 @@
+# DocNear documentation
+
+- [Project README](README.md)
+- [Local run guide](RUNNING.md)
+- [Flutter migration and integration report](INTEGRATION-PROGRESS.md)
+- [API contract v1](api-contract-v1.md)
+- [API contract](api-contract.md)
+- [Postman guide](POSTMAN.md)
+- [QA endpoint inventory](qa/API_ENDPOINTS.md)
+- [QA testing report](qa/API_TESTING_REPORT.md)
+- [Permission matrix](qa/PERMISSION_MATRIX.md)
+- [Client integration status](qa/client-integration-status.md)
+- [Secret handling](security/SECRETS.md)

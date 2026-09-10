@@ -1,4 +1,13 @@
 .env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+local.properties
+.idea/
+artifacts/*.apk
+artifacts/*.aab
 .venv/
 __pycache__/
 *.py[cod]
@@ -13,3 +22,4 @@ dist/
 build/
 coverage/
 *.log
+.runtime/

@@ -1,0 +1,6 @@
+{
+  "name": "DocNear - Healthcare Discovery & Doctor Booking",
+  "description": "Discover verified partnered clinics and doctors within 5 km, explore interactive maps, and book doctor appointments with real-time schedule availability.",
+  "requestFramePermissions": ["geolocation", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

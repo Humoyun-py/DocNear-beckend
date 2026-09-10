@@ -1,7 +1,7 @@
 """Prepare an isolated local QA DB and a private Newman environment.
 
 Explicit opt-in: DOCNEAR_QA_LIVE=1. Requires a non-production DATABASE_URL.
-Never prints tokens or passwords. Credentials are stored only in /tmp, mode 0600.
+Never prints tokens or passwords. Credentials are stored only in the selected runtime directory, mode 0600.
 """
 import io
 import json
@@ -19,7 +19,7 @@ from django.conf import settings  # noqa: E402 — Django must be initialized be
 if not settings.DEBUG or not settings.DATABASES['default']['NAME'].endswith('_qa'):
     raise SystemExit('Use development settings and a database whose name ends with _qa.')
 ROOT = Path(__file__).resolve().parents[2]
-directory = Path('/tmp/docnear-qa-runtime')
+directory = Path(os.getenv('DOCNEAR_QA_RUNTIME_DIR', '/tmp/docnear-qa-runtime'))
 directory.mkdir(mode=0o700, exist_ok=True)
 env_path = directory/'postman.env.json'
 environment = json.loads((env_path if env_path.exists() else ROOT/'postman/DocNear.local.postman_environment.json').read_text())
@@ -37,4 +37,4 @@ for item in environment['values']:
 fd = os.open(env_path, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, 0o600)
 with os.fdopen(fd, 'w') as file:
     json.dump(environment, file)
-print('Local QA fixtures ready; private Newman environment: /tmp/docnear-qa-runtime/postman.env.json')
+print(f'Local QA fixtures ready; private Newman environment: {env_path}')
