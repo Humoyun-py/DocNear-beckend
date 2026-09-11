@@ -50,6 +50,17 @@ For Google Maps, put this line in the user-level Gradle properties file
 GOOGLE_MAPS_API_KEY=your_android_maps_key
 ```
 
+Then enable map rendering without placing the key in Dart source:
+
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
+  --dart-define=GOOGLE_MAPS_ENABLED=true
+```
+
+Without the key and this non-secret flag, the map screen shows a clear setup
+state and keeps the clinic list available instead of opening a broken map.
+
 For iOS, set the `GOOGLE_MAPS_API_KEY` build setting in Xcode. Location and
 local-network permissions are already declared in the platform projects.
 
@@ -90,8 +101,8 @@ Ready-to-install copies produced by the verified build are available at:
 
 ```text
 artifacts/DocNear-debug.apk
-artifacts/DocNear-release-dev-signed.apk
-artifacts/DocNear-release-dev-signed.aab
+artifacts/DocNear-release.apk
+artifacts/DocNear-release.aab
 ```
 
 The release artifact is optimized but currently uses the development signing

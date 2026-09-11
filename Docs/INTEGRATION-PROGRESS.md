@@ -58,15 +58,15 @@ The live Flutter test verified:
 
 - Debug: `artifacts/DocNear-debug.apk`
 - Optimized release build with development signing:
-  `artifacts/DocNear-release-dev-signed.apk`
+  `artifacts/DocNear-release.apk`
 - Play Store App Bundle with development signing:
-  `artifacts/DocNear-release-dev-signed.aab`
+  `artifacts/DocNear-release.aab`
 - Debug SHA-256:
-  `650bacaebc23717117f4c6eb4ee05f92887bae94dd021d93015910299f2dcdf0`
+  `881f5ca24a74c32f36614e37f43905385910a1f86168fdaaf7f6382586670bdd`
 - Release SHA-256:
-  `9e39aa10ebf07340f7c177efb4e140884ec7b4196ec58313ac64d89086e8dd71`
+  `6a346b8432f805e5ae00d1137a0f43f1c2f842abab073148071bbf79cad002c8`
 - App Bundle SHA-256:
-  `986eb371a30ef5be5258508799bc3aa217b4d79179e16bbb25186c2ac836decd`
+  `de76b2f87da1b5340d1a2c62c32bde1eddd8f6b3c7dede442f4f2b48e31134b4`
 - Application ID: `com.docnear.app`
 - Minimum Android SDK: 24
 - Target Android SDK: 36

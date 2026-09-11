@@ -1,16 +1,33 @@
 # Client integration status
 
-## Verified
+Verified on 2026-09-11:
 
-- Telegram credentials are absent from source and required at runtime.
-- Web production server is bundled as native ESM and accepts `PORT`.
-- Android debug builds use the standard Gradle debug signing flow; release signing is opt-in through CI environment variables.
-- Android Gemini integration does not embed a usable API key in the APK.
-- Python bot compiles successfully; JSON manifests parse successfully.
+- Flutter, patient web, doctor panel, admin panel, and clinic owner panel source
+  are present in this checkout.
+- Every client defaults to `/api/v1` and supports an environment-provided API
+  base URL.
+- Django exposes both compatibility `/api/` routes and active `/api/v1/`
+  routes.
+- All clients unwrap the `success/data` envelope and paginated `data.results`.
+- Flutter uses secure JWT storage and synchronized refresh/retry handling.
+- React clients use session storage and synchronized refresh/retry handling.
+- Patient booking, cancellation, and reschedule call the backend.
+- Doctor acceptance calls the backend.
+- Admin and clinic owner appointment lists use the backend's shared records.
+- Unused fake appointment datasets were removed.
+- Patient web lint, API-client test, and production build passed.
+- Doctor, admin, and clinic owner lint/builds passed.
+- All four final NPM lockfiles report zero known vulnerabilities.
+- Flutter analysis, 8 normal tests, debug APK build, and the live Django test
+  passed.
+- The 18-request Newman flow confirmed shared Booking ID/status visibility and
+  double-booking protection.
 
-## Pending in this environment
+External work still required for production:
 
-- Web and doctor-panel `npm run build`/`npm run lint` could not run because `node_modules` is absent and dependency installation was unavailable in the sandbox.
-- Android Gradle build could not run because the repository has no `gradlew` script or wrapper JAR and no system Gradle executable.
-- The Android doctor repositories still seed Room mock data; wiring them to the Django API requires a deliberate repository migration.
-- The existing Django routes are currently `/api/`, while the new client contract is `/api/v1/`; a compatibility alias or coordinated client/backend migration is still required before production deployment.
+- deployed HTTPS domains and restricted production CORS;
+- real provider secrets and secret-manager integration;
+- Android/iOS production signing and Maps keys;
+- production email, media storage, Telegram delivery, and Redis/Celery smoke
+  tests;
+- iOS build and device verification on macOS/Xcode.

@@ -16,6 +16,8 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
 ```
 
 For a physical phone, replace `10.0.2.2` with the backend computer's LAN IP.
+Map rendering is disabled safely until a platform Maps key is configured; then
+add `--dart-define=GOOGLE_MAPS_ENABLED=true` to the run/build command.
 Production builds should use:
 
 ```bash
@@ -33,4 +35,3 @@ flutter build apk --debug
 
 The debug APK is written to
 `build/app/outputs/flutter-apk/app-debug.apk`.
-

@@ -31,7 +31,11 @@ stream = io.StringIO()
 call_command('seed_qa', stdout=stream)
 fixture = json.loads(stream.getvalue())
 values.update({k:v for k,v in fixture.items() if k != 'accounts'})
-values.update(test_password=password, new_password=secrets.token_urlsafe(30))
+values.update(
+    base_url=os.getenv("DOCNEAR_QA_BASE_URL", "http://127.0.0.1:8001"),
+    test_password=password,
+    new_password=secrets.token_urlsafe(30),
+)
 for item in environment['values']:
     item['value'] = str(values[item['key']])
 fd = os.open(env_path, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, 0o600)

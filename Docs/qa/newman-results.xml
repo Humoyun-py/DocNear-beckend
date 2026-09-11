@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="DocNear — Full API QA" tests="18" time="2.211">
+  <testsuite name="00 End-to-end booking verification / Login patient" id="cd54a558-869a-480c-a75b-f5313a72d542" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.259">
+    <testcase name="Expected HTTP status" time="0.259" classname="00EndToEndBookingVerificationLoginPatient"/>
+    <testcase name="Response envelope" time="0.259" classname="00EndToEndBookingVerificationLoginPatient"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Login patient_b" id="40cb8f1b-ccfa-425a-80f0-2299e6de083c" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.235">
+    <testcase name="Expected HTTP status" time="0.235" classname="00EndToEndBookingVerificationLoginPatientB"/>
+    <testcase name="Response envelope" time="0.235" classname="00EndToEndBookingVerificationLoginPatientB"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Login doctor" id="8cd28cb8-13db-4477-b3bd-703defe614de" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.258">
+    <testcase name="Expected HTTP status" time="0.258" classname="00EndToEndBookingVerificationLoginDoctor"/>
+    <testcase name="Response envelope" time="0.258" classname="00EndToEndBookingVerificationLoginDoctor"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Login clinic_owner" id="da6ee9a6-f6f0-444d-97e6-60c85d79aaab" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.249">
+    <testcase name="Expected HTTP status" time="0.249" classname="00EndToEndBookingVerificationLoginClinicOwner"/>
+    <testcase name="Response envelope" time="0.249" classname="00EndToEndBookingVerificationLoginClinicOwner"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Login admin" id="570a3cd4-5a3d-4266-ba20-10c46c304374" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.245">
+    <testcase name="Expected HTTP status" time="0.245" classname="00EndToEndBookingVerificationLoginAdmin"/>
+    <testcase name="Response envelope" time="0.245" classname="00EndToEndBookingVerificationLoginAdmin"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Login super_admin" id="9ed38fc3-c4e8-44e5-9a88-ff5f4f3f8718" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.279">
+    <testcase name="Expected HTTP status" time="0.279" classname="00EndToEndBookingVerificationLoginSuperAdmin"/>
+    <testcase name="Response envelope" time="0.279" classname="00EndToEndBookingVerificationLoginSuperAdmin"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Find nearby QA clinic" id="7251e87c-e153-41d0-b81c-94809b422a78" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.067">
+    <testcase name="Expected HTTP status" time="0.067" classname="00EndToEndBookingVerificationFindNearbyQaClinic"/>
+    <testcase name="Response envelope" time="0.067" classname="00EndToEndBookingVerificationFindNearbyQaClinic"/>
+    <testcase name="Seeded clinic is nearby" time="0.067" classname="00EndToEndBookingVerificationFindNearbyQaClinic"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Select the doctor at the clinic" id="707ec99b-b513-4c78-b65c-e8f144a542f7" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.065">
+    <testcase name="Expected HTTP status" time="0.065" classname="00EndToEndBookingVerificationSelectTheDoctorAtTheClinic"/>
+    <testcase name="Response envelope" time="0.065" classname="00EndToEndBookingVerificationSelectTheDoctorAtTheClinic"/>
+    <testcase name="Doctor belongs to clinic" time="0.065" classname="00EndToEndBookingVerificationSelectTheDoctorAtTheClinic"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Choose a real available slot" id="39733b20-c885-4903-89d8-c068490f1506" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.062">
+    <testcase name="Expected HTTP status" time="0.062" classname="00EndToEndBookingVerificationChooseARealAvailableSlot"/>
+    <testcase name="Response envelope" time="0.062" classname="00EndToEndBookingVerificationChooseARealAvailableSlot"/>
+    <testcase name="At least one slot is available" time="0.062" classname="00EndToEndBookingVerificationChooseARealAvailableSlot"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Patient requests appointment" id="438c70b8-6cdb-4516-8646-13cb36e28785" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.063">
+    <testcase name="Expected HTTP status" time="0.063" classname="00EndToEndBookingVerificationPatientRequestsAppointment"/>
+    <testcase name="Response envelope" time="0.063" classname="00EndToEndBookingVerificationPatientRequestsAppointment"/>
+    <testcase name="Booking ID is generated" time="0.063" classname="00EndToEndBookingVerificationPatientRequestsAppointment"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Doctor sees pending booking" id="3de34071-d4a1-4455-aa27-36b6d351f821" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.051">
+    <testcase name="Expected HTTP status" time="0.051" classname="00EndToEndBookingVerificationDoctorSeesPendingBooking"/>
+    <testcase name="Response envelope" time="0.051" classname="00EndToEndBookingVerificationDoctorSeesPendingBooking"/>
+    <testcase name="Pending" time="0.051" classname="00EndToEndBookingVerificationDoctorSeesPendingBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Doctor confirms booking" id="34a9237c-03c9-4657-a9a5-3e688ebcd738" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.058">
+    <testcase name="Expected HTTP status" time="0.058" classname="00EndToEndBookingVerificationDoctorConfirmsBooking"/>
+    <testcase name="Response envelope" time="0.058" classname="00EndToEndBookingVerificationDoctorConfirmsBooking"/>
+    <testcase name="Confirmed" time="0.058" classname="00EndToEndBookingVerificationDoctorConfirmsBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / patient sees the same confirmed booking" id="836e3c0e-d64c-4260-82e8-98f9da236a06" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.050">
+    <testcase name="Expected HTTP status" time="0.050" classname="00EndToEndBookingVerificationPatientSeesTheSameConfirmedBooking"/>
+    <testcase name="Response envelope" time="0.050" classname="00EndToEndBookingVerificationPatientSeesTheSameConfirmedBooking"/>
+    <testcase name="Shared booking and status" time="0.050" classname="00EndToEndBookingVerificationPatientSeesTheSameConfirmedBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / admin sees the same confirmed booking" id="513876df-6378-4c8c-94c5-aa00ccae730a" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.051">
+    <testcase name="Expected HTTP status" time="0.051" classname="00EndToEndBookingVerificationAdminSeesTheSameConfirmedBooking"/>
+    <testcase name="Response envelope" time="0.051" classname="00EndToEndBookingVerificationAdminSeesTheSameConfirmedBooking"/>
+    <testcase name="Shared booking and status" time="0.051" classname="00EndToEndBookingVerificationAdminSeesTheSameConfirmedBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / clinic_owner sees the same confirmed booking" id="61499f28-558d-4b9b-a478-1d306af987f4" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.051">
+    <testcase name="Expected HTTP status" time="0.051" classname="00EndToEndBookingVerificationClinicOwnerSeesTheSameConfirmedBooking"/>
+    <testcase name="Response envelope" time="0.051" classname="00EndToEndBookingVerificationClinicOwnerSeesTheSameConfirmedBooking"/>
+    <testcase name="Shared booking and status" time="0.051" classname="00EndToEndBookingVerificationClinicOwnerSeesTheSameConfirmedBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / super_admin sees the same confirmed booking" id="87f87fb6-8452-44d1-87df-13025bdac3d5" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.050">
+    <testcase name="Expected HTTP status" time="0.050" classname="00EndToEndBookingVerificationSuperAdminSeesTheSameConfirmedBooking"/>
+    <testcase name="Response envelope" time="0.050" classname="00EndToEndBookingVerificationSuperAdminSeesTheSameConfirmedBooking"/>
+    <testcase name="Shared booking and status" time="0.050" classname="00EndToEndBookingVerificationSuperAdminSeesTheSameConfirmedBooking"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Second patient cannot double-book" id="42b5b8a5-47e1-4cb7-a66f-fcadfc07346d" timestamp="2026-09-11T10:04:51.545Z" tests="3" failures="0" errors="0" time="0.056">
+    <testcase name="Expected HTTP status" time="0.056" classname="00EndToEndBookingVerificationSecondPatientCannotDoubleBook"/>
+    <testcase name="Response envelope" time="0.056" classname="00EndToEndBookingVerificationSecondPatientCannotDoubleBook"/>
+    <testcase name="Slot unavailable" time="0.056" classname="00EndToEndBookingVerificationSecondPatientCannotDoubleBook"/>
+  </testsuite>
+  <testsuite name="00 End-to-end booking verification / Cleanup: cancel QA booking" id="f1f23d38-83f6-487a-8fe0-c9c970d8a8fe" timestamp="2026-09-11T10:04:51.545Z" tests="2" failures="0" errors="0" time="0.062">
+    <testcase name="Expected HTTP status" time="0.062" classname="00EndToEndBookingVerificationCleanupCancelQaBooking"/>
+    <testcase name="Response envelope" time="0.062" classname="00EndToEndBookingVerificationCleanupCancelQaBooking"/>
+  </testsuite>
+</testsuites>

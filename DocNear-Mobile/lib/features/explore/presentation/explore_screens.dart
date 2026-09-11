@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../app/data_providers.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/providers.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/widgets/app_widgets.dart';
@@ -476,6 +477,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               itemCount: items.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, index) => ClinicCard(items[index]),
+            );
+          }
+          if (!AppConfig.googleMapsEnabled) {
+            return const EmptyState(
+              title: 'Xarita sozlanmagan',
+              message:
+                  'Google Maps kaliti qo‘yilgach GOOGLE_MAPS_ENABLED=true bilan '
+                  'ishga tushiring. Hozir klinikalarni yuqoridagi ro‘yxat '
+                  'tugmasi orqali ko‘rishingiz mumkin.',
             );
           }
           return location.when(

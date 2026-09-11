@@ -1,6 +1,8 @@
 # DocNear documentation
 
-- [Project README](README.md)
+- [Project README](../README.md)
+- [Repository audit](REPOSITORY-AUDIT.md)
+- [Production deployment](DEPLOYMENT.md)
 - [Local run guide](RUNNING.md)
 - [Flutter migration and integration report](INTEGRATION-PROGRESS.md)
 - [API contract v1](api-contract-v1.md)

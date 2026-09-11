@@ -77,7 +77,23 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True, "BLACKLIST_AFTER_ROTATION": True, "CHECK_REVOKE_TOKEN": True,
 }
-SPECTACULAR_SETTINGS = {"TITLE": "DocNear API", "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see docs/api-contract.md.", "VERSION": "1.0.0", "SERVE_INCLUDE_SCHEMA": False, "COMPONENT_SPLIT_REQUEST": True, "ENUM_NAME_OVERRIDES": {"AccountRoleEnum": [("patient", "Patient"), ("doctor", "Doctor"), ("clinic_owner", "Clinic Owner"), ("admin", "Admin"), ("super_admin", "Super Admin")], "BroadcastRoleEnum": [("patient", "patient"), ("doctor", "doctor"), ("clinic_owner", "clinic_owner")]}}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "DocNear API",
+    "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see Docs/api-contract.md.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {
+        "AccountRoleEnum": [("patient", "Patient"), ("doctor", "Doctor"), ("clinic_owner", "Clinic Owner"), ("admin", "Admin"), ("super_admin", "Super Admin")],
+        "BroadcastRoleEnum": [("patient", "patient"), ("doctor", "doctor"), ("clinic_owner", "clinic_owner")],
+        "AppointmentStatusEnum": [
+            ("pending", "Pending"), ("confirmed", "Confirmed"), ("waiting", "Waiting"),
+            ("in_progress", "In progress"), ("completed", "Completed"),
+            ("cancelled", "Cancelled"), ("rejected", "Rejected"), ("no_show", "No show"),
+        ],
+        "WaitlistStatusEnum": [("waiting", "waiting"), ("cancelled", "cancelled"), ("booked", "booked")],
+    },
+}
 REDIS_URL = os.getenv("REDIS_URL", "")
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}} if REDIS_URL else {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL or "redis://localhost:6379/1")

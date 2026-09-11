@@ -43,13 +43,14 @@ newman run postman/DocNear.postman_collection.json \
   -e /path/to/private-environment.json \
   --folder '00 End-to-end booking verification' \
   --reporters cli,junit \
-  --reporter-junit-export docs/qa/newman-results.xml
+  --reporter-junit-export Docs/qa/newman-results.xml
 ```
 
 For an entirely local disposable run, `qa.prepare_live` can create the QA fixture data and a private environment automatically:
 
 ```bash
-DOCNEAR_QA_LIVE=1 DEBUG=true PYTHONPATH=backend \
+DOCNEAR_QA_LIVE=1 DEBUG=true \
+  DOCNEAR_QA_BASE_URL=http://127.0.0.1:8001 PYTHONPATH=backend \
   .venv/bin/python -m qa.prepare_live
 ```
 
