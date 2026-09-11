@@ -10,7 +10,17 @@ PostgreSQL must be running. From the repository root:
 ```bash
 sudo systemctl enable --now postgresql
 cd /home/humoyun/DocNear-web-beckend
+export DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env"
 ./run-docnear-dev.sh
+```
+
+The launcher automatically uses that backup path when it exists. For any other
+external location, set `DOCNEAR_ENV_FILE` explicitly. To run a management
+command directly:
+
+```bash
+DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env" \
+  .venv/bin/python backend/manage.py migrate
 ```
 
 The script starts:

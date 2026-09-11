@@ -133,8 +133,8 @@ ignored `.runtime/` storage and does not print credentials.
 The code and automated acceptance flow are ready for an MVP demo. Before the
 demo operator must:
 
-- start PostgreSQL and copy `.env.example` to an ignored `.env` with local
-  credentials;
+- start PostgreSQL and point `DOCNEAR_ENV_FILE` to a protected configuration
+  file stored outside the repository;
 - run `./run-docnear-dev.sh`;
 - add a restricted Google Maps key and enable Maps if the demo includes map
   tiles;

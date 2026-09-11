@@ -8,6 +8,17 @@ DOCTOR_PORT="${DOCTOR_PORT:-3002}"
 ADMIN_PORT="${ADMIN_PORT:-3003}"
 OWNER_PORT="${OWNER_PORT:-3004}"
 if [[ ! -x "$PYTHON" ]]; then echo "Python virtualenv topilmadi: $ROOT_DIR/.venv" >&2; exit 1; fi
+if [[ -z "${DOCNEAR_ENV_FILE:-}" && -r "$HOME/docnear-env-backup/repo-root.env" ]]; then
+  export DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env"
+fi
+if [[ -n "${DOCNEAR_ENV_FILE:-}" && ! -r "$DOCNEAR_ENV_FILE" ]]; then
+  echo "DOCNEAR_ENV_FILE o‘qib bo‘lmaydi: $DOCNEAR_ENV_FILE" >&2
+  exit 1
+fi
+if [[ -z "${DATABASE_URL:-}" && -z "${DOCNEAR_ENV_FILE:-}" ]]; then
+  echo "DATABASE_URL yoki tashqi DOCNEAR_ENV_FILE ni sozlang." >&2
+  exit 1
+fi
 "$PYTHON" - "$BACKEND_PORT" "$WEB_PORT" "$DOCTOR_PORT" "$ADMIN_PORT" "$OWNER_PORT" <<'PY'
 import socket, sys
 for port in sys.argv[1:]:

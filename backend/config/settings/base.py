@@ -6,7 +6,11 @@ import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-load_dotenv(BASE_DIR.parent / ".env")
+ENV_FILE = os.getenv("DOCNEAR_ENV_FILE")
+if ENV_FILE:
+    load_dotenv(Path(ENV_FILE).expanduser())
+elif os.getenv("DJANGO_SETTINGS_MODULE", "").endswith(".development"):
+    load_dotenv(BASE_DIR.parent / ".env")
 SECRET_KEY = os.environ.get("SECRET_KEY", "development-only-change-this-before-deploying-docnear")
 DEBUG = False
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")

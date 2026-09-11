@@ -1,6 +1,9 @@
 # PostgreSQL Test Database
 
-Django reads `DATABASE_URL` from the repository `.env`. When it is not set, the default role is `docnear` and the test database is `test_docnear`.
+Django reads `DATABASE_URL` from the process environment or the external file
+selected by `DOCNEAR_ENV_FILE`. Keep that file outside the repository. When a
+custom URL is not set, the default role is `docnear` and the test database is
+`test_docnear`.
 
 Grant the role permission to create test databases as a PostgreSQL administrator:
 
