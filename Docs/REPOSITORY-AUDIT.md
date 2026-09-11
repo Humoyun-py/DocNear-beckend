@@ -6,11 +6,11 @@ Audit date: 2026-09-11 (Asia/Tashkent).
 
 - Remote: `https://github.com/Humoyun-py/DocNear-beckend.git`
 - Default working branch: `main`
-- Latest checked commit: `c61ba583f2b1eed23f5c285caff6ddd615f161c1`
-  (`Frontend, mobile, beckend birlashgan`)
-- The working tree contains the reviewed integration, CI, security, dependency,
-  documentation, and cleanup changes described here. They are not represented
-  by the commit above until they are committed.
+- Latest checked commit: `ec3718942f6a1776b07a550df98a4ee44e3864b0`
+  (`Complete repository audit, CI and production preparation`)
+- The integration, CI, security, dependency, documentation, and cleanup changes
+  described here are represented by that commit. The later local `.env` backup
+  and removal is documented below.
 
 Active product modules:
 
@@ -106,8 +106,10 @@ ignored `.runtime/` storage and does not print credentials.
   token pattern was found in the current tree or the two reachable Git commits.
 - Real `.env`, keystore, APK/AAB, dependency, build, IDE, cache, and runtime
   paths are ignored by Git.
-- Two ignored local `.env` files remain in this workspace pending explicit
-  deletion approval. Neither file is tracked or included in an artifact.
+- The two local `.env` files were backed up as `repo-root.env` and
+  `patient-web.env` under `/home/humoyun/docnear-env-backup/`, then removed from
+  this workspace. The backup directory uses mode `700`, its files use mode
+  `600`, and no real `.env` file is tracked or included in an artifact.
 - Generated dependency/build directories are local only and are not tracked.
 
 ## Fixes made during this audit
@@ -157,8 +159,6 @@ remain external configuration or environment work:
 - manual accessibility and browser/device coverage beyond automated source and
   build checks;
 - dependency and application security monitoring after deployment.
-- removal or secure retention of the two ignored local development `.env`
-  files, according to the owner's explicit choice.
 
 The known historical Telegram/Gemini credential warning remains in
 `Docs/security/SECRETS.md`. If those values were ever active, rotate them before
