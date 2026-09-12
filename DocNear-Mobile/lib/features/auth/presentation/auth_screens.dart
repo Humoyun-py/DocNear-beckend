@@ -177,255 +177,252 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  Widget build(BuildContext context) =>
+      const _PhoneAuthScreen(purpose: 'login');
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final formKey = GlobalKey<FormState>();
-  final identifier = TextEditingController();
-  final password = TextEditingController();
-  bool hidden = true;
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      const _PhoneAuthScreen(purpose: 'register');
+}
+
+class _PhoneAuthScreen extends ConsumerStatefulWidget {
+  const _PhoneAuthScreen({required this.purpose});
+  final String purpose;
+  @override
+  ConsumerState<_PhoneAuthScreen> createState() => _PhoneAuthScreenState();
+}
+
+class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
+  final phone = TextEditingController(text: '+998');
+  final code = TextEditingController();
+  final firstName = TextEditingController();
+  final lastName = TextEditingController();
+  bool codeStep = false;
+  bool sending = false;
+  String? error;
 
   @override
   void dispose() {
-    identifier.dispose();
-    password.dispose();
+    phone.dispose();
+    code.dispose();
+    firstName.dispose();
+    lastName.dispose();
     super.dispose();
+  }
+
+  bool get validPhone =>
+      RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(phone.text.trim());
+
+  Future<void> send(String channel) async {
+    setState(() => error = null);
+    if (!validPhone) {
+      setState(
+        () =>
+            error = 'Telefon raqamni xalqaro formatda kiriting: +998901234567',
+      );
+      return;
+    }
+    if (widget.purpose == 'register' && firstName.text.trim().isEmpty) {
+      setState(() => error = 'Ismingizni kiriting.');
+      return;
+    }
+    setState(() => sending = true);
+    final message = await ref
+        .read(authProvider.notifier)
+        .requestOtp(
+          phoneNumber: phone.text.trim(),
+          purpose: widget.purpose,
+          channel: channel,
+          firstName: firstName.text.trim(),
+          lastName: lastName.text.trim(),
+        );
+    if (mounted)
+      setState(() {
+        sending = false;
+        error = message;
+        if (message == null) codeStep = true;
+      });
+  }
+
+  Future<void> verify() async {
+    setState(() => error = null);
+    if (!RegExp(r'^\d{6}$').hasMatch(code.text)) {
+      setState(() => error = '6 xonali tasdiqlash kodini kiriting.');
+      return;
+    }
+    await ref
+        .read(authProvider.notifier)
+        .verifyOtp(
+          phoneNumber: phone.text.trim(),
+          code: code.text,
+          purpose: widget.purpose,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authProvider);
-    final loading = auth.status == AuthStatus.checking;
+    final state = ref.watch(authProvider);
+    final busy = sending || state.status == AuthStatus.checking;
+    final visibleError = error ?? state.error;
     return Scaffold(
+      appBar: widget.purpose == 'register'
+          ? AppBar(title: const Text('Hisob yaratish'))
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(
-                      LucideIcons.stethoscope,
-                      size: 52,
-                      color: Theme.of(context).colorScheme.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(
+                    LucideIcons.stethoscope,
+                    size: 52,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.purpose == 'login'
+                        ? 'Telefon orqali kirish'
+                        : 'Bemor hisobini yaratish',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Xush kelibsiz',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'DocNear hisobingizga kiring',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: identifier,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.username],
-                      decoration: const InputDecoration(
-                        labelText: 'Email yoki telefon',
-                        prefixIcon: Icon(LucideIcons.user),
-                      ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? 'Email yoki telefonni kiriting'
-                          : null,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: password,
-                      obscureText: hidden,
-                      autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(
-                        labelText: 'Parol',
-                        prefixIcon: const Icon(LucideIcons.lock),
-                        suffixIcon: IconButton(
-                          tooltip: hidden
-                              ? 'Parolni ko‘rsatish'
-                              : 'Parolni yashirish',
-                          onPressed: () => setState(() => hidden = !hidden),
-                          icon: Icon(
-                            hidden ? LucideIcons.eye : LucideIcons.eyeOff,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Email va parol talab qilinmaydi.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+                  if (widget.purpose == 'register' && !codeStep) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: firstName,
+                            decoration: const InputDecoration(
+                              labelText: 'Ism',
+                              prefixIcon: Icon(LucideIcons.user),
+                            ),
                           ),
                         ),
-                      ),
-                      validator: (value) => value == null || value.length < 8
-                          ? 'Parol kamida 8 belgidan iborat bo‘lsin'
-                          : null,
-                    ),
-                    if (auth.error != null) ...[
-                      const SizedBox(height: 14),
-                      Text(
-                        auth.error!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: lastName,
+                            decoration: const InputDecoration(
+                              labelText: 'Familiya',
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                    const SizedBox(height: 22),
-                    FilledButton.icon(
-                      onPressed: loading ? null : _submit,
-                      icon: loading
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(LucideIcons.logIn),
-                      label: const Text('Kirish'),
+                      ],
                     ),
                     const SizedBox(height: 14),
-                    TextButton(
-                      onPressed: loading
-                          ? null
-                          : () => context.push('/register'),
-                      child: const Text('Yangi hisob yaratish'),
+                  ],
+                  TextField(
+                    controller: phone,
+                    enabled: !codeStep,
+                    keyboardType: TextInputType.phone,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    decoration: const InputDecoration(
+                      labelText: 'Telefon raqamingizni kiriting',
+                      hintText: '+998901234567',
+                      prefixIcon: Icon(LucideIcons.phone),
+                    ),
+                  ),
+                  if (codeStep) ...[
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: code,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        labelText: 'Tasdiqlash kodini kiriting',
+                        prefixIcon: Icon(LucideIcons.shieldCheck),
+                      ),
                     ),
                   ],
-                ),
+                  if (visibleError != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      visibleError,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: busy
+                        ? null
+                        : codeStep
+                        ? verify
+                        : () => send('sms'),
+                    icon: Icon(
+                      codeStep
+                          ? LucideIcons.shieldCheck
+                          : LucideIcons.messageSquare,
+                    ),
+                    label: Text(
+                      busy
+                          ? 'Kutilmoqda...'
+                          : codeStep
+                          ? 'Tasdiqlash'
+                          : 'Tasdiqlash kodini yuborish',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (!codeStep)
+                    OutlinedButton.icon(
+                      onPressed: busy ? null : () => send('telegram'),
+                      icon: const Icon(LucideIcons.send),
+                      label: const Text('Kodni Telegram orqali olish'),
+                    ),
+                  if (codeStep)
+                    TextButton.icon(
+                      onPressed: busy ? null : () => send('sms'),
+                      icon: const Icon(LucideIcons.refreshCw),
+                      label: const Text('Kodni qayta yuborish'),
+                    ),
+                  if (!codeStep)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Telegram uchun avval DocNear botida telefon raqamingizni ulashing.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: busy
+                        ? null
+                        : () => context.go(
+                            widget.purpose == 'login' ? '/register' : '/login',
+                          ),
+                    child: Text(
+                      widget.purpose == 'login'
+                          ? 'Yangi hisob yaratish'
+                          : 'Kirish sahifasiga qaytish',
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _submit() async {
-    if (!formKey.currentState!.validate()) return;
-    FocusScope.of(context).unfocus();
-    await ref
-        .read(authProvider.notifier)
-        .login(identifier.text.trim(), password.text);
-  }
-}
-
-class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
-  @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
-}
-
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final formKey = GlobalKey<FormState>();
-  final first = TextEditingController();
-  final last = TextEditingController();
-  final email = TextEditingController();
-  final phone = TextEditingController();
-  final password = TextEditingController();
-
-  @override
-  void dispose() {
-    for (final item in [first, last, email, phone, password]) {
-      item.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(authProvider);
-    final loading = state.status == AuthStatus.checking;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Hisob yaratish')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: formKey,
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: _field(first, 'Ism', LucideIcons.user)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _field(last, 'Familiya', LucideIcons.user)),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                _field(
-                  email,
-                  'Email',
-                  LucideIcons.mail,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 14),
-                _field(
-                  phone,
-                  'Telefon',
-                  LucideIcons.phone,
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: password,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Parol',
-                    prefixIcon: Icon(LucideIcons.lock),
-                  ),
-                  validator: (value) => value == null || value.length < 8
-                      ? 'Kamida 8 belgi kiriting'
-                      : null,
-                ),
-                if (state.error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    state.error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: loading ? null : _submit,
-                  child: const Text('Ro‘yxatdan o‘tish'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  TextFormField _field(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType? keyboardType,
-  }) => TextFormField(
-    controller: controller,
-    keyboardType: keyboardType,
-    decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-    validator: (value) => value == null || value.trim().isEmpty
-        ? '$label maydonini to‘ldiring'
-        : null,
-  );
-
-  Future<void> _submit() async {
-    if (!formKey.currentState!.validate()) return;
-    await ref
-        .read(authProvider.notifier)
-        .register(
-          firstName: first.text.trim(),
-          lastName: last.text.trim(),
-          email: email.text.trim(),
-          phone: phone.text.trim(),
-          password: password.text,
-        );
   }
 }

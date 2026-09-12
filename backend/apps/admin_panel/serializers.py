@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 from apps.accounts.models import User
-from apps.accounts.serializers import RegisterSerializer, UserSerializer
+from apps.accounts.serializers import PHONE_MESSAGE, PHONE_PATTERN, UserSerializer
 from apps.clinics.models import Clinic
 from apps.doctors.models import DoctorProfile, DoctorClinic
 from apps.doctors.serializers import AffiliationSerializer
@@ -21,9 +21,38 @@ class ClinicManageSerializer(serializers.ModelSerializer):
         return user
 
 
-class StaffAccountSerializer(RegisterSerializer):
+class StaffAccountSerializer(serializers.ModelSerializer):
+    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+
+    class Meta:
+        model = User
+        fields = ["phone_number", "email", "first_name", "last_name"]
+
+    def validate_phone_number(self, value):
+        matches = User.objects.filter(phone_number=value)
+        if self.instance:
+            matches = matches.exclude(pk=self.instance.pk)
+        if matches.exists():
+            raise serializers.ValidationError("An account with this phone number already exists.")
+        return value
+
+    def validate_email(self, value):
+        value = value.lower() if value else None
+        if value:
+            matches = User.objects.filter(email__iexact=value)
+            if self.instance:
+                matches = matches.exclude(pk=self.instance.pk)
+            if matches.exists():
+                raise serializers.ValidationError("An account with this email already exists.")
+        return value
+
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data, role=self.context["account_role"])
+        return User.objects.create_user(
+            **validated_data,
+            role=self.context["account_role"],
+            is_verified=True,
+        )
 
 
 class DoctorManageSerializer(serializers.ModelSerializer):
@@ -51,7 +80,7 @@ class DoctorManageSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         account = validated_data.pop("account")
         clinic, specialty = validated_data.pop("clinic"), validated_data.pop("specialty")
-        user = User.objects.create_user(**account, role="doctor")
+        user = User.objects.create_user(**account, role="doctor", is_verified=True)
         doctor = DoctorProfile.objects.create(user=user, **validated_data)
         DoctorClinic.objects.create(doctor=doctor, clinic=clinic, specialty=specialty, is_primary=True)
         return doctor
@@ -72,7 +101,7 @@ class AdminPatientSerializer(UserSerializer):
 
 class AdminUserCreateSerializer(StaffAccountSerializer):
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data, role="admin")
+        return User.objects.create_user(**validated_data, role="admin", is_verified=True)
 
 
 class PlatformSettingsSerializer(serializers.ModelSerializer):

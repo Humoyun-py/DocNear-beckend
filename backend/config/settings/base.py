@@ -74,7 +74,11 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"anon": "100/min", "user": "300/min", "auth": "10/min"},
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/min", "user": "300/min", "auth": "10/min",
+        "otp_request": os.getenv("OTP_REQUEST_RATE", "5/min"),
+        "otp_verify": os.getenv("OTP_VERIFY_RATE", "10/min"),
+    },
 }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "5"))),
@@ -112,6 +116,17 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "DocNear <noreply@docnear.uz>")
 PASSWORD_RESET_URL = os.getenv("PASSWORD_RESET_URL", "http://localhost:5173/reset-password")
 TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
+OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
+OTP_PHONE_REQUEST_LIMIT = int(os.getenv("OTP_PHONE_REQUEST_LIMIT", "3"))
+OTP_IP_REQUEST_LIMIT = int(os.getenv("OTP_IP_REQUEST_LIMIT", "20"))
+OTP_SMS_PROVIDER = os.getenv("OTP_SMS_PROVIDER", "console")
+OTP_TEST_MODE = False
+SMS_API_URL = os.getenv("SMS_API_URL", "")
+SMS_API_KEY = os.getenv("SMS_API_KEY", "")
+SMS_SENDER_NAME = os.getenv("SMS_SENDER_NAME", "DocNear")
+LEGACY_PASSWORD_AUTH_ENABLED = os.getenv("LEGACY_PASSWORD_AUTH_ENABLED", "false").lower() == "true"
 if os.getenv("AWS_STORAGE_BUCKET_NAME"):
     STORAGES = {"default": {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {
         "bucket_name": os.environ["AWS_STORAGE_BUCKET_NAME"], "default_acl": None,

@@ -22,10 +22,15 @@ VARIABLES = {
     'latitude': '41.3111', 'longitude': '69.2797', 'radius': '5', 'date': '', 'time': '',
     'next_time': '', 'booking_weekday': '', 'q': 'QA', 'telegram_user_id': '123456', 'telegram_bot_secret': '',
     'telegram_link_code': '', 'reset_uid': '', 'reset_token': '', 'test_password': '', 'new_password': '',
+    'otp_test_code': '',
+    'patient_phone': '+998900000001', 'patient_b_phone': '+998900000002',
+    'doctor_phone': '+998900000003', 'clinic_owner_phone': '+998900000004',
+    'admin_phone': '+998900000005', 'super_admin_phone': '+998900000006',
     'patient_email': 'qa.patient@docnear.example', 'patient_b_email': 'qa.patient-b@docnear.example',
     'doctor_email': 'qa.doctor@docnear.example', 'clinic_owner_email': 'qa.owner@docnear.example',
     'admin_email': 'qa.admin@docnear.example', 'super_admin_email': 'qa.super-admin@docnear.example',
-    'created_email': 'qa.created-{{$guid}}@docnear.example', 'created_slug': 'qa-{{$guid}}',
+    'created_email': 'qa.created-{{$guid}}@docnear.example', 'created_phone': '+99899000{{$randomInt}}',
+    'created_slug': 'qa-{{$guid}}',
 }
 for role in ['patient', 'patient_b', 'doctor', 'clinic_owner', 'admin', 'super_admin']:
     VARIABLES[role + '_refresh_token'] = ''
@@ -56,12 +61,17 @@ def bearer(path, method):
 
 
 def body_for(path, method):
+    path = path.replace('/api/v1/', '/api/', 1)
     if method not in {'POST','PATCH'}:
         return None
     if path == '/api/auth/register/':
         return {'email':'{{created_email}}','first_name':'QA Patient','password':'{{test_password}}'}
     if path == '/api/auth/login/':
         return {'identifier':'{{patient_email}}','password':'{{test_password}}'}
+    if path in ['/api/auth/request-otp/', '/api/auth/resend-otp/']:
+        return {'phone_number':'{{patient_phone}}','purpose':'login','channel':'sms'}
+    if path == '/api/auth/verify-otp/':
+        return {'phone_number':'{{patient_phone}}','code':'{{otp_test_code}}','purpose':'login'}
     if path in ['/api/auth/token/refresh/', '/api/auth/logout/']:
         return {'refresh':'{{refresh_token}}'}
     if path == '/api/auth/change-password/':
@@ -104,7 +114,7 @@ def body_for(path, method):
     if path == '/api/reviews/' and method == 'POST':
         return {'appointment':'{{appointment_id}}','rating':5,'comment':'Fictional QA review'}
     if path.endswith('/doctors/') and method == 'POST':
-        return {'account':{'email':'{{created_email}}','first_name':'QA Doctor','password':'{{test_password}}'},'clinic':'{{clinic_id}}','specialty':'{{specialty_id}}'}
+        return {'account':{'phone_number':'{{created_phone}}','email':'{{created_email}}','first_name':'QA Doctor'},'clinic':'{{clinic_id}}','specialty':'{{specialty_id}}'}
     if '/doctors/{pk}/' in path and method == 'PATCH':
         return {'consultation_duration':30,'buffer_time':0,'max_appointments_per_day':20} if '/clinic-owner/' in path else {'bio':'Updated fictional QA profile'}
     if path.endswith('/clinics/') and method == 'POST':
@@ -116,7 +126,7 @@ def body_for(path, method):
     if any(f'/{name}/' in path for name in ['specialties','services']):
         return {'name':'QA care','slug':'{{created_slug}}','icon_name':'heart-pulse','description':'Fictional test item'} if method == 'POST' else {'description':'Updated fictional QA item'}
     if any(f'/{name}/' in path for name in ['owners','admin-users','patients']):
-        return {'email':'{{created_email}}','first_name':'QA Staff','password':'{{test_password}}'} if '{pk}' not in path else {'first_name':'QA Updated'} if method == 'PATCH' else {}
+        return {'phone_number':'{{created_phone}}','email':'{{created_email}}','first_name':'QA Staff'} if '{pk}' not in path else {'first_name':'QA Updated'} if method == 'PATCH' else {}
     return {}
 
 
@@ -160,7 +170,7 @@ def request_item(path, method, name=None, token=None, body=None, status=None, ex
     if path not in {'/api/docs/','/api/schema/'} and status != 204:
         scripts += ['const result = pm.response.json();', f'pm.test("Response envelope", () => pm.expect(result.success).to.eql({str(status < 400).lower()}));']
     scripts.extend(extra_tests)
-    if path == '/api/auth/login/' and not extra_tests:
+    if path in {'/api/auth/verify-otp/', '/api/v1/auth/verify-otp/'} and not extra_tests:
         scripts += ['if (pm.response.code === 200) { const d=pm.response.json().data; pm.environment.set("access_token",d.access); pm.environment.set("refresh_token",d.refresh); pm.environment.set(d.user.role+"_token",d.access); }']
     if path == '/api/auth/token/refresh/':
         scripts += ['if (pm.response.code === 200) { const d=pm.response.json().data; pm.environment.set("access_token",d.access); pm.environment.set("patient_token",d.access); pm.environment.set("refresh_token",d.refresh); pm.environment.set("patient_refresh_token",d.refresh); }']
@@ -176,7 +186,8 @@ def e2e():
     items=[]
     for role in ['patient','patient_b','doctor','clinic_owner','admin','super_admin']:
         tests=[f'if(pm.response.code===200){{const d=pm.response.json().data;pm.environment.set("{role}_token",d.access);pm.environment.set("{role}_refresh_token",d.refresh);'+('pm.environment.set("access_token",d.access);pm.environment.set("refresh_token",d.refresh);pm.environment.set("patient_id",d.user.id);' if role=='patient' else '')+'}']
-        items.append(request_item('/api/auth/login/','POST',f'Login {role}',body={'email':'{{'+role+'_email}}','password':'{{test_password}}'},extra_tests=tests))
+        items.append(request_item('/api/v1/auth/request-otp/','POST',f'Request phone OTP for {role}',body={'phone_number':'{{'+role+'_phone}}','purpose':'login','channel':'sms'}))
+        items.append(request_item('/api/v1/auth/verify-otp/','POST',f'Verify phone OTP for {role}',body={'phone_number':'{{'+role+'_phone}}','code':'{{otp_test_code}}','purpose':'login'},extra_tests=tests))
     items.append(request_item('/api/clinics/nearby/','GET','Find nearby QA clinic',extra_tests=['pm.test("Seeded clinic is nearby",()=>pm.expect(result.data.results.some(c=>String(c.id)===String(pm.environment.get("clinic_id")))).to.eql(true));']))
     items.append(request_item('/api/clinics/{pk}/','GET','Select the doctor at the clinic',extra_tests=['pm.test("Doctor belongs to clinic",()=>pm.expect(result.data.doctors.some(d=>String(d.id)===String(pm.environment.get("doctor_id")))).to.eql(true));']))
     items.append(request_item('/api/doctors/{pk}/availability/','GET','Choose a real available slot',extra_tests=['const free=result.data.slots.filter(s=>s.available);pm.test("At least one slot is available",()=>pm.expect(free.length).to.be.greaterThan(0));if(free.length){pm.environment.set("time",free[0].time);if(free[1])pm.environment.set("next_time",free[1].time);}']))
@@ -187,7 +198,7 @@ def e2e():
         items.append(request_item('/api/'+prefix+'appointments/{pk}/','GET',f'{role} sees the same confirmed booking',token=role+'_token',extra_tests=['pm.test("Shared booking and status",()=>{pm.expect(result.data.booking_id).to.eql(pm.environment.get("booking_id"));pm.expect(result.data.status).to.eql("confirmed");});']))
     items.append(request_item('/api/appointments/','POST','Second patient cannot double-book',token='patient_b_token',status=409,extra_tests=['pm.test("Slot unavailable",()=>pm.expect(result.code).to.eql("slot_unavailable"));']))
     items.append(request_item('/api/appointments/{pk}/cancel/','POST','Cleanup: cancel QA booking'))
-    return {'name':'00 End-to-end booking verification','description':'Run after seed_qa and filling environment variables. Uses six role logins. No real users or production data. Tokens stay in your local Postman environment. Final step cancels the test appointment.', 'item':items}
+    return {'name':'00 End-to-end booking verification','description':'Run only with config.settings.test after seed_qa. Uses phone OTP for six roles. No real users or production data. Tokens stay in your local Postman environment. Final step cancels the test appointment.', 'item':items}
 
 
 def main():
@@ -221,7 +232,7 @@ def main():
                 'event':[{'listen':'prerequest','script':{'type':'text/javascript','exec':[
                     'if (!pm.environment.get("date")) { const day=new Date(Date.now()+86400000+5*3600000); pm.environment.set("date",day.toISOString().slice(0,10)); pm.environment.set("booking_weekday",(day.getUTCDay()+6)%7); }']}}], 'item':folders}
     dump(ROOT/'postman/DocNear.postman_collection.json', collection)
-    dump(ROOT/'postman/DocNear.local.postman_environment.json', {'name':'DocNear local QA','_postman_variable_scope':'environment','values':[{'key':key,'value':value,'enabled':True,'type':'secret' if ('token' in key or 'password' in key or 'secret' in key) else 'default'} for key,value in VARIABLES.items()]})
+    dump(ROOT/'postman/DocNear.local.postman_environment.json', {'name':'DocNear local QA','_postman_variable_scope':'environment','values':[{'key':key,'value':value,'enabled':True,'type':'secret' if ('token' in key or 'password' in key or 'secret' in key or key == 'otp_test_code') else 'default'} for key,value in VARIABLES.items()]})
     dump(ROOT/'Docs/qa/endpoints.json',[{'path':path,'method':method,'module':module(path),'allowed_roles':sorted(allowed_roles(path,method)) if allowed_roles(path,method) is not None else None} for path,method in ops])
     (ROOT/'Docs/qa/API_ENDPOINTS.md').write_text('\n'.join(inventory)+'\n')
     print(f'Exported {len(ops)} operations and {len(folders[0]["item"])} E2E requests; no credentials embedded.')

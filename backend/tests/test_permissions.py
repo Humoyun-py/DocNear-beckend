@@ -47,13 +47,13 @@ def test_only_super_admin_manages_admins(client, world):
     assert client.get("/api/admin-panel/patients/").status_code == 200
     client.force_authenticate(world.superadmin)
     assert client.get("/api/admin-panel/admin-users/").status_code == 200
-    response = client.post("/api/admin-panel/admin-users/", {"email": "newadmin@example.test", "first_name": "Admin", "password": "Secure-admin-pass1"})
+    response = client.post("/api/admin-panel/admin-users/", {"phone_number": "+998901230004", "email": "newadmin@example.test", "first_name": "Admin"})
     assert response.status_code == 201, response.data
 
 
 def test_owner_create_doctor_cannot_verify(client, world):
     client.force_authenticate(world.owner)
-    data = {"account": {"email": "owneddoctor@example.test", "first_name": "Demo", "password": "Secure-owner-pass1"}, "clinic": world.clinic.pk, "specialty": world.specialty.pk, "is_verified": True}
+    data = {"account": {"phone_number": "+998901230005", "email": "owneddoctor@example.test", "first_name": "Demo"}, "clinic": world.clinic.pk, "specialty": world.specialty.pk, "is_verified": True}
     response = client.post("/api/clinic-owner/doctors/", data, format="json")
     assert response.status_code == 201, response.data
     assert not response.json()["data"]["is_verified"]

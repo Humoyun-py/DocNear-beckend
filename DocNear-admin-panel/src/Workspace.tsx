@@ -17,7 +17,7 @@ import {resourceService,settingsService,RecordData} from './services/resourceSer
 
 type Field={key:string;label:string;type?:string;required?:boolean;options?:string[];createOnly?:boolean};
 const field=(key:string,label:string,type='text',required=false):Field=>({key,label,type,required});
-const account=[field('first_name','First name','text',true),field('last_name','Last name'),field('email','Email','email',true),field('password','Password','password',true)];
+const account=[field('first_name','First name','text',true),field('last_name','Last name'),field('phone_number','Phone number','tel',true),field('email','Email (optional)','email')];
 const catalog=[field('name','Name','text',true),field('slug','Slug','text',true),field('description','Description','textarea'),field('icon_name','Vector icon name'),field('is_active','Active','checkbox')];
 const clinicFields=[field('owner','Owner user ID','number',true),field('name','Name','text',true),field('slug','Slug','text',true),field('address','Address','text',true),field('latitude','Latitude','number',true),field('longitude','Longitude','number',true),field('phone','Phone'),field('email','Email','email'),field('description','Description','textarea'),field('working_hours','Working hours','hours'),field('is_24_7','Open 24 hours','checkbox'),field('has_emergency_service','Emergency services','checkbox')];
 const doctorFields=[...account.map(f=>({...f,key:'account_'+f.key,createOnly:true})),field('clinic','Clinic ID','number'),field('specialty','Specialty ID','number'),field('bio','Biography','textarea'),field('experience_years','Experience years','number'),field('education','Education','textarea'),field('languages','Languages, comma separated','list'),field('certifications','Certifications, comma separated','list')];
@@ -25,14 +25,14 @@ type Resource={title:string;service:ReturnType<typeof resourceService>;columns:s
 export const resources:Record<string,Resource>={
  clinics:{title:'Clinics',service:adminClinicService,columns:['id','name','address','is_verified','is_partner','is_active'],fields:clinicFields,create:true,actions:['verify','mark-partner','remove-partner','disable','enable'],filter:'is_active'},
  doctors:{title:'Doctors',service:adminDoctorService,columns:['id','name','is_verified','is_active'],fields:doctorFields,create:true,actions:['verify','suspend','activate'],filter:'is_verified'},
- patients:{title:'Patients',service:adminPatientService,columns:['id','name','email','phone_number','booking_count','is_active'],fields:[field('first_name','First name'),field('last_name','Last name')],actions:['disable','enable'],filter:'is_active'},
+ patients:{title:'Patients',service:adminPatientService,columns:['id','name','phone_number','email','booking_count','is_active'],fields:[field('first_name','First name'),field('last_name','Last name')],actions:['disable','enable'],filter:'is_active'},
  appointments:{title:'Appointments',service:adminAppointmentService,columns:['booking_id','patient_name','doctor_name','clinic_name','appointment_date','start_time','status'],fields:[],actions:['cancel','reschedule'],filter:'status'},
  specialties:{title:'Specialties',service:adminSpecialtyService,columns:['id','name','icon_name','is_active'],fields:[...catalog,field('search_aliases','Search aliases')],create:true},
  services:{title:'Services',service:adminServiceService,columns:['id','name','is_active'],fields:catalog,create:true},
  reviews:{title:'Reviews',service:adminReviewService,columns:['id','doctor','clinic','rating','comment','is_visible'],fields:[],actions:['approve','hide'],filter:'is_visible'},
  notifications:{title:'Notifications',service:{...resourceService('notifications'),list:adminNotificationService.list},columns:['id','user','title','type','is_read','created_at'],fields:[],filter:'is_read'},
- 'admin-users':{title:'Admin users',service:adminUserService,columns:['id','name','email','is_active'],fields:account.map(f=>({...f,createOnly:f.key==='password'||f.key==='email'})),create:true,actions:['enable','disable']},
- owners:{title:'Clinic owners',service:resourceService('owners'),columns:['id','name','email','is_active'],fields:account.map(f=>({...f,createOnly:f.key==='password'||f.key==='email'})),create:true,actions:['enable','disable']}
+ 'admin-users':{title:'Admin users',service:adminUserService,columns:['id','name','phone_number','email','is_active'],fields:account.map(f=>({...f,createOnly:f.key==='phone_number'||f.key==='email'})),create:true,actions:['enable','disable']},
+ owners:{title:'Clinic owners',service:resourceService('owners'),columns:['id','name','phone_number','email','is_active'],fields:account.map(f=>({...f,createOnly:f.key==='phone_number'||f.key==='email'})),create:true,actions:['enable','disable']}
 };
 export function ErrorBox({error}:{error:unknown}){return <div className="error-box" role="alert"><AlertCircle size={18}/>{error instanceof Error?error.message:'Unable to complete the request'}</div>}
 export function RecordForm({title,fields,initial={},onSave,onClose}:{title:string;fields:Field[];initial?:RecordData;onSave:(v:RecordData)=>Promise<unknown>;onClose:()=>void}){
@@ -54,7 +54,7 @@ export function RecordForm({title,fields,initial={},onSave,onClose}:{title:strin
     if(f.key==='icon_name'&&value)value=z.string().regex(/^[a-z][a-z0-9-]*$/,'Use an icon name such as stethoscope').parse(value);
     values[f.key]=value;
    }
-   if(values.account_email){values.account={};for(const k of Object.keys(values).filter(k=>k.startsWith('account_'))){values.account[k.slice(8)]=values[k];delete values[k]}}
+   if(values.account_phone_number){values.account={};for(const k of Object.keys(values).filter(k=>k.startsWith('account_'))){values.account[k.slice(8)]=values[k];delete values[k]}}
    await onSave(values);onClose();
   }catch(e){setError(e)}finally{setBusy(false)}
  });

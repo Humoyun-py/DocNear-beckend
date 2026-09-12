@@ -30,19 +30,28 @@ class MemoryTokenStore extends SecureTokenStore {
 
 void main() {
   const live = bool.fromEnvironment('LIVE_API');
-  const password = String.fromEnvironment('QA_PASSWORD');
+  const otpCode = String.fromEnvironment('QA_OTP_CODE');
 
   test(
     'real Django booking flow and double-booking protection',
     () async {
-      expect(password, isNotEmpty, reason: 'Set QA_PASSWORD as a dart define.');
+      expect(otpCode, isNotEmpty, reason: 'Set QA_OTP_CODE as a dart define.');
 
       ApiClient clientFor(MemoryTokenStore tokens) => ApiClient(tokens);
 
       final patientTokens = MemoryTokenStore();
       final patientClient = clientFor(patientTokens);
       final auth = AuthRepository(patientClient, patientTokens);
-      await auth.login('qa.patient@docnear.example', password);
+      await auth.requestOtp(
+        phoneNumber: '+998900000001',
+        purpose: 'login',
+        channel: 'sms',
+      );
+      await auth.verifyOtp(
+        phoneNumber: '+998900000001',
+        code: otpCode,
+        purpose: 'login',
+      );
 
       final clinics = await ClinicRepository(patientClient).getClinics();
       final doctors = await DoctorRepository(patientClient).getDoctors();
@@ -87,10 +96,17 @@ void main() {
 
       final secondTokens = MemoryTokenStore();
       final secondClient = clientFor(secondTokens);
-      await AuthRepository(
-        secondClient,
-        secondTokens,
-      ).login('qa.patient-b@docnear.example', password);
+      final secondAuth = AuthRepository(secondClient, secondTokens);
+      await secondAuth.requestOtp(
+        phoneNumber: '+998900000002',
+        purpose: 'login',
+        channel: 'sms',
+      );
+      await secondAuth.verifyOtp(
+        phoneNumber: '+998900000002',
+        code: otpCode,
+        purpose: 'login',
+      );
       await expectLater(
         AppointmentRepository(secondClient).create(
           doctorId: doctor.id,

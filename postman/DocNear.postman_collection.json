@@ -206,6 +206,41 @@
       "type": "string"
     },
     {
+      "key": "otp_test_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patient_phone",
+      "value": "+998900000001",
+      "type": "string"
+    },
+    {
+      "key": "patient_b_phone",
+      "value": "+998900000002",
+      "type": "string"
+    },
+    {
+      "key": "doctor_phone",
+      "value": "+998900000003",
+      "type": "string"
+    },
+    {
+      "key": "clinic_owner_phone",
+      "value": "+998900000004",
+      "type": "string"
+    },
+    {
+      "key": "admin_phone",
+      "value": "+998900000005",
+      "type": "string"
+    },
+    {
+      "key": "super_admin_phone",
+      "value": "+998900000006",
+      "type": "string"
+    },
+    {
       "key": "patient_email",
       "value": "qa.patient@docnear.example",
       "type": "string"
@@ -238,6 +273,11 @@
     {
       "key": "created_email",
       "value": "qa.created-{{$guid}}@docnear.example",
+      "type": "string"
+    },
+    {
+      "key": "created_phone",
+      "value": "+99899000{{$randomInt}}",
       "type": "string"
     },
     {
@@ -290,13 +330,13 @@
   "item": [
     {
       "name": "00 End-to-end booking verification",
-      "description": "Run after seed_qa and filling environment variables. Uses six role logins. No real users or production data. Tokens stay in your local Postman environment. Final step cancels the test appointment.",
+      "description": "Run only with config.settings.test after seed_qa. Uses phone OTP for six roles. No real users or production data. Tokens stay in your local Postman environment. Final step cancels the test appointment.",
       "item": [
         {
-          "name": "Login patient",
+          "name": "Request phone OTP for patient",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -313,7 +353,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for patient",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -340,7 +465,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -357,7 +482,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -379,10 +504,10 @@
           ]
         },
         {
-          "name": "Login patient_b",
+          "name": "Request phone OTP for patient_b",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -399,7 +524,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{patient_b_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{patient_b_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_b_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for patient_b",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_b_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -426,7 +636,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -443,7 +653,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{patient_b_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{patient_b_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -465,10 +675,10 @@
           ]
         },
         {
-          "name": "Login doctor",
+          "name": "Request phone OTP for doctor",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -485,7 +695,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{doctor_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{doctor_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for doctor",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{doctor_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -512,7 +807,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -529,7 +824,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{doctor_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -551,10 +846,10 @@
           ]
         },
         {
-          "name": "Login clinic_owner",
+          "name": "Request phone OTP for clinic_owner",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -571,7 +866,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{clinic_owner_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{clinic_owner_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{clinic_owner_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for clinic_owner",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{clinic_owner_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -598,7 +978,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -615,7 +995,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{clinic_owner_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{clinic_owner_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -637,10 +1017,10 @@
           ]
         },
         {
-          "name": "Login admin",
+          "name": "Request phone OTP for admin",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -657,7 +1037,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{admin_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{admin_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for admin",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{admin_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -684,7 +1149,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -701,7 +1166,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{admin_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -723,10 +1188,10 @@
           ]
         },
         {
-          "name": "Login super_admin",
+          "name": "Request phone OTP for super_admin",
           "request": {
             "method": "POST",
-            "url": "{{base_url}}/api/auth/login/",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
             "header": [
               {
                 "key": "Accept",
@@ -743,7 +1208,92 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{super_admin_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{super_admin_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{super_admin_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify phone OTP for super_admin",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{super_admin_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -770,7 +1320,7 @@
               "name": "Expected 200 (illustrative)",
               "originalRequest": {
                 "method": "POST",
-                "url": "{{base_url}}/api/auth/login/",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
                 "header": [
                   {
                     "key": "Accept",
@@ -787,7 +1337,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{super_admin_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{super_admin_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -1864,7 +2414,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1914,7 +2464,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -4735,7 +5285,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+              "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4785,7 +5335,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+                  "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5939,7 +6489,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5989,7 +6539,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -8341,7 +8891,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -8391,7 +8941,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -11210,7 +11760,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+              "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -11260,7 +11810,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+                  "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -12412,7 +12962,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+              "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -12462,7 +13012,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\",\n  \"password\": \"{{test_password}}\"\n}",
+                  "raw": "{\n  \"phone_number\": \"{{created_phone}}\",\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Staff\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -14227,7 +14777,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"support_email\": \"qa.support@docnear.example\",\n  \"support_phone\": \"\",\n  \"maintenance_message\": \"QA instance\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -14277,7 +14827,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"support_email\": \"qa.support@docnear.example\",\n  \"support_phone\": \"\",\n  \"maintenance_message\": \"QA instance\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -15976,8 +16526,7 @@
                 "exec": [
                   "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
                   "const result = pm.response.json();",
-                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));",
-                  "if (pm.response.code === 200) { const d=pm.response.json().data; pm.environment.set(\"access_token\",d.access); pm.environment.set(\"refresh_token\",d.refresh); pm.environment.set(d.user.role+\"_token\",d.access); }"
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
                 ]
               }
             }
@@ -16382,6 +16931,176 @@
           ]
         },
         {
+          "name": "POST /api/auth/request-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/request-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/resend-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/resend-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/auth/resend-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
           "name": "POST /api/auth/reset-password/",
           "request": {
             "method": "POST",
@@ -16553,6 +17272,92 @@
           ]
         },
         {
+          "name": "POST /api/auth/verify-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));",
+                  "if (pm.response.code === 200) { const d=pm.response.json().data; pm.environment.set(\"access_token\",d.access); pm.environment.set(\"refresh_token\",d.refresh); pm.environment.set(d.user.role+\"_token\",d.access); }"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/auth/verify-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
           "name": "POST /api/v1/auth/change-password/",
           "request": {
             "method": "POST",
@@ -16580,7 +17385,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"old_password\": \"{{test_password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -16630,7 +17435,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"old_password\": \"{{test_password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -16672,7 +17477,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"email\": \"{{patient_email}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -16715,7 +17520,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"email\": \"{{patient_email}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -16757,7 +17562,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"identifier\": \"{{patient_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -16800,7 +17605,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"identifier\": \"{{patient_email}}\",\n  \"password\": \"{{test_password}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -16849,7 +17654,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -16899,7 +17704,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -17021,7 +17826,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"first_name\": \"QA Patient\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -17071,7 +17876,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"first_name\": \"QA Patient\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -17113,7 +17918,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Patient\",\n  \"password\": \"{{test_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -17156,7 +17961,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"email\": \"{{created_email}}\",\n  \"first_name\": \"QA Patient\",\n  \"password\": \"{{test_password}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -17166,6 +17971,176 @@
               },
               "status": "Created",
               "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/request-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/request-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/resend-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/resend-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/resend-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\",\n  \"channel\": \"sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -17198,7 +18173,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"uid\": \"{{reset_uid}}\",\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -17241,7 +18216,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"uid\": \"{{reset_uid}}\",\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -17283,7 +18258,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -17326,7 +18301,93 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/verify-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/verify-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));",
+                  "if (pm.response.code === 200) { const d=pm.response.json().data; pm.environment.set(\"access_token\",d.access); pm.environment.set(\"refresh_token\",d.refresh); pm.environment.set(d.user.role+\"_token\",d.access); }"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/verify-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"code\": \"{{otp_test_code}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -17990,7 +19051,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+              "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -18040,7 +19101,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+                  "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -19116,7 +20177,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+              "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -19166,7 +20227,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"account\": {\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\",\n    \"password\": \"{{test_password}}\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
+                  "raw": "{\n  \"account\": {\n    \"phone_number\": \"{{created_phone}}\",\n    \"email\": \"{{created_email}}\",\n    \"first_name\": \"QA Doctor\"\n  },\n  \"clinic\": \"{{clinic_id}}\",\n  \"specialty\": \"{{specialty_id}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -19533,7 +20594,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Updated fictional QA item\"\n}",
+              "raw": "{\n  \"services\": [\n    \"{{service_id}}\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -19583,7 +20644,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"description\": \"Updated fictional QA item\"\n}",
+                  "raw": "{\n  \"services\": [\n    \"{{service_id}}\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -24499,7 +25560,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"bio\": \"Fictional QA doctor profile\",\n  \"education\": \"Fictional credential pending review\",\n  \"languages\": [\n    \"Uzbek\",\n    \"English\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24549,7 +25610,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"bio\": \"Fictional QA doctor profile\",\n  \"education\": \"Fictional credential pending review\",\n  \"languages\": [\n    \"Uzbek\",\n    \"English\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -24744,7 +25805,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"schedules\": [\n    {\n      \"clinic\": \"{{clinic_id}}\",\n      \"day_of_week\": \"{{booking_weekday}}\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"17:00\",\n      \"is_working\": true\n    }\n  ],\n  \"policies\": [\n    {\n      \"clinic\": \"{{clinic_id}}\",\n      \"consultation_duration\": 30,\n      \"buffer_time\": 0,\n      \"max_appointments_per_day\": 20\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -24794,7 +25855,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"schedules\": [\n    {\n      \"clinic\": \"{{clinic_id}}\",\n      \"day_of_week\": \"{{booking_weekday}}\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"17:00\",\n      \"is_working\": true\n    }\n  ],\n  \"policies\": [\n    {\n      \"clinic\": \"{{clinic_id}}\",\n      \"consultation_duration\": 30,\n      \"buffer_time\": 0,\n      \"max_appointments_per_day\": 20\n    }\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -27540,7 +28601,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"first_name\": \"QA Patient\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -27590,7 +28651,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"first_name\": \"QA Patient\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -29042,7 +30103,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"appointment\": \"{{appointment_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Fictional QA review\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -29092,7 +30153,7 @@
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{}",
+                  "raw": "{\n  \"appointment\": \"{{appointment_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Fictional QA review\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -30112,6 +31173,281 @@
           ]
         },
         {
+          "name": "DELETE /api/telegram/phone-link/",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/telegram/phone-link/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 204 (illustrative)",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/api/telegram/phone-link/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/telegram/phone-link/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/telegram/phone-link/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/telegram/phone-link/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/telegram/request-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/telegram/request-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/telegram/request-otp/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
           "name": "GET /api/telegram/search/",
           "request": {
             "method": "GET",
@@ -31090,7 +32426,7 @@
             "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"code\": \"{{telegram_link_code}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -31117,6 +32453,281 @@
               "originalRequest": {
                 "method": "POST",
                 "url": "{{base_url}}/api/v1/telegram/link/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{telegram_link_code}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/v1/telegram/phone-link/",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/v1/telegram/phone-link/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 204 (illustrative)",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": "{{base_url}}/api/v1/telegram/phone-link/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/telegram/phone-link/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/telegram/phone-link/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/telegram/phone-link/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/telegram/request-otp/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/telegram/request-otp/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/telegram/request-otp/",
                 "header": [
                   {
                     "key": "Accept",

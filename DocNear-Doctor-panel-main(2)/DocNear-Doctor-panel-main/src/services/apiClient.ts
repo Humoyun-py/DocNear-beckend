@@ -7,7 +7,7 @@ export function clearSession() {
 }
 apiClient.interceptors.request.use(config => {
  const token = sessionStorage.getItem('docnear_doctor_token');
- if (token && !config.url?.includes('/auth/login/')) config.headers.Authorization = 'Bearer ' + token;
+ if (token && !/\/auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)\//.test(config.url || '')) config.headers.Authorization = 'Bearer ' + token;
  return config;
 });
 let refreshPromise: Promise<void> | null = null;
@@ -19,7 +19,7 @@ apiClient.interceptors.response.use(response => {
  return response;
 }, async error => {
  const original = error.config;
- if (error.response?.status === 401 && original && !original.url?.includes('/auth/login/')) {
+ if (error.response?.status === 401 && original && !/\/auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)\//.test(original.url || '')) {
   if (!original._retry && sessionStorage.getItem('docnear_doctor_refresh')) {
    original._retry = true;
    if (!refreshPromise) refreshPromise = axios.post(apiClient.defaults.baseURL + '/auth/token/refresh/', {refresh: sessionStorage.getItem('docnear_doctor_refresh')}, {timeout: 20000})

@@ -6,6 +6,14 @@ const expect = baseExpect.configure({timeout:20000});
 const root = resolve('../..');
 const directory = resolve(root,'.runtime/integration');
 const values = Object.fromEntries(JSON.parse(readFileSync(resolve(directory,'postman.env.json'),'utf8')).values.map(v=>[v.key,v.value]));
+async function loginWithOtp(page, port, phone) {
+ await page.goto('http://localhost:'+port+'/login');
+ await page.locator('input[type=tel]').fill(phone);
+ await page.getByRole('button',{name:'Tasdiqlash kodini yuborish',exact:true}).click();
+ await page.locator('input[inputmode=numeric]').fill(values.otp_test_code);
+ await page.getByRole('button',{name:'Tasdiqlash',exact:true}).click();
+ await expect(page).not.toHaveURL(/\/login$/);
+}
 const browser = await chromium.launch({executablePath:process.env.CHROME_PATH || '/opt/google/chrome/chrome',headless:true});
 const patient = await browser.newPage();
 const doctor = await browser.newPage();
@@ -15,11 +23,7 @@ const failures=[];
 patient.on('pageerror',e=>failures.push(e.message));
 doctor.on('pageerror',e=>failures.push(e.message));
 try {
- await patient.goto('http://localhost:3001/login');
- await patient.locator('input[type=password]').fill(values.test_password);
- await patient.locator('input').filter({visible:true}).first().fill(values.patient_email);
- await patient.locator('form button[type=submit]').click();
- await expect(patient).not.toHaveURL(/\/login$/);
+ await loginWithOtp(patient,3001,values.patient_phone);
  await patient.goto('http://localhost:3001/doctors/'+values.doctor_id);
  await expect(patient.getByRole('heading',{name:'QA Doctor',exact:true})).toBeVisible();
  await patient.screenshot({path:resolve(directory,'patient-doctor.png'),fullPage:true});
@@ -41,11 +45,7 @@ try {
   expect(appointment.status).toBe('pending');
   await expect(modal.getByText(appointment.booking_id,{exact:false}).first()).toBeVisible();
   await patient.screenshot({path:resolve(directory,'web-booking-created.png'),fullPage:true});
-  await doctor.goto('http://localhost:3002/login');
-  await doctor.locator('#login-identifier-input').fill(values.doctor_email);
-  await doctor.locator('#login-password-input').fill(values.test_password);
-  await doctor.locator('#sign-in-button').click();
-  await expect(doctor).not.toHaveURL(/\/login$/);
+  await loginWithOtp(doctor,3002,values.doctor_phone);
   await doctor.goto('http://localhost:3002/appointments');
   await expect(doctor.getByText(appointment.booking_id,{exact:false}).first()).toBeVisible();
   const confirmedResponse=doctor.waitForResponse(r=>r.url().endsWith('/'+appointment.id+'/accept/') && r.request().method()==='POST');

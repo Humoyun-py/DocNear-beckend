@@ -800,6 +800,32 @@
     ]
   },
   {
+    "path": "/api/auth/request-otp/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/resend-otp/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
     "path": "/api/auth/reset-password/",
     "method": "POST",
     "module": "Auth",
@@ -814,6 +840,19 @@
   },
   {
     "path": "/api/auth/token/refresh/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/auth/verify-otp/",
     "method": "POST",
     "module": "Auth",
     "allowed_roles": [
@@ -1575,6 +1614,24 @@
   },
   {
     "path": "/api/telegram/link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/phone-link/",
+    "method": "DELETE",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/phone-link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/request-otp/",
     "method": "POST",
     "module": "Telegram",
     "allowed_roles": null
@@ -2393,6 +2450,32 @@
     ]
   },
   {
+    "path": "/api/v1/auth/request-otp/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/resend-otp/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
     "path": "/api/v1/auth/reset-password/",
     "method": "POST",
     "module": "Auth",
@@ -2407,6 +2490,19 @@
   },
   {
     "path": "/api/v1/auth/token/refresh/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/verify-otp/",
     "method": "POST",
     "module": "Auth",
     "allowed_roles": [
@@ -3142,6 +3238,24 @@
   },
   {
     "path": "/api/v1/telegram/link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/phone-link/",
+    "method": "DELETE",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/phone-link/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/request-otp/",
     "method": "POST",
     "module": "Telegram",
     "allowed_roles": null

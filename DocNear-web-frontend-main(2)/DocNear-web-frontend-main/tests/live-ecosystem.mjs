@@ -6,20 +6,17 @@ const root=resolve('../..'),dir=resolve(root,'.runtime/integration');
 const v=Object.fromEntries(JSON.parse(readFileSync(resolve(dir,'postman.env.json'),'utf8')).values.map(v=>[v.key,v.value]));
 const booking=JSON.parse(readFileSync(resolve(dir,'e2e-appointment.json'),'utf8'));
 const api=await request.newContext({baseURL:'http://127.0.0.1:8001/api/v1/'});
-const login=async identifier=>{const r=await api.post('auth/login/',{data:{identifier,password:v.test_password}});expect(r.status()).toBe(200);return (await r.json()).data};
-const patient=await login(v.patient_email),patientB=await login(v.patient_b_email),admin=await login(v.super_admin_email);
+const login=async phone=>{let r=await api.post('auth/request-otp/',{data:{phone_number:phone,purpose:'login',channel:'sms'}});expect(r.status()).toBe(200);r=await api.post('auth/verify-otp/',{data:{phone_number:phone,purpose:'login',code:v.otp_test_code}});expect(r.status()).toBe(200);return (await r.json()).data};
+const loginUi=async(page,port,phone)=>{await page.goto('http://localhost:'+port+'/login');await page.locator('input[type=tel]').fill(phone);await page.getByRole('button',{name:'Tasdiqlash kodini yuborish',exact:true}).click();await page.locator('input[inputmode=numeric]').fill(v.otp_test_code);await page.getByRole('button',{name:'Tasdiqlash',exact:true}).click();await expect(page).not.toHaveURL(/login/)};
+const patient=await login(v.patient_phone),patientB=await login(v.patient_b_phone),admin=await login(v.super_admin_phone);
 const headers=t=>({Authorization:'Bearer '+t.access});
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/opt/google/chrome/chrome',headless:true});
 const adminPage=await browser.newPage(),ownerPage=await browser.newPage();
 const errors=[];for(const page of [adminPage,ownerPage])page.on('pageerror',e=>errors.push(e.message));
 const report={};
 try{
- for(const [page,port,email] of [[adminPage,3003,v.super_admin_email],[ownerPage,3004,v.clinic_owner_email]]){
-  await page.goto('http://localhost:'+port+'/login');
-  await page.locator('input[type=password]').fill(v.test_password);
-  await page.locator('input:not([type=password])').first().fill(email);
-  await page.getByRole('button',{name:'Sign in',exact:true}).click();
-  await expect(page).not.toHaveURL(/login/);
+ for(const [page,port,phone] of [[adminPage,3003,v.super_admin_phone],[ownerPage,3004,v.clinic_owner_phone]]){
+  await loginUi(page,port,phone);
   await page.goto('http://localhost:'+port+'/appointments');
   await page.getByRole('textbox',{name:'Search records'}).fill(booking.booking_id);
   await expect(page.getByText(booking.booking_id,{exact:true})).toBeVisible();
@@ -59,9 +56,9 @@ try{
  expect((await near.json()).data.results.some(c=>c.id===Number(v.clinic_id))).toBe(true);
  report.nearby=true;
  // Clinic owner cannot read or change a clinic outside the account scope.
- const owner=await login(v.clinic_owner_email);
- const otherOwner=await api.post('admin-panel/owners/',{headers:headers(admin),data:{first_name:'QA Scope',email:'qa.scope-'+suffix+'@docnear.example',password:v.test_password}});
- expect(otherOwner.status()).toBe(201);const ownerLookup=await api.get('admin-panel/owners/?search=qa.scope-'+suffix,{headers:headers(admin)});const otherOwnerId=(await ownerLookup.json()).data.results[0].id;
+ const owner=await login(v.clinic_owner_phone);
+ const otherOwner=await api.post('admin-panel/owners/',{headers:headers(admin),data:{first_name:'QA Scope',phone_number:'+99893'+suffix.slice(-7)}});
+ expect(otherOwner.status()).toBe(201);const ownerLookup=await api.get('admin-panel/owners/?search='+encodeURIComponent('QA Scope'),{headers:headers(admin)});const otherOwnerId=(await ownerLookup.json()).data.results.find(row=>row.phone_number==='+99893'+suffix.slice(-7)).id;
  const otherClinic=await api.post('admin-panel/clinics/',{headers:headers(admin),data:{owner:otherOwnerId,name:'QA Isolated Clinic',slug:'qa-isolated-'+suffix,address:'Fictional QA address',latitude:41.3,longitude:69.3,working_hours:{},facilities:[]}});
  expect(otherClinic.status()).toBe(201);const otherId=(await otherClinic.json()).data.id;
  expect((await api.get('clinic-owner/clinic/?clinic_id='+otherId,{headers:headers(owner)})).status()).toBe(404);
@@ -78,7 +75,7 @@ try{
  const telegramBooking=await api.post('telegram/appointments/',{headers:botHeaders,data:{doctor_id:Number(v.doctor_id),clinic_id:Number(v.clinic_id),date,time:slot.time}});
  expect(telegramBooking.status()).toBe(201);const tg=(await telegramBooking.json()).data;
  expect((await api.get('telegram/appointments/by-booking-id/'+tg.booking_id+'/',{headers:botHeaders})).status()).toBe(200);
- for(const [path,token] of [['appointments/',patientB],['admin-panel/appointments/',admin],['clinic-owner/appointments/',owner],['doctor-panel/appointments/',await login(v.doctor_email)]]){
+ for(const [path,token] of [['appointments/',patientB],['admin-panel/appointments/',admin],['clinic-owner/appointments/',owner],['doctor-panel/appointments/',await login(v.doctor_phone)]]){
   const r=await api.get(path+tg.id+'/',{headers:headers(token)});expect(r.status()).toBe(200);expect((await r.json()).data.booking_id).toBe(tg.booking_id);
  }
  expect((await api.post('telegram/appointments/'+tg.id+'/cancel/',{headers:botHeaders,data:{reason:'QA cleanup'}})).status()).toBe(200);

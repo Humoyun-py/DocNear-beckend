@@ -36,7 +36,11 @@ def allowed_roles(path, method):
     """
     path = path.replace("/api/v1/", "/api/", 1)
     authenticated = set(ROLES) - {"anonymous"}
-    if path.startswith("/api/telegram/appointments/") or path == "/api/telegram/link/":
+    if path.startswith("/api/telegram/appointments/") or path in {
+        "/api/telegram/link/",
+        "/api/telegram/phone-link/",
+        "/api/telegram/request-otp/",
+    }:
         return None
     if path == "/api/telegram/link-code/":
         return {"patient"}

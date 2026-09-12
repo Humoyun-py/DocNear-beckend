@@ -1,11 +1,8 @@
 # DocNear local development
 
-DocNear Mobile is a Flutter application. The repository contains one active
-mobile project: `DocNear-Mobile`.
+## Start backend and web clients
 
-## Start the backend and web panels
-
-PostgreSQL must be running. From the repository root:
+PostgreSQL must be running. Keep populated environment files outside the repo:
 
 ```bash
 sudo systemctl enable --now postgresql
@@ -14,16 +11,7 @@ export DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env"
 ./run-docnear-dev.sh
 ```
 
-The launcher automatically uses that backup path when it exists. For any other
-external location, set `DOCNEAR_ENV_FILE` explicitly. To run a management
-command directly:
-
-```bash
-DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env" \
-  .venv/bin/python backend/manage.py migrate
-```
-
-The script starts:
+Services:
 
 | Service | URL |
 | --- | --- |
@@ -35,9 +23,44 @@ The script starts:
 
 Health check: `http://127.0.0.1:8001/health/`.
 
-## Run Flutter on an Android emulator
+Local development uses `OTP_SMS_PROVIDER=console`. The console provider never
+prints an OTP. To exercise a deterministic OTP, run only with
+`DJANGO_SETTINGS_MODULE=config.settings.test`; its code is `111111`. Never put a
+deterministic OTP in development or production settings.
 
-Start an Android emulator, then run:
+QA phones are:
+
+- Patient: `+998900000001`
+- Second patient: `+998900000002`
+- Doctor: `+998900000003`
+- Clinic owner: `+998900000004`
+- Admin: `+998900000005`
+- Super admin: `+998900000006`
+
+Create them only in an isolated debug/test database with:
+
+```bash
+DJANGO_SETTINGS_MODULE=config.settings.test   .venv/bin/python backend/manage.py seed_qa
+```
+
+## Telegram bot
+
+Set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_SECRET` and
+`DOCNEAR_API_BASE_URL=http://127.0.0.1:8001/api/v1` in the bot process, then:
+
+```bash
+cd 'DocNear-web-frontend-main(2)/DocNear-web-frontend-main'
+python telegram_bot.py
+```
+
+The user runs `/link_phone` and shares the contact button. The bot accepts only
+a contact whose Telegram `user_id` matches the sender. `/code` requests a login
+OTP, `/code register` requests a registration OTP and `/unlink` disables the
+link.
+
+## Run Flutter
+
+Android emulator:
 
 ```bash
 cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile
@@ -45,136 +68,32 @@ flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
 ```
 
-The Android build uses JDK 21. If Flutter selects an incompatible JDK, point it
-to the installed JDK 21 once, then rerun the command above:
-
-```bash
-flutter config --jdk-dir=/home/humoyun/.minecraft/runtime/java-runtime-delta/linux/java-runtime-delta
-flutter doctor -v
-```
-
-For Google Maps, put this line in the user-level Gradle properties file
-`~/.gradle/gradle.properties`:
-
-```properties
-GOOGLE_MAPS_API_KEY=your_android_maps_key
-```
-
-Then enable map rendering without placing the key in Dart source:
-
-```bash
-flutter run \
-  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
-  --dart-define=GOOGLE_MAPS_ENABLED=true
-```
-
-Without the key and this non-secret flag, the map screen shows a clear setup
-state and keeps the clinic list available instead of opening a broken map.
-
-For iOS, set the `GOOGLE_MAPS_API_KEY` build setting in Xcode. Location and
-local-network permissions are already declared in the platform projects.
-
-## Run on a physical Android phone
-
-Use the computer's LAN address:
+Physical Android device on the same network:
 
 ```bash
 flutter run --dart-define=API_BASE_URL=http://YOUR_LAN_IP:8001/api/v1/
 ```
 
-Alternatively, connect the phone over ADB and forward the backend port:
+Or use ADB port reverse and `http://127.0.0.1:8001/api/v1/`:
 
 ```bash
 ~/Android/Sdk/platform-tools/adb reverse tcp:8001 tcp:8001
-flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8001/api/v1/
 ```
 
-## Test and build the Flutter APK
+## Test and build APK
 
 ```bash
 cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile
-flutter clean
 flutter pub get
 flutter analyze
 flutter test
-flutter build apk --debug \
-  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
+flutter build apk --debug   --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
 ```
 
-APK output:
+Output: `DocNear-Mobile/build/app/outputs/flutter-apk/app-debug.apk`.
+`./run-docnear-mobile.sh` can build, start the configured emulator, install and
+open this Flutter app.
 
-```text
-DocNear-Mobile/build/app/outputs/flutter-apk/app-debug.apk
-```
-
-Ready-to-install copies produced by the verified build are available at:
-
-```text
-artifacts/DocNear-debug.apk
-artifacts/DocNear-release.apk
-artifacts/DocNear-release.aab
-```
-
-The release artifact is optimized but currently uses the development signing
-key. Configure the owner's protected release keystore before Play Store upload.
-
-## Configure production Android signing
-
-Create and protect an upload key outside the repository:
-
-```bash
-keytool -genkeypair -v \
-  -keystore "$HOME/docnear-upload-key.jks" \
-  -alias docnear-upload \
-  -keyalg RSA -keysize 2048 -validity 10000
-```
-
-Copy the provided template and insert the real path and passwords:
-
-```bash
-cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile/android
-cp key.properties.example key.properties
-```
-
-`android/key.properties` and `*.jks` are ignored by Git. When this file exists,
-the release build automatically uses that keystore and rejects incomplete
-properties. Build the signed production APK with:
-
-```bash
-cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile
-flutter build apk --release \
-  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/
-flutter build appbundle --release \
-  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/
-```
-
-The APK is used for direct installation. Google Play Console expects the AAB.
-
-The repository launcher builds the APK when missing, starts the configured
-emulator, installs the current Flutter APK, and opens DocNear:
-
-```bash
-cd /home/humoyun/DocNear-web-beckend
-./run-docnear-mobile.sh
-```
-
-To install the already-built debug APK manually:
-
-```bash
-~/Android/Sdk/platform-tools/adb install --no-streaming -r \
-  /home/humoyun/DocNear-web-beckend/artifacts/DocNear-debug.apk
-~/Android/Sdk/platform-tools/adb shell am start \
-  -n com.docnear.app/.MainActivity
-```
-
-## Development QA accounts
-
-All local QA users use the password `DocnearQA2026!`:
-
-- Patient: `qa.patient@docnear.example`
-- Second patient: `qa.patient-b@docnear.example`
-- Doctor: `qa.doctor@docnear.example`
-- Admin: `qa.admin@docnear.example`
-- Clinic owner: `qa.owner@docnear.example`
-
-These accounts are for local development only and are not embedded in the app.
+For a release, keep the upload keystore outside Git, copy
+`android/key.properties.example` to the ignored `android/key.properties`, then
+build with the HTTPS production API URL. The Play Console expects an AAB.

@@ -7,35 +7,31 @@ class AuthRepository {
   AuthRepository(this.api, this.tokens);
   final ApiClient api;
   final SecureTokenStore tokens;
-  Future<UserModel> login(String identifier, String password) async {
-    final data = await api.post(
-      ApiEndpoints.login,
-      data: {'identifier': identifier, 'password': password},
-      anonymous: true,
-    );
-    await tokens.save(
-      access: asString(data['access']),
-      refresh: asString(data['refresh']),
-    );
-    return UserModel.fromJson(asJson(data['user']));
+  Future<void> requestOtp({
+    required String phoneNumber,
+    required String purpose,
+    required String channel,
+    String? firstName,
+    String? lastName,
+  }) async {
+    final data = <String, dynamic>{
+      'phone_number': phoneNumber,
+      'purpose': purpose,
+      'channel': channel,
+    };
+    if (firstName != null) data['first_name'] = firstName;
+    if (lastName != null) data['last_name'] = lastName;
+    await api.post(ApiEndpoints.requestOtp, data: data, anonymous: true);
   }
 
-  Future<UserModel> register({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
-    required String password,
+  Future<UserModel> verifyOtp({
+    required String phoneNumber,
+    required String code,
+    required String purpose,
   }) async {
     final data = await api.post(
-      ApiEndpoints.register,
-      data: {
-        'first_name': firstName,
-        'last_name': lastName,
-        'email': email.isEmpty ? null : email,
-        'phone_number': phone.isEmpty ? null : phone,
-        'password': password,
-      },
+      ApiEndpoints.verifyOtp,
+      data: {'phone_number': phoneNumber, 'code': code, 'purpose': purpose},
       anonymous: true,
     );
     await tokens.save(

@@ -5,9 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { clinicService } from '../../services/clinicService';
 import { doctorService } from '../../services/doctorService';
-import { telegramAuthService } from '../../services/telegramAuthService';
-import { authService } from '../../services/authService';
-import { TelegramBotSimulator } from '../auth/TelegramBotSimulator';
 import { generateAppointmentReceiptPDF } from '../../utils/pdfReceipt';
 import { getGoogleCalendarUrl, downloadICalendarFile } from '../../utils/calendarExport';
 import { PartnerBadge } from '../common/PartnerBadge';
@@ -29,14 +26,7 @@ import {
   CheckCircle2,
   CalendarPlus,
   ShieldCheck,
-  Lock,
-  Bot,
-  Sparkles,
-  ExternalLink,
   AlertCircle,
-  RefreshCw,
-  Eye,
-  EyeOff,
   LogIn,
   UserPlus,
   ArrowRight,
@@ -54,7 +44,7 @@ import {
 
 export const BookingModal: React.FC = () => {
   const { bookingModal, closeBookingModal, bookAppointment, rescheduleAppointment, showToast } = useAppointments();
-  const { user, login, register, openAuthModal } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const { t, language } = useLanguage();
 
   const [step, setStep] = useState<number>(1);
@@ -103,31 +93,6 @@ export const BookingModal: React.FC = () => {
   const [visitReason, setVisitReason] = useState<string>('General Consultation');
   const [patientNotes, setPatientNotes] = useState<string>('');
 
-  // Step 5 In-Modal Auth State when !user
-  const [authTab, setAuthTab] = useState<'register' | 'login'>('register');
-  const [authStep, setAuthStep] = useState<'form' | 'telegram_verify'>('form');
-  const [authFirstName, setAuthFirstName] = useState<string>('');
-  const [authLastName, setAuthLastName] = useState<string>('');
-  const [authPhone, setAuthPhone] = useState<string>('+998 ');
-  const [authPassword, setAuthPassword] = useState<string>('');
-  const [authConfirmPassword, setAuthConfirmPassword] = useState<string>('');
-  const [showAuthPassword, setShowAuthPassword] = useState<boolean>(false);
-  const [showAuthConfirmPassword, setShowAuthConfirmPassword] = useState<boolean>(false);
-
-  // Login inputs (empty by default so user logs in from 0)
-  const [loginIdentifier, setLoginIdentifier] = useState<string>('');
-  const [loginPassword, setLoginPassword] = useState<string>('');
-  const [showLoginPassword, setShowLoginPassword] = useState<boolean>(false);
-
-  // Telegram verification inputs
-  const [verificationCode, setVerificationCode] = useState<string>('');
-  const [authCountdown, setAuthCountdown] = useState<number>(300);
-  const [isBotSimulatorOpen, setIsBotSimulatorOpen] = useState<boolean>(false);
-  const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  const botUsername = telegramAuthService.getBotUsername();
-
   // Sync user profile if logged in
   useEffect(() => {
     if (user) {
@@ -136,17 +101,6 @@ export const BookingModal: React.FC = () => {
       setPatientEmail(user.email);
     }
   }, [user]);
-
-  // Telegram countdown
-  useEffect(() => {
-    let timer: any;
-    if (authStep === 'telegram_verify' && authCountdown > 0) {
-      timer = setInterval(() => {
-        setAuthCountdown((prev) => Math.max(0, prev - 1));
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [authStep, authCountdown]);
 
   // Initial load
   useEffect(() => {
@@ -188,8 +142,6 @@ export const BookingModal: React.FC = () => {
       }
 
       setConfirmedBookingCode(null);
-      setAuthError(null);
-      setAuthStep('form');
     }
   }, [bookingModal.isOpen, bookingModal.preselectedClinic, bookingModal.preselectedDoctor, bookingModal.preselectedTime]);
 
@@ -797,484 +749,32 @@ export const BookingModal: React.FC = () => {
               {step === 5 && (
                 <div className="space-y-4">
                   {!user ? (
-                    /* User is NOT logged in: Must log in or register with Telegram verification */
                     <div className="space-y-4">
                       <div className="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 flex items-start gap-3">
-                        <AlertCircle size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <ShieldCheck size={20} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div className="text-xs">
                           <strong className="block text-amber-950 dark:text-amber-100 font-bold text-[13px] mb-0.5">
-                            Qabulni band qilish uchun hisobingizga kiring
+                            Qabulni band qilish uchun telefon raqamingizni tasdiqlang
                           </strong>
-                          <span>
-                            Uchrashuvni rasmiylashtirish va shifokor bilan bog‘lanish uchun avval tizimga kiring yoki yangi hisob oching.
-                          </span>
+                          <span>Tasdiqlash kodi SMS yoki oldindan ulangan DocNear Telegram boti orqali yuboriladi.</span>
                         </div>
                       </div>
-
-                      {/* Mode switch tabs: Register vs Login */}
-                      <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAuthError(null);
-                            setAuthTab('register');
-                            setAuthStep('form');
-                          }}
-                          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                            authTab === 'register'
-                              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <UserPlus size={14} />
-                          <span>Ro‘yxatdan o‘tish</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAuthError(null);
-                            setAuthTab('login');
-                          }}
-                          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                            authTab === 'login'
-                              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          <LogIn size={14} />
-                          <span>Tizimga kirish</span>
-                        </button>
-                      </div>
-
-                      {authError && (
-                        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300 text-xs flex items-start gap-2">
-                          <AlertCircle size={15} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                          <span>{authError}</span>
-                        </div>
-                      )}
-
-                      {/* --- REGISTER SUB-FLOW --- */}
-                      {authTab === 'register' && (
-                        <>
-                          {authStep === 'form' ? (
-                            <form
-                              onSubmit={async (e) => {
-                                e.preventDefault();
-                                setAuthError(null);
-                                const fName = authFirstName.trim();
-                                const lName = authLastName.trim();
-                                const pNum = authPhone.trim();
-
-                                if (!fName) {
-                                  setAuthError('Iltimos, ismingizni kiriting.');
-                                  return;
-                                }
-                                if (!lName) {
-                                  setAuthError('Iltimos, familiyangizni kiriting.');
-                                  return;
-                                }
-                                if (pNum.length < 9) {
-                                  setAuthError('Iltimos, to‘liq telefon raqamingizni kiriting.');
-                                  return;
-                                }
-                                if (!authPassword || authPassword.length < 6) {
-                                  setAuthError('Parol kamida 6 ta belgidan iborat bo‘lishi kerak.');
-                                  return;
-                                }
-                                if (authPassword !== authConfirmPassword) {
-                                  setAuthError('Parol va parolni tasdiqlash mos kelmadi.');
-                                  return;
-                                }
-
-                                setAuthLoading(true);
-                                try { await register({firstName:fName,lastName:lName,phone:pNum,password:authPassword}); }
-                                catch(error) { setAuthError(error instanceof Error ? error.message : 'Ro‘yxatdan o‘tish bajarilmadi'); }
-                                finally { setAuthLoading(false); }
-                              }}
-                              className="space-y-3.5"
-                            >
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {/* Ism */}
-                                <div>
-                                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Ism <span className="text-rose-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <User size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                    <input
-                                      type="text"
-                                      required
-                                      value={authFirstName}
-                                      onChange={(e) => setAuthFirstName(e.target.value)}
-                                      placeholder="Aziza"
-                                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Familiya */}
-                                <div>
-                                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Familiya <span className="text-rose-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <User size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                    <input
-                                      type="text"
-                                      required
-                                      value={authLastName}
-                                      onChange={(e) => setAuthLastName(e.target.value)}
-                                      placeholder="Rakhimova"
-                                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Telefon nomer */}
-                              <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                  Telefon raqam (Telegram ulangan) <span className="text-rose-500">*</span>
-                                </label>
-                                <div className="relative">
-                                  <Phone size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                  <input
-                                    type="tel"
-                                    required
-                                    value={authPhone}
-                                    onChange={(e) => setAuthPhone(e.target.value)}
-                                    placeholder="+998 90 123 45 67"
-                                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                  />
-                                </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                                  <Bot size={12} className="text-blue-600 dark:text-blue-400" />
-                                  <span>Tasdiqlash kodi @{botUsername} orqali beriladi</span>
-                                </p>
-                              </div>
-
-                              {/* Parol & Parolni tasdiqlash */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Parol <span className="text-rose-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <Lock size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                    <input
-                                      type={showAuthPassword ? 'text' : 'password'}
-                                      required
-                                      value={authPassword}
-                                      onChange={(e) => setAuthPassword(e.target.value)}
-                                      placeholder="Kamida 6 belgi"
-                                      className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowAuthPassword(!showAuthPassword)}
-                                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                    >
-                                      {showAuthPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Parolni tasdiqlash <span className="text-rose-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <Lock size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                    <input
-                                      type={showAuthConfirmPassword ? 'text' : 'password'}
-                                      required
-                                      value={authConfirmPassword}
-                                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                                      placeholder="Parolni qaytaring"
-                                      className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowAuthConfirmPassword(!showAuthConfirmPassword)}
-                                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                    >
-                                      {showAuthConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <button
-                                type="submit"
-                                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                              >
-                                <span>Telegram orqali tasdiqlash</span>
-                                <ArrowRight size={14} />
-                              </button>
-                            </form>
-                          ) : (
-                            /* Telegram Verification Step in Register */
-                            <div className="space-y-4">
-                              <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-slate-800 dark:text-slate-200 space-y-2">
-                                <div className="flex items-center gap-1.5 text-sky-900 dark:text-sky-300 font-bold text-xs">
-                                  <Bot size={16} className="text-sky-600 dark:text-sky-400" />
-                                  <span>Telegram Bot orqali tasdiqlash:</span>
-                                </div>
-                                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                                  Telegram'da <strong>@{botUsername}</strong> botiga kiring, <strong>/start</strong> tugmasini bosing va <strong>{authPhone}</strong> raqamini yuboring.
-                                </p>
-
-                                <div className="flex gap-2 pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsBotSimulatorOpen(true)}
-                                    className="flex-1 py-1.5 px-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer hover:bg-slate-800 dark:hover:bg-slate-700"
-                                  >
-                                    <Sparkles size={12} className="text-sky-400" />
-                                    <span>Bot Simulyatori</span>
-                                  </button>
-                                  <a
-                                    href={`https://t.me/${botUsername}?start=auth_${authPhone.replace(/[^0-9]/g, '')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 py-1.5 px-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold flex items-center justify-center gap-1 text-center"
-                                  >
-                                    <ExternalLink size={12} />
-                                    <span>Telegram'da ochish</span>
-                                  </a>
-                                </div>
-                              </div>
-
-                              {isBotSimulatorOpen && (
-                                <div className="p-3 bg-slate-950/5 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
-                                  <div className="flex items-center justify-between mb-2 px-1">
-                                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                      Telegram Bot Simulyatori
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => setIsBotSimulatorOpen(false)}
-                                      className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                    >
-                                      Yopish
-                                    </button>
-                                  </div>
-                                  <TelegramBotSimulator
-                                    phone={authPhone}
-                                    firstName={authFirstName}
-                                    lastName={authLastName}
-                                    onCodeReceived={(code) => {
-                                      setVerificationCode(code);
-                                      setIsBotSimulatorOpen(false);
-                                    }}
-                                    onClose={() => setIsBotSimulatorOpen(false)}
-                                  />
-                                </div>
-                              )}
-
-                              <form
-                                onSubmit={async (e) => {
-                                  e.preventDefault();
-                                  setAuthError(null);
-                                  if (!verificationCode || verificationCode.length < 6) {
-                                    setAuthError('Iltimos, 6 xonali tasdiqlash kodini kiriting.');
-                                    return;
-                                  }
-
-                                  setAuthLoading(true);
-                                  try {
-                                    const verifyRes = telegramAuthService.verifyCode(authPhone, verificationCode);
-                                    if (!verifyRes.success) {
-                                      setAuthError(verifyRes.message);
-                                      setAuthLoading(false);
-                                      return;
-                                    }
-
-                                    await register({
-                                      firstName: authFirstName,
-                                      lastName: authLastName,
-                                      phone: authPhone,
-                                      password: authPassword,
-                                    });
-
-                                    setPatientName(`${authFirstName} ${authLastName}`.trim());
-                                    setPatientPhone(authPhone);
-                                    showToast('Hisobingiz muvaffaqiyatli tasdiqlandi!', 'success');
-                                    triggerHaptic('success');
-                                    setStep(6);
-                                  } catch (err: any) {
-                                    setAuthError(err.message || 'Tasdiqlashda xatolik yuz berdi.');
-                                  } finally {
-                                    setAuthLoading(false);
-                                  }
-                                }}
-                                className="space-y-3"
-                              >
-                                <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                      6 xonali tasdiqlash kodi
-                                    </label>
-                                    <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400 font-bold">
-                                      {Math.floor(authCountdown / 60)}:
-                                      {(authCountdown % 60 < 10 ? '0' : '') + (authCountdown % 60)}
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    maxLength={6}
-                                    required
-                                    value={verificationCode}
-                                    onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
-                                    placeholder="849201"
-                                    className="w-full text-center py-2.5 rounded-xl border-2 border-blue-600 bg-white dark:bg-slate-800 text-lg font-mono font-bold tracking-widest text-slate-900 dark:text-white focus:outline-none"
-                                  />
-                                </div>
-
-                                <button
-                                  type="submit"
-                                  disabled={authLoading || verificationCode.length < 6}
-                                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                                >
-                                  {authLoading ? (
-                                    <>
-                                      <RefreshCw size={14} className="animate-spin" />
-                                      <span>Tekshirilmoqda...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle2 size={15} />
-                                      <span>Tasdiqlash va Davom etish</span>
-                                    </>
-                                  )}
-                                </button>
-
-                                <div className="flex items-center justify-between text-xs pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => setAuthStep('form')}
-                                    className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                  >
-                                    ← Ma‘lumotlarni o‘zgartirish
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      telegramAuthService.resendCode(authPhone, authFirstName, authLastName);
-                                      setAuthCountdown(300);
-                                      setVerificationCode('');
-                                      showToast('Yangi kod tayyorlandi.', 'info');
-                                    }}
-                                    className="text-blue-600 dark:text-blue-400 font-bold hover:underline"
-                                  >
-                                    Qayta yuborish
-                                  </button>
-                                </div>
-                              </form>
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {/* --- LOGIN SUB-FLOW --- */}
-                      {authTab === 'login' && (
-                        <div className="space-y-3.5">
-                          <form
-                            onSubmit={async (e) => {
-                              e.preventDefault();
-                              setAuthError(null);
-                              setAuthLoading(true);
-                              try {
-                                await login(loginIdentifier, loginPassword);
-                                const currentUser = authService.getCurrentUser();
-                                if (currentUser) {
-                                  setPatientName(currentUser.name);
-                                  setPatientPhone(currentUser.phone || loginIdentifier);
-                                  if (currentUser.email) setPatientEmail(currentUser.email);
-                                }
-
-                                showToast('Tizimga muvaffaqiyatli kirdingiz!', 'success');
-                                triggerHaptic('success');
-                                setStep(6);
-                              } catch (err: any) {
-                                setAuthError(err.message || 'Kirishda xatolik yuz berdi.');
-                              } finally {
-                                setAuthLoading(false);
-                              }
-                            }}
-                            className="space-y-3"
-                          >
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                {language === 'ru'
-                                  ? 'Имя, номер телефона или Email'
-                                  : language === 'en'
-                                  ? 'Name, Phone number or Email'
-                                  : 'Ism, telefon raqam yoki email'}
-                              </label>
-                              <div className="relative">
-                                <User size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                <input
-                                  type="text"
-                                  required
-                                  value={loginIdentifier}
-                                  onChange={(e) => setLoginIdentifier(e.target.value)}
-                                  placeholder={
-                                    language === 'ru'
-                                      ? 'Ваше имя, телефон или email'
-                                      : language === 'en'
-                                      ? 'Your name, phone or email'
-                                      : 'Ismingiz, telefon yoki email (Masalan: Aziza)'
-                                  }
-                                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Parol
-                              </label>
-                              <div className="relative">
-                                <Lock size={15} className="absolute left-3.5 top-3 text-slate-400 dark:text-slate-500" />
-                                <input
-                                  type={showLoginPassword ? 'text' : 'password'}
-                                  required
-                                  value={loginPassword}
-                                  onChange={(e) => setLoginPassword(e.target.value)}
-                                  placeholder="••••••••"
-                                  className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                >
-                                  {showLoginPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                </button>
-                              </div>
-                            </div>
-
-                            <button
-                              type="submit"
-                              disabled={authLoading}
-                              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                            >
-                              {authLoading ? (
-                                <>
-                                  <RefreshCw size={14} className="animate-spin" />
-                                  <span>Kirilmoqda...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span>Tizimga kirish va Davom etish</span>
-                                  <ArrowRight size={14} />
-                                </>
-                              )}
-                            </button>
-                          </form>
-                        </div>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('login')}
+                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <LogIn size={15} />
+                        <span>Telefon orqali kirish</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('register')}
+                        className="w-full py-3 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <UserPlus size={15} />
+                        <span>Yangi hisob yaratish</span>
+                      </button>
                     </div>
                   ) : (
                     /* User IS logged in: Display verified user badge, reason for visit, and notes */

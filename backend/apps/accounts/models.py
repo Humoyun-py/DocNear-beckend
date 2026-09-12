@@ -55,3 +55,31 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
 
     def __str__(self):
         return self.get_full_name()
+
+
+class PhoneOTP(TimestampedModel):
+    class Purpose(models.TextChoices):
+        REGISTER = "register", "Register"
+        LOGIN = "login", "Login"
+        VERIFY_PHONE = "verify_phone", "Verify phone"
+        RESET = "reset", "Reset"
+
+    class Channel(models.TextChoices):
+        SMS = "sms", "SMS"
+        TELEGRAM = "telegram", "Telegram"
+
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name="phone_otps")
+    phone_number = models.CharField(max_length=16, db_index=True, validators=[phone_validator])
+    code_hash = models.CharField(max_length=128)
+    purpose = models.CharField(max_length=20, choices=Purpose.choices)
+    channel = models.CharField(max_length=20, choices=Channel.choices)
+    expires_at = models.DateTimeField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField(default=5)
+    request_ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["phone_number", "purpose", "created_at"], name="accounts_ot_phone_purpose_idx")]

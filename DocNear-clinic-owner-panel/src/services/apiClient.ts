@@ -8,13 +8,13 @@ export const setTokens=(data:{access:string;refresh?:string})=>{sessionStorage.s
 export const clearTokens=()=>{sessionStorage.removeItem(ACCESS_KEY);sessionStorage.removeItem(REFRESH_KEY)};
 export function expire(){clearTokens();window.dispatchEvent(new Event('owner-auth-expired'))}
 apiClient.interceptors.request.use(config=>{
- const token=getAccessToken(); if(token&&!/auth\/(login|register|token\/refresh)/.test(config.url||''))config.headers.Authorization='Bearer '+token;
+ const token=getAccessToken(); if(token&&!/auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)/.test(config.url||''))config.headers.Authorization='Bearer '+token;
  return config;
 });
 let refreshing:Promise<void>|null=null;
 apiClient.interceptors.response.use(r=>r,async error=>{
  const config=error.config;
- if(error.response?.status===401&&config&&!/auth\/(login|register|token\/refresh)/.test(config.url||'')){
+ if(error.response?.status===401&&config&&!/auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)/.test(config.url||'')){
   if(!config._retry&&hasSession()){
    config._retry=true;
    if(!refreshing)refreshing=axios.post(baseURL+'/auth/token/refresh/',{refresh:sessionStorage.getItem(REFRESH_KEY)},{timeout:20000})

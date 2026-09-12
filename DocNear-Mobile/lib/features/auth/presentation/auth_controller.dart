@@ -44,38 +44,40 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> login(String identifier, String password) async {
-    state = const AuthState.checking();
+  Future<String?> requestOtp({
+    required String phoneNumber,
+    required String purpose,
+    required String channel,
+    String? firstName,
+    String? lastName,
+  }) async {
     try {
-      state = AuthState.authenticated(
-        await ref.read(authRepositoryProvider).login(identifier, password),
-      );
-      return true;
+      await ref
+          .read(authRepositoryProvider)
+          .requestOtp(
+            phoneNumber: phoneNumber,
+            purpose: purpose,
+            channel: channel,
+            firstName: firstName,
+            lastName: lastName,
+          );
+      return null;
     } catch (error) {
-      state = AuthState.unauthenticated(_message(error));
-      return false;
+      return _message(error);
     }
   }
 
-  Future<bool> register({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
-    required String password,
+  Future<bool> verifyOtp({
+    required String phoneNumber,
+    required String code,
+    required String purpose,
   }) async {
     state = const AuthState.checking();
     try {
       state = AuthState.authenticated(
         await ref
             .read(authRepositoryProvider)
-            .register(
-              firstName: firstName,
-              lastName: lastName,
-              email: email,
-              phone: phone,
-              password: password,
-            ),
+            .verifyOtp(phoneNumber: phoneNumber, code: code, purpose: purpose),
       );
       return true;
     } catch (error) {

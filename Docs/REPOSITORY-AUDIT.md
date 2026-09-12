@@ -1,16 +1,13 @@
 # DocNear repository audit
 
-Audit date: 2026-09-11 (Asia/Tashkent).
+Audit date: 2026-09-12 (Asia/Tashkent).
 
 ## Repository status
 
 - Remote: `https://github.com/Humoyun-py/DocNear-beckend.git`
 - Default working branch: `main`
-- Latest checked commit: `ec3718942f6a1776b07a550df98a4ee44e3864b0`
-  (`Complete repository audit, CI and production preparation`)
-- The integration, CI, security, dependency, documentation, and cleanup changes
-  described here are represented by that commit. The later local `.env` backup
-  and removal is documented below.
+- The audit covers the current working tree, including the phone OTP migration,
+  integration changes, CI, security, documentation, and local secret cleanup.
 
 Active product modules:
 
@@ -36,10 +33,11 @@ references it.
 - Ruff: passed.
 - PostgreSQL 16 migrations: all applied successfully.
 - Migration drift check: `No changes detected`.
-- Pytest: **2243 passed in 108.94 seconds** against an isolated PostgreSQL
+- Pytest: **2327 passed in 188.34 seconds** against an isolated PostgreSQL
   cluster; double-booking and permission tests were retained.
 - Production deploy check: passed with zero issues using non-secret QA values.
-- Password reset returns the same response whether an active account exists.
+- Production email/password authentication is disabled. All roles authenticate
+  using E.164 phone numbers, OTP verification, and JWT.
 - Production errors and failed health checks have sanitized response tests.
 
 ### Flutter mobile
@@ -48,7 +46,7 @@ references it.
 - `flutter analyze`: passed with `No issues found`.
 - Normal tests: **8 passed**, one opt-in live test skipped as designed.
 - Debug APK build: passed from a clean Flutter build.
-- Live Django test: **1 passed**. It verified patient login, clinics, doctors,
+- Live Django test: **1 passed**. It verified patient phone OTP login, clinics, doctors,
   availability, appointment creation, Booking ID, My Appointments, a 409
   `slot_unavailable` response for patient B, and cancellation cleanup.
 - Package ID: `com.docnear.app`.
@@ -60,11 +58,11 @@ references it.
 
 ### React clients
 
-- Patient web: clean `npm ci`, TypeScript lint, API-client test, and production build
+- Patient web: TypeScript lint, phone OTP browser E2E, and production build
   passed.
-- Doctor panel: clean `npm ci`, TypeScript lint, and production build passed.
-- Admin panel: clean `npm ci`, TypeScript lint, and production build passed.
-- Clinic owner panel: clean `npm ci`, TypeScript lint, and production build
+- Doctor panel: phone OTP browser E2E, TypeScript lint, and production build passed.
+- Admin panel: phone OTP ecosystem E2E, TypeScript lint, and production build passed.
+- Clinic owner panel: phone OTP ecosystem E2E, TypeScript lint, and production build
   passed.
 - `npm audit`: zero known vulnerabilities in all four final lockfiles.
 - Every API client unwraps `success/data`; list helpers consume `data.results`
@@ -74,9 +72,10 @@ references it.
 
 ### Shared live booking flow
 
-Newman executed **18 HTTP requests and 47 assertions with zero failures**:
+Newman executed **24 HTTP requests and 59 assertions with zero failures**:
 
-1. Patient, patient B, doctor, owner, admin, and super-admin JWT login.
+1. Patient, patient B, doctor, owner, admin, and super-admin requested and
+   verified phone OTP, then received JWT.
 2. Nearby clinic and its doctor loaded.
 3. Real availability supplied a free slot.
 4. Patient created an appointment and received a Booking ID.
@@ -94,6 +93,8 @@ ignored `.runtime/` storage and does not print credentials.
   `Appointment` model and PostgreSQL database.
 - Search, nearby clinics, availability, create/list/reschedule/cancel, and
   Booking ID lookup routes exist.
+- The bot links a phone only when the shared contact belongs to the Telegram
+  sender, supports unlinking, and sends OTP only to an active linked chat.
 - Private routes require both a runtime bot secret and a linked patient.
 - Tests cover cross-platform visibility and prevent Booking ID ownership bypass.
 - No Telegram master code or source-level token is present.
@@ -127,6 +128,8 @@ ignored `.runtime/` storage and does not print credentials.
 - Removed unused mock clinic/doctor/review/appointment datasets.
 - Added a safe Google Maps missing-key state.
 - Added a sanitized root `.env.example` and deployment documentation.
+- Added phone-only OTP authentication, SMS provider abstraction, Telegram phone
+  linking, and OTP UI flows across every React and Flutter client.
 
 ## MVP demo readiness
 

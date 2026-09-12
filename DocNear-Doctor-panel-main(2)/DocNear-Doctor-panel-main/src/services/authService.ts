@@ -1,6 +1,6 @@
 import { apiClient, clearSession } from './apiClient';
 import { User, DoctorProfile, VerificationStatus } from '../types';
-export interface LoginCredentials { identifier: string; password: string; rememberMe?: boolean }
+export interface OtpCredentials { phoneNumber: string; code: string }
 export interface AuthResponse { user: User; profile: DoctorProfile; token: string }
 export function mapProfile(raw: any, user: User): DoctorProfile {
  const [firstName, ...last] = user.fullName.split(' ');
@@ -23,8 +23,11 @@ async function session(raw: any): Promise<AuthResponse> {
  return {user,profile,token: sessionStorage.getItem('docnear_doctor_token')!};
 }
 export const authService = {
- async login(credentials: LoginCredentials): Promise<AuthResponse> {
-  const {data} = await apiClient.post('/auth/login/', {identifier: credentials.identifier, password: credentials.password});
+ async requestOtp(phoneNumber: string, channel: 'sms'|'telegram'='sms'): Promise<void> {
+  await apiClient.post('/auth/request-otp/', {phone_number:phoneNumber,purpose:'login',channel});
+ },
+ async verifyOtp(credentials: OtpCredentials): Promise<AuthResponse> {
+  const {data} = await apiClient.post('/auth/verify-otp/', {phone_number:credentials.phoneNumber,code:credentials.code,purpose:'login'});
   mapUser(data.user);
   sessionStorage.setItem('docnear_doctor_token', data.access); sessionStorage.setItem('docnear_doctor_refresh', data.refresh);
   return session(data.user);

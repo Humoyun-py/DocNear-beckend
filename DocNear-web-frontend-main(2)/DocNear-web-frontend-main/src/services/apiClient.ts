@@ -53,7 +53,7 @@ export async function apiRequest<T = unknown>(path: string, init: RequestInit = 
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-  const isAuthEntry = /^auth\/(login|register|token\/refresh)\//.test(path);
+  const isAuthEntry = /^auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)\//.test(path);
   const access = sessionStorage.getItem(ACCESS_KEY);
   if (access && !isAuthEntry) headers.set('Authorization', 'Bearer ' + access);
   try { return await send<T>(path, { ...init, headers }); }

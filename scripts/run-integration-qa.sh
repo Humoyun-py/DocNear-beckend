@@ -25,7 +25,8 @@ if ! "$PG_BIN/psql" -h "$QA_DIR" -p 55439 -d postgres -Atc "SELECT 1 FROM pg_dat
   "$PG_BIN/createdb" -h "$QA_DIR" -p 55439 docnear_integration_qa
 fi
 export DATABASE_URL="postgresql:///docnear_integration_qa?host=$QA_DIR&port=55439"
-export DEBUG=true DJANGO_SETTINGS_MODULE=config.settings.development DOCNEAR_QA_LIVE=1
+export DEBUG=true DJANGO_SETTINGS_MODULE=config.settings.test DOCNEAR_QA_LIVE=1
+export OTP_SMS_PROVIDER=console OTP_TEST_CODE=111111 OTP_REQUEST_RATE=100/min OTP_VERIFY_RATE=100/min
 export DOCNEAR_QA_RUNTIME_DIR="$QA_DIR"
 export DOCNEAR_QA_BASE_URL="${DOCNEAR_QA_BASE_URL:-http://127.0.0.1:8001}"
 export TELEGRAM_BOT_SECRET="$(cat "$QA_DIR/telegram-secret")"

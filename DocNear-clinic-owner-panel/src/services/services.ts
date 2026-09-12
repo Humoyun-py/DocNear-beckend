@@ -1,6 +1,6 @@
 import {list,request,setTokens,logout,sessionUser} from './apiClient';
-export const ownerAuth={login:async(identifier:string,password:string)=>{
- const data=await request<{access:string;refresh:string;user:{role:string;name:string}}>({url:'/auth/login/',method:'POST',data:{identifier,password}});
+export const ownerAuth={requestOtp:(phone_number:string,channel:'sms'|'telegram'='sms')=>request({url:'/auth/request-otp/',method:'POST',data:{phone_number,purpose:'login',channel}}),verifyOtp:async(phone_number:string,code:string)=>{
+ const data=await request<{access:string;refresh:string;user:{role:string;name:string}}>({url:'/auth/verify-otp/',method:'POST',data:{phone_number,code,purpose:'login'}});
  if(data.user.role!=='clinic_owner')throw new Error('A clinic owner account is required.');
  setTokens(data);return data.user;
 },logout,restore:sessionUser};

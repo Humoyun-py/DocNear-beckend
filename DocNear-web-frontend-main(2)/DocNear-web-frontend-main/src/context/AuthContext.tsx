@@ -11,14 +11,8 @@ interface AuthContextType {
   authModalMode: 'login' | 'register';
   openAuthModal: (mode?: 'login' | 'register', onAuthSuccess?: () => void) => void;
   closeAuthModal: () => void;
-  login: (identifier: string, pass: string) => Promise<void>;
-  register: (data: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    email?: string;
-    password?: string;
-  }) => Promise<void>;
+  requestOtp: (data: { phone: string; purpose: 'login' | 'register'; channel: 'sms' | 'telegram'; firstName?: string; lastName?: string }) => Promise<void>;
+  verifyOtp: (data: { phone: string; code: string; purpose: 'login' | 'register' }) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   toggleFavoriteDoctor: (doctorId: string) => void;
@@ -58,22 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthSuccessCallback(null);
   };
 
-  const login = async (identifier: string, pass: string): Promise<void> => {
-    const loggedUser = await authService.login(identifier, pass);
-    setUser({ ...loggedUser });
-    if (authSuccessCallback) {
-      authSuccessCallback();
-    }
-  };
+  const requestOtp = (data: { phone: string; purpose: 'login' | 'register'; channel: 'sms' | 'telegram'; firstName?: string; lastName?: string }) => authService.requestOtp(data);
 
-  const register = async (data: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    email?: string;
-    password?: string;
-  }): Promise<void> => {
-    const newUser = await authService.register(data);
+  const verifyOtp = async (data: { phone: string; code: string; purpose: 'login' | 'register' }): Promise<void> => {
+    const newUser = await authService.verifyOtp(data);
     setUser({ ...newUser });
     if (authSuccessCallback) {
       authSuccessCallback();
@@ -130,8 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authModalMode,
         openAuthModal,
         closeAuthModal,
-        login,
-        register,
+        requestOtp,
+        verifyOtp,
         logout,
         updateProfile,
         toggleFavoriteDoctor,

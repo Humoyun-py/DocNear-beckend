@@ -22,7 +22,7 @@ def test_clinic_lifecycle(client, world):
 
 def test_doctor_lifecycle_and_affiliations(client, world):
     authenticate(client, world.admin)
-    result = data(client.post("/api/admin-panel/doctors/", {"account": {"email": "qa-doctor@example.test", "first_name": "QA", "password": "Strong-qa-doctor42"}, "clinic": world.clinic.pk, "specialty": world.specialty.pk}, format="json"), 201)
+    result = data(client.post("/api/admin-panel/doctors/", {"account": {"phone_number": "+998901230001", "email": "qa-doctor@example.test", "first_name": "QA"}, "clinic": world.clinic.pk, "specialty": world.specialty.pk}, format="json"), 201)
     prefix = f"/api/admin-panel/doctors/{result['id']}/"
     data(client.patch(prefix, {"bio": "Fictional test profile"}))
     for action, field, expected in [("verify", "is_verified", True), ("suspend", "is_active", False), ("activate", "is_active", True)]:
@@ -61,9 +61,11 @@ def test_admin_patient_and_booking_access(client, world):
 
 def test_owner_accounts_settings_and_logs(client, world):
     authenticate(client, world.admin)
-    data(client.post("/api/admin-panel/owners/", {"first_name": "New", "email": "qa-owner@example.test", "password": "Strong-qa-owner42"}), 201)
+    data(client.post("/api/admin-panel/owners/", {"first_name": "New", "phone_number": "+998901230002", "email": "qa-owner@example.test"}), 201)
+    error(client.post("/api/admin-panel/owners/", {"first_name": "Duplicate", "phone_number": "+998901230002"}), 400)
     account = User.objects.get(email="qa-owner@example.test")
     assert account.role == "clinic_owner"
+    assert account.is_verified and not account.has_usable_password()
     data(client.patch(f"/api/admin-panel/owners/{account.pk}/", {"first_name": "Updated"}))
     data(client.post(f"/api/admin-panel/owners/{account.pk}/disable/"))
     data(client.post(f"/api/admin-panel/owners/{account.pk}/enable/"))

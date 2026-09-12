@@ -5,6 +5,24 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 
 
+PHONE_PATTERN = r"^\+[1-9]\d{7,14}$"
+PHONE_MESSAGE = "Telefon raqamni xalqaro formatda kiriting: +998901234567"
+
+
+class RequestOTPSerializer(serializers.Serializer):
+    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    purpose = serializers.ChoiceField(choices=["register", "login"])
+    channel = serializers.ChoiceField(choices=["sms", "telegram"], default="sms")
+    first_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+
+class VerifyOTPSerializer(serializers.Serializer):
+    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    code = serializers.RegexField(r"^\d{6}$", error_messages={"invalid": "6 xonali tasdiqlash kodini kiriting."})
+    purpose = serializers.ChoiceField(choices=["register", "login"])
+
+
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="get_full_name", read_only=True)
 

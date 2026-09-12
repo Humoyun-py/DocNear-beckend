@@ -30,16 +30,15 @@ export const authService = {
     if (!hasSession()) return null;
     return loadUser(await apiRequest<UserDto>('auth/me/'));
   },
-  async login(identifier: string, password: string): Promise<UserProfile> {
-    const data = await apiRequest<SessionDto>('auth/login/', { method: 'POST', body: JSON.stringify({ identifier: identifier.trim(), password }) });
-    setAuthTokens(data);
-    return loadUser(data.user);
+  async requestOtp(data: { phone: string; purpose: 'login' | 'register'; channel: 'sms' | 'telegram'; firstName?: string; lastName?: string }): Promise<void> {
+    await apiRequest('auth/request-otp/', { method: 'POST', body: JSON.stringify({
+      phone_number: data.phone.trim(), purpose: data.purpose, channel: data.channel,
+      first_name: data.firstName?.trim(), last_name: data.lastName?.trim(),
+    }) });
   },
-  async register(data: { firstName: string; lastName: string; phone: string; email?: string; password?: string }): Promise<UserProfile> {
-    if (!data.password) throw new Error('Parol kiriting (kamida 10 belgi)');
-    const session = await apiRequest<SessionDto>('auth/register/', { method: 'POST', body: JSON.stringify({
-      first_name: data.firstName.trim(), last_name: data.lastName.trim(), phone_number: data.phone.replace(/[\s()-]/g, ''),
-      ...(data.email ? { email: data.email.trim() } : {}), password: data.password,
+  async verifyOtp(data: { phone: string; code: string; purpose: 'login' | 'register' }): Promise<UserProfile> {
+    const session = await apiRequest<SessionDto>('auth/verify-otp/', { method: 'POST', body: JSON.stringify({
+      phone_number: data.phone.trim(), code: data.code.trim(), purpose: data.purpose,
     }) });
     setAuthTokens(session);
     return loadUser(session.user);

@@ -2,7 +2,7 @@
 
 Generated from the Django URL resolver. Base URL: `http://127.0.0.1:8000`.
 
-354 API method/path combinations. `HEAD`/`OPTIONS` and router format suffix aliases are omitted. `/health/`, Django `/admin/`, and router navigation roots are listed separately below.
+366 API method/path combinations. `HEAD`/`OPTIONS` and router format suffix aliases are omitted. `/health/`, Django `/admin/`, and router navigation roots are listed separately below.
 
 Pagination: `data.results`, `data.count`, `data.next`, `data.previous`; page size defaults to 20 (maximum 100). All appointment times use Asia/Tashkent.
 
@@ -185,8 +185,11 @@ Personal routes are role-scoped. Super admins have platform-wide record access t
 - `GET /api/auth/me/` — patient, doctor, clinic_owner, admin, super_admin.
 - `PATCH /api/auth/me/` — patient, doctor, clinic_owner, admin, super_admin.
 - `POST /api/auth/register/` — Public.
+- `POST /api/auth/request-otp/` — Public.
+- `POST /api/auth/resend-otp/` — Public.
 - `POST /api/auth/reset-password/` — Public.
 - `POST /api/auth/token/refresh/` — Public.
+- `POST /api/auth/verify-otp/` — Public.
 - `POST /api/v1/auth/change-password/` — patient, doctor, clinic_owner, admin, super_admin.
 - `POST /api/v1/auth/forgot-password/` — Public.
 - `POST /api/v1/auth/login/` — Public.
@@ -194,8 +197,11 @@ Personal routes are role-scoped. Super admins have platform-wide record access t
 - `GET /api/v1/auth/me/` — patient, doctor, clinic_owner, admin, super_admin.
 - `PATCH /api/v1/auth/me/` — patient, doctor, clinic_owner, admin, super_admin.
 - `POST /api/v1/auth/register/` — Public.
+- `POST /api/v1/auth/request-otp/` — Public.
+- `POST /api/v1/auth/resend-otp/` — Public.
 - `POST /api/v1/auth/reset-password/` — Public.
 - `POST /api/v1/auth/token/refresh/` — Public.
+- `POST /api/v1/auth/verify-otp/` — Public.
 
 ## Clinic Owner Panel
 
@@ -389,6 +395,9 @@ Personal routes are role-scoped. Super admins have platform-wide record access t
 - `DELETE /api/telegram/link-code/` — patient.
 - `POST /api/telegram/link-code/` — patient.
 - `POST /api/telegram/link/` — Bot secret + linked patient.
+- `DELETE /api/telegram/phone-link/` — Bot secret + linked patient.
+- `POST /api/telegram/phone-link/` — Bot secret + linked patient.
+- `POST /api/telegram/request-otp/` — Bot secret + linked patient.
 - `GET /api/telegram/search/` — Public.
 - `GET /api/v1/telegram/appointments/` — Bot secret + linked patient.
 - `POST /api/v1/telegram/appointments/` — Bot secret + linked patient.
@@ -402,6 +411,9 @@ Personal routes are role-scoped. Super admins have platform-wide record access t
 - `DELETE /api/v1/telegram/link-code/` — patient.
 - `POST /api/v1/telegram/link-code/` — patient.
 - `POST /api/v1/telegram/link/` — Bot secret + linked patient.
+- `DELETE /api/v1/telegram/phone-link/` — Bot secret + linked patient.
+- `POST /api/v1/telegram/phone-link/` — Bot secret + linked patient.
+- `POST /api/v1/telegram/request-otp/` — Bot secret + linked patient.
 - `GET /api/v1/telegram/search/` — Public.
 
 ## Infrastructure and navigation

@@ -33,7 +33,7 @@ def test_owner_schedule_change_rolls_back_conflict(client, world):
 
 def test_owner_rejects_unowned_doctor_creation(client, world):
     authenticate(client, world.owner)
-    error(client.post("/api/clinic-owner/doctors/", {"account": {"first_name": "QA", "email": "bad-owner@example.test", "password": "Strong-password42"}, "clinic": world.hidden.pk, "specialty": world.specialty.pk}, format="json"), 400)
+    error(client.post("/api/clinic-owner/doctors/", {"account": {"first_name": "QA", "phone_number": "+998901230003", "email": "bad-owner@example.test"}, "clinic": world.hidden.pk, "specialty": world.specialty.pk}, format="json"), 400)
 
 
 def test_owner_can_update_own_affiliation(client, world):

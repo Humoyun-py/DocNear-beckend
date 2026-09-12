@@ -9,11 +9,20 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from .models import User
 from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer, ChangePasswordSerializer,
-                          ForgotPasswordSerializer, ResetPasswordSerializer, LogoutSerializer)
+                          ForgotPasswordSerializer, ResetPasswordSerializer, LogoutSerializer,
+                          RequestOTPSerializer, VerifyOTPSerializer)
+from .otp import request_code, verify_code
+
+
+class PasswordAuthDisabled(APIException):
+    status_code = 400
+    default_code = "password_auth_disabled"
+    default_detail = "Telefon raqam orqali tasdiqlash kodidan foydalaning."
 
 
 class AuthView(generics.GenericAPIView):
@@ -26,6 +35,8 @@ class RegisterView(AuthView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
+        if not settings.LEGACY_PASSWORD_AUTH_ENABLED:
+            raise PasswordAuthDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -37,9 +48,37 @@ class LoginView(AuthView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        if not settings.LEGACY_PASSWORD_AUTH_ENABLED:
+            raise PasswordAuthDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
+
+
+class RequestOTPView(AuthView):
+    serializer_class = RequestOTPSerializer
+    throttle_scope = "otp_request"
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        message = request_code(request=request, **serializer.validated_data)
+        return Response({"message": message})
+
+
+class ResendOTPView(RequestOTPView):
+    pass
+
+
+class VerifyOTPView(AuthView):
+    serializer_class = VerifyOTPSerializer
+    throttle_scope = "otp_verify"
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user, access, refresh = verify_code(**serializer.validated_data)
+        return Response({"access": access, "refresh": refresh, "user": UserSerializer(user).data})
 
 
 class MeView(generics.RetrieveUpdateAPIView):
@@ -70,6 +109,8 @@ class ChangePasswordView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
 
     def post(self, request):
+        if not settings.LEGACY_PASSWORD_AUTH_ENABLED:
+            raise PasswordAuthDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         request.user.set_password(serializer.validated_data["new_password"])
@@ -84,6 +125,8 @@ class ForgotPasswordView(AuthView):
     serializer_class = ForgotPasswordSerializer
 
     def post(self, request):
+        if not settings.LEGACY_PASSWORD_AUTH_ENABLED:
+            raise PasswordAuthDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User.objects.filter(email__iexact=serializer.validated_data["email"], is_active=True).first()
@@ -98,6 +141,8 @@ class ResetPasswordView(AuthView):
     serializer_class = ResetPasswordSerializer
 
     def post(self, request):
+        if not settings.LEGACY_PASSWORD_AUTH_ENABLED:
+            raise PasswordAuthDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
