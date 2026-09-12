@@ -1,13 +1,13 @@
 """Telegram polling bot for secure phone linking and OTP requests."""
 
 import json
-import re
 import time
 from urllib import error, request
 
+from apps.accounts.phone import normalize_phone_number
 
-PHONE_PATTERN = re.compile(r"^\+[1-9]\d{7,14}$")
 NOT_LINKED_MESSAGE = "Avval telefon raqamingizni ulashing. Buning uchun /link_phone buyrug‘idan foydalaning."
+ACCOUNT_UNAVAILABLE_MESSAGE = "Bu raqamga DocNear hisobi topilmadi. Ro‘yxatdan o‘tish kodi uchun /code register buyrug‘idan foydalaning."
 
 
 class BotServiceError(RuntimeError):
@@ -41,6 +41,12 @@ class TelegramApi:
 
     def get_updates(self, offset: int, timeout: int) -> list[dict]:
         return self._call("getUpdates", {"offset": offset, "timeout": timeout, "allowed_updates": ["message"]})
+
+    def get_me(self) -> dict:
+        return self._call("getMe", {})
+
+    def delete_webhook(self, *, drop_pending_updates: bool = False) -> None:
+        self._call("deleteWebhook", {"drop_pending_updates": drop_pending_updates})
 
     def send_text(self, chat_id: int, text: str, reply_markup: dict | None = None) -> None:
         payload = {"chat_id": chat_id, "text": text}
@@ -94,12 +100,10 @@ class BackendClient:
 
 
 def normalize_phone(value: str) -> str:
-    value = re.sub(r"[\s\-()]", "", value.strip())
-    if not value.startswith("+"):
-        value = "+" + value
-    if not PHONE_PATTERN.fullmatch(value):
-        raise BotServiceError("Telefon raqamni xalqaro formatda kiriting: +998901234567")
-    return value
+    try:
+        return normalize_phone_number(value)
+    except ValueError as exc:
+        raise BotServiceError(str(exc)) from None
 
 
 class DocNearTelegramBot:
@@ -183,12 +187,17 @@ class DocNearTelegramBot:
         try:
             self.backend.request_code(telegram_user_id, purpose)
         except BotServiceError as exc:
-            message = NOT_LINKED_MESSAGE if exc.code == "telegram_not_linked" else str(exc)
+            if exc.code == "telegram_not_linked":
+                message = NOT_LINKED_MESSAGE
+            elif exc.code == "telegram_account_unavailable":
+                message = ACCOUNT_UNAVAILABLE_MESSAGE
+            else:
+                message = str(exc)
             self.telegram.send_text(chat_id, message)
             return
         self.telegram.send_text(
             chat_id,
-            "Tasdiqlash kodi yuborildi. Kod 5 daqiqa amal qiladi. Uni hech kimga bermang.",
+            "Tasdiqlash kodi Telegram orqali yuborildi.",
         )
 
     def _unlink(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:

@@ -1,9 +1,11 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 
 from apps.accounts.models import PhoneOTP, User
+from apps.accounts.sms import SmsDeliveryError
 from apps.telegram_support.models import TelegramPhoneLink
 from .conftest import payload
 from .helpers import data, error
@@ -59,7 +61,7 @@ def test_register_phone_creates_verified_patient_without_password(client):
 
 
 def test_invalid_phone_wrong_expired_and_attempt_limit(client, settings):
-    assert request_otp(client, "998901234567").status_code == 400
+    assert request_otp(client, "123").status_code == 400
     user = otp_user()
     request_otp(client, user.phone_number)
     error(verify_otp(client, user.phone_number, code="000000"), 400)
@@ -74,6 +76,13 @@ def test_invalid_phone_wrong_expired_and_attempt_limit(client, settings):
     for _ in range(5):
         error(verify_otp(client, other.phone_number, code="000000"), 400)
     error(verify_otp(client, other.phone_number), 400)
+
+
+@pytest.mark.parametrize("raw", ["998901234567", "+998901234567", "90 123 45 67", "(90) 123-45-67"])
+def test_uzbek_phone_inputs_are_normalized_consistently(client, raw):
+    user = otp_user()
+    assert request_otp(client, raw).status_code == 200
+    assert PhoneOTP.objects.filter(phone_number=user.phone_number).exists()
 
 
 def test_resend_invalidates_previous_code(client, settings):
@@ -123,6 +132,87 @@ def test_telegram_otp_can_be_disabled_without_affecting_sms(client, settings):
     response = request_otp(client, user.phone_number, channel="telegram")
     assert error(response, 503)["code"] == "telegram_otp_disabled"
     assert request_otp(client, user.phone_number, channel="sms").status_code == 200
+
+
+def test_telegram_login_never_returns_false_success_for_unregistered_link(client, settings):
+    settings.TELEGRAM_BOT_SECRET = "test-bot-secret"
+    phone = "+998901234574"
+    TelegramPhoneLink.objects.create(
+        phone_number=phone,
+        telegram_user_id=701,
+        telegram_chat_id=702,
+        is_active=True,
+    )
+    response = request_otp(client, phone, channel="telegram")
+    assert error(response, 400)["code"] == "telegram_account_unavailable"
+    assert not PhoneOTP.objects.filter(phone_number=phone).exists()
+
+
+def test_telegram_send_failure_returns_specific_error_and_invalidates_otp(client, settings, monkeypatch):
+    settings.OTP_TEST_MODE = False
+    user = otp_user("+998901234575")
+    TelegramPhoneLink.objects.create(
+        user=user,
+        phone_number=user.phone_number,
+        telegram_user_id=801,
+        telegram_chat_id=802,
+        is_active=True,
+    )
+
+    def fail_delivery(chat_id, code):
+        raise SmsDeliveryError("unsafe provider detail")
+
+    monkeypatch.setattr("apps.accounts.otp.send_telegram_code", fail_delivery)
+    response = request_otp(client, user.phone_number, channel="telegram")
+    assert error(response, 503)["code"] == "telegram_send_failed"
+    otp = PhoneOTP.objects.get(phone_number=user.phone_number)
+    assert otp.verified_at is not None
+    assert "unsafe provider detail" not in response.content.decode()
+
+
+def test_telegram_send_success_stores_only_hashed_otp(client, settings, monkeypatch, caplog):
+    settings.OTP_TEST_MODE = False
+    settings.TELEGRAM_BOT_TOKEN = "sensitive-test-token"
+    user = otp_user("+998901234576")
+    TelegramPhoneLink.objects.create(
+        user=user,
+        phone_number=user.phone_number,
+        telegram_user_id=901,
+        telegram_chat_id=902,
+        is_active=True,
+    )
+    delivered = {}
+
+    def deliver(chat_id, code):
+        delivered["chat_id"] = chat_id
+        delivered["code"] = code
+
+    monkeypatch.setattr("apps.accounts.otp.send_telegram_code", deliver)
+    assert request_otp(client, user.phone_number, channel="telegram").status_code == 200
+    otp = PhoneOTP.objects.get(phone_number=user.phone_number)
+    assert otp.code_hash != delivered["code"]
+    assert check_password(delivered["code"], otp.code_hash)
+    assert delivered["chat_id"] == 902
+    assert delivered["code"] not in caplog.text
+    assert settings.TELEGRAM_BOT_TOKEN not in caplog.text
+
+
+def test_phone_link_endpoint_normalizes_local_uzbek_number(client, settings):
+    settings.TELEGRAM_BOT_SECRET = "test-bot-secret"
+    response = client.post(
+        "/api/v1/telegram/phone-link/",
+        {
+            "phone_number": "90 000 00 77",
+            "telegram_user_id": 1001,
+            "telegram_chat_id": 1002,
+            "contact_user_id": 1001,
+            "sender_user_id": 1001,
+        },
+        format="json",
+        HTTP_X_TELEGRAM_BOT_SECRET="test-bot-secret",
+    )
+    assert response.status_code == 200
+    assert TelegramPhoneLink.objects.get(telegram_user_id=1001).phone_number == "+998900000077"
 
 
 def test_sms_registration_attaches_prelinked_telegram_contact(client, settings):

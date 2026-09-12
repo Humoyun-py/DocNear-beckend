@@ -26,6 +26,7 @@ TELEGRAM_BOT_TOKEN=<BotFather token>
 TELEGRAM_BOT_USERNAME=<username without @>
 TELEGRAM_BOT_WEBHOOK_SECRET=<independent random secret>
 TELEGRAM_OTP_ENABLED=true
+TELEGRAM_DELETE_WEBHOOK_ON_START=false
 DOCNEAR_API_BASE_URL=https://api.docnear.uz/api/v1
 LEGACY_PASSWORD_AUTH_ENABLED=false
 ```

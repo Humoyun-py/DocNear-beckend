@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import timedelta
 
@@ -13,6 +14,10 @@ from apps.telegram_support.models import TelegramPhoneLink
 from .models import PhoneOTP, User
 from .sms import SmsDeliveryError, get_sms_provider
 from .telegram_otp import send_telegram_code
+from .phone import mask_phone_number
+
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramNotLinked(APIException):
@@ -31,6 +36,18 @@ class TelegramOtpDisabled(APIException):
     status_code = 503
     default_code = "telegram_otp_disabled"
     default_detail = "Telegram orqali tasdiqlash kodi vaqtincha mavjud emas."
+
+
+class TelegramSendFailed(APIException):
+    status_code = 503
+    default_code = "telegram_send_failed"
+    default_detail = "Telegram orqali kod yuborilmadi. Birozdan keyin qayta urinib ko‘ring."
+
+
+class TelegramAccountUnavailable(APIException):
+    status_code = 400
+    default_code = "telegram_account_unavailable"
+    default_detail = "Bu telefon raqamga faol DocNear hisobi topilmadi. Avval ro‘yxatdan o‘ting."
 
 
 GENERIC_REQUEST_MESSAGE = "Agar raqamdan foydalanish mumkin bo‘lsa, tasdiqlash kodi yuborildi."
@@ -84,6 +101,11 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
     if channel == PhoneOTP.Channel.TELEGRAM and not settings.TELEGRAM_OTP_ENABLED:
         raise TelegramOtpDisabled()
     ip = client_ip(request)
+    masked_phone = mask_phone_number(phone_number)
+    if channel == PhoneOTP.Channel.TELEGRAM:
+        logger.info("Telegram OTP requested: phone=%s channel=telegram", masked_phone)
+    else:
+        logger.info("OTP requested: phone=%s channel=%s", masked_phone, channel)
     with transaction.atomic():
         _rate_limit(phone_number, ip)
         user = _eligible_user(phone_number, purpose, names)
@@ -95,8 +117,12 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
         link = None
         if channel == PhoneOTP.Channel.TELEGRAM:
             link = TelegramPhoneLink.objects.filter(phone_number=phone_number, is_active=True).first()
+            logger.info("Telegram link found: %s", "yes" if link else "no")
             if not link:
                 raise TelegramNotLinked()
+            logger.info("Telegram chat id exists: %s", "yes" if link.telegram_chat_id else "no")
+            if user is None:
+                raise TelegramAccountUnavailable()
         PhoneOTP.objects.filter(
             phone_number=phone_number,
             purpose=purpose,
@@ -114,6 +140,7 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
             request_ip=ip,
             user_agent=request.META.get("HTTP_USER_AGENT", "")[:1000],
         )
+        logger.info("OTP saved: yes")
     if user is None:
         return GENERIC_REQUEST_MESSAGE
     try:
@@ -121,8 +148,12 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
             get_sms_provider().send_code(phone_number, code)
         else:
             send_telegram_code(link.telegram_chat_id, code)
+            logger.info("Telegram sendMessage result: success")
     except SmsDeliveryError as exc:
         PhoneOTP.objects.filter(pk=otp.pk).update(verified_at=timezone.now())
+        if channel == PhoneOTP.Channel.TELEGRAM:
+            logger.warning("Telegram sendMessage failed: delivery service unavailable")
+            raise TelegramSendFailed() from None
         raise OtpDeliveryFailed() from exc
     return GENERIC_REQUEST_MESSAGE
 

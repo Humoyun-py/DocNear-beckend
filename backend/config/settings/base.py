@@ -121,6 +121,7 @@ TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "") or TELEGRAM_BOT_WEBHO
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
 TELEGRAM_OTP_ENABLED = os.getenv("TELEGRAM_OTP_ENABLED", "false").lower() == "true"
+TELEGRAM_DELETE_WEBHOOK_ON_START = os.getenv("TELEGRAM_DELETE_WEBHOOK_ON_START", "false").lower() == "true"
 DOCNEAR_API_BASE_URL = os.getenv("DOCNEAR_API_BASE_URL", "http://127.0.0.1:8001/api/v1").rstrip("/")
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
 OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.telegram_support.bot import BackendClient, DocNearTelegramBot, TelegramApi
+from apps.telegram_support.bot import BackendClient, BotServiceError, DocNearTelegramBot, TelegramApi
 
 
 class Command(BaseCommand):
@@ -19,8 +19,15 @@ class Command(BaseCommand):
         if not settings.TELEGRAM_BOT_SECRET:
             raise CommandError("TELEGRAM_BOT_WEBHOOK_SECRET is not configured.")
         api_base_url = getattr(settings, "DOCNEAR_API_BASE_URL", "http://127.0.0.1:8001/api/v1")
+        telegram = TelegramApi(settings.TELEGRAM_BOT_TOKEN)
+        if settings.TELEGRAM_DELETE_WEBHOOK_ON_START:
+            try:
+                telegram.delete_webhook(drop_pending_updates=False)
+            except BotServiceError:
+                raise CommandError("Telegram webhookini xavfsiz o‘chirib bo‘lmadi.") from None
+            self.stdout.write("Telegram webhook o‘chirildi; kutilayotgan xabarlar saqlandi.")
         bot = DocNearTelegramBot(
-            TelegramApi(settings.TELEGRAM_BOT_TOKEN),
+            telegram,
             BackendClient(api_base_url, settings.TELEGRAM_BOT_SECRET),
         )
         self.stdout.write("DocNear Telegram boti ishga tushdi.")

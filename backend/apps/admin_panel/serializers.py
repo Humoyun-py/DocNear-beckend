@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 from apps.accounts.models import User
-from apps.accounts.serializers import PHONE_MESSAGE, PHONE_PATTERN, UserSerializer
+from apps.accounts.serializers import PhoneNumberField, UserSerializer
 from apps.clinics.models import Clinic
 from apps.doctors.models import DoctorProfile, DoctorClinic
 from apps.doctors.serializers import AffiliationSerializer
@@ -22,7 +22,7 @@ class ClinicManageSerializer(serializers.ModelSerializer):
 
 
 class StaffAccountSerializer(serializers.ModelSerializer):
-    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    phone_number = PhoneNumberField()
     email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:

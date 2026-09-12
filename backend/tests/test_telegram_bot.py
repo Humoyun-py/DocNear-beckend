@@ -7,7 +7,13 @@ from django.core.management.base import CommandError
 
 from apps.accounts.telegram_otp import send_telegram_code
 from apps.accounts.sms import SmsDeliveryError
-from apps.telegram_support.bot import BotServiceError, DocNearTelegramBot, NOT_LINKED_MESSAGE, TelegramApi
+from apps.telegram_support.bot import (
+    ACCOUNT_UNAVAILABLE_MESSAGE,
+    BotServiceError,
+    DocNearTelegramBot,
+    NOT_LINKED_MESSAGE,
+    TelegramApi,
+)
 
 
 class FakeTelegram:
@@ -79,10 +85,13 @@ def test_code_and_unlink_commands_use_backend_source_of_truth():
     service, telegram, backend = bot()
     service.handle_update(update("/code"))
     assert backend.codes == [(101, "login")]
-    assert "Tasdiqlash kodi yuborildi" in telegram.sent[-1][1]
+    assert telegram.sent[-1][1] == "Tasdiqlash kodi Telegram orqali yuborildi."
     backend.code_error = BotServiceError("hidden backend detail", "telegram_not_linked")
     service.handle_update(update("/code"))
     assert telegram.sent[-1][1] == NOT_LINKED_MESSAGE
+    backend.code_error = BotServiceError("hidden backend detail", "telegram_account_unavailable")
+    service.handle_update(update("/code"))
+    assert telegram.sent[-1][1] == ACCOUNT_UNAVAILABLE_MESSAGE
     service.handle_update(update("/unlink"))
     assert backend.unlinked == [101]
 
@@ -93,6 +102,41 @@ def test_missing_token_is_a_controlled_command_error(settings):
     settings.TELEGRAM_BOT_SECRET = "configured-secret"
     with pytest.raises(CommandError, match="TELEGRAM_BOT_TOKEN is not configured"):
         call_command("run_telegram_bot", once=True)
+
+
+def test_run_command_clears_webhook_without_dropping_updates(settings, monkeypatch):
+    settings.TELEGRAM_OTP_ENABLED = True
+    settings.TELEGRAM_BOT_TOKEN = "configured-token"
+    settings.TELEGRAM_BOT_SECRET = "configured-secret"
+    settings.TELEGRAM_DELETE_WEBHOOK_ON_START = True
+    calls = []
+    monkeypatch.setattr(
+        "apps.telegram_support.management.commands.run_telegram_bot.TelegramApi.delete_webhook",
+        lambda self, *, drop_pending_updates: calls.append(drop_pending_updates),
+    )
+    monkeypatch.setattr(
+        "apps.telegram_support.management.commands.run_telegram_bot.DocNearTelegramBot.poll",
+        lambda self, timeout, once: None,
+    )
+    call_command("run_telegram_bot", once=True)
+    assert calls == [False]
+
+
+def test_telegram_status_never_prints_token(settings, monkeypatch, capsys):
+    token = "123456:super-sensitive-token"
+    settings.TELEGRAM_BOT_TOKEN = token
+    settings.TELEGRAM_BOT_USERNAME = "docnear_bot"
+    settings.TELEGRAM_OTP_ENABLED = True
+    settings.TELEGRAM_BOT_SECRET = "configured-secret"
+    monkeypatch.setattr(
+        "apps.telegram_support.management.commands.telegram_status.TelegramApi.get_me",
+        lambda self: {"username": "docnear_bot"},
+    )
+    call_command("telegram_status")
+    output = capsys.readouterr().out
+    assert "Telegram getMe: success" in output
+    assert "@docnear_bot" in output
+    assert token not in output
 
 
 def test_missing_token_returns_delivery_error_without_crashing_django(settings):

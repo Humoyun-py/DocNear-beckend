@@ -22,6 +22,10 @@ Start the Telegram bot in another terminal:
 DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py run_telegram_bot --settings=config.settings.development
 ```
 
+Use `telegram_status` to validate the BotFather token and `telegram_links` to
+inspect masked link/account readiness. A linked phone without an existing
+DocNear account can request its registration OTP with `/code register`.
+
 Run the Flutter app on an Android emulator:
 
 ```bash

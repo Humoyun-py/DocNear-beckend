@@ -3,14 +3,26 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
+from .phone import PHONE_MESSAGE, normalize_phone_number
 
 
-PHONE_PATTERN = r"^\+[1-9]\d{7,14}$"
-PHONE_MESSAGE = "Telefon raqamni xalqaro formatda kiriting: +998901234567"
+class PhoneNumberField(serializers.CharField):
+    default_error_messages = {"invalid": PHONE_MESSAGE}
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("max_length", 32)
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        try:
+            return normalize_phone_number(value)
+        except ValueError:
+            self.fail("invalid")
 
 
 class RequestOTPSerializer(serializers.Serializer):
-    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    phone_number = PhoneNumberField()
     purpose = serializers.ChoiceField(choices=["register", "login"])
     channel = serializers.ChoiceField(choices=["sms", "telegram"], default="sms")
     first_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
@@ -18,7 +30,7 @@ class RequestOTPSerializer(serializers.Serializer):
 
 
 class VerifyOTPSerializer(serializers.Serializer):
-    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    phone_number = PhoneNumberField()
     code = serializers.RegexField(r"^\d{6}$", error_messages={"invalid": "6 xonali tasdiqlash kodini kiriting."})
     purpose = serializers.ChoiceField(choices=["register", "login"])
 

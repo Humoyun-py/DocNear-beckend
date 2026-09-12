@@ -54,6 +54,7 @@ Set these values in `.runtime/local.env` without committing the file:
 
 ```text
 TELEGRAM_OTP_ENABLED=true
+TELEGRAM_DELETE_WEBHOOK_ON_START=true
 TELEGRAM_BOT_TOKEN=<BotFather token>
 TELEGRAM_BOT_USERNAME=<username without @>
 TELEGRAM_BOT_WEBHOOK_SECRET=<random local secret>
@@ -68,11 +69,28 @@ source .venv/bin/activate
 DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py run_telegram_bot --settings=config.settings.development
 ```
 
+Verify the token and inspect phone links without exposing secrets or chat IDs:
+
+```bash
+DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_status --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_links --settings=config.settings.development
+```
+
+Development polling removes an old webhook with `drop_pending_updates=false`
+when `TELEGRAM_DELETE_WEBHOOK_ON_START=true`. Restart the bot command after
+changing its code or environment.
+
 The user sends `/start`, then `/link_phone`, and shares the contact button. The
 bot accepts only a contact whose Telegram `user_id` matches the sender. `/code`
 requests a login OTP, `/code register` requests a registration OTP, and
 `/unlink` disables the link. The backend generates, hashes and sends the OTP;
 the polling process does not store it.
+
+`/code` requires an active, verified DocNear account with the same normalized
+phone number. A newly linked phone without an account must first use
+`/code register` and complete registration. `telegram_links` reports this state as
+`account_ready=false`. Telegram delivery failures return
+`telegram_send_failed`; the API does not report a successful delivery.
 
 Use `https://t.me/<TELEGRAM_BOT_USERNAME>` or the “Telegram botni ochish” link
 on a configured login screen. Telegram OTP is unavailable when

@@ -11,7 +11,7 @@ from drf_spectacular.utils import extend_schema
 from apps.appointments.models import Appointment
 from apps.accounts.models import User
 from apps.accounts.otp import TelegramNotLinked, request_code
-from apps.accounts.serializers import PHONE_MESSAGE, PHONE_PATTERN
+from apps.accounts.serializers import PhoneNumberField
 from common.permissions import IsPatient
 from apps.appointments.views import PatientAppointmentViewSet
 from .authentication import TelegramAuthentication, verify_bot
@@ -64,7 +64,7 @@ class RedeemLinkView(generics.GenericAPIView):
 
 
 class PhoneContactSerializer(serializers.Serializer):
-    phone_number = serializers.RegexField(PHONE_PATTERN, max_length=16, error_messages={"invalid": PHONE_MESSAGE})
+    phone_number = PhoneNumberField()
     telegram_user_id = serializers.IntegerField(min_value=1)
     telegram_chat_id = serializers.IntegerField()
     contact_user_id = serializers.IntegerField(min_value=1)
