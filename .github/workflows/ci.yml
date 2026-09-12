@@ -38,6 +38,8 @@ jobs:
       OTP_SMS_PROVIDER: console
       OTP_TEST_CODE: "111111"
       TELEGRAM_BOT_TOKEN: dummy-ci-token
+      TELEGRAM_BOT_WEBHOOK_SECRET: dummy-ci-secret
+      TELEGRAM_OTP_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

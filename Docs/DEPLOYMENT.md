@@ -23,12 +23,15 @@ OTP_IP_REQUEST_LIMIT=20
 OTP_REQUEST_RATE=5/min
 OTP_VERIFY_RATE=10/min
 TELEGRAM_BOT_TOKEN=<BotFather token>
-TELEGRAM_BOT_SECRET=<independent random secret>
+TELEGRAM_BOT_USERNAME=<username without @>
+TELEGRAM_BOT_WEBHOOK_SECRET=<independent random secret>
+TELEGRAM_OTP_ENABLED=true
+DOCNEAR_API_BASE_URL=https://api.docnear.uz/api/v1
 LEGACY_PASSWORD_AUTH_ENABLED=false
 ```
 
-Production settings reject the console SMS provider, missing SMS/Telegram
-credentials and enabled legacy password authentication. Adapt `HttpSmsProvider`
+Production settings reject the console SMS provider, missing credentials for an
+enabled Telegram OTP channel, and enabled legacy password authentication. Adapt `HttpSmsProvider`
 payload/response handling to the selected vendor and verify it in staging before
 release. Do not put `OTP_TEST_CODE` in a production environment.
 
@@ -42,14 +45,22 @@ python backend/manage.py collectstatic --noinput --settings=config.settings.prod
 gunicorn config.wsgi:application --chdir backend --bind 0.0.0.0:8000 --workers 3
 ```
 
-Run `telegram_bot.py` as a separate supervised process with the same API base
-URL, bot token and bot secret. The API and every client must use HTTPS.
-
-Build each React app with
-`VITE_API_BASE_URL=https://api.docnear.uz/api/v1`. Build Flutter with:
+Run the Django bot command as a separate supervised process with the same API
+base URL, bot token and webhook secret:
 
 ```bash
-flutter build appbundle --release   --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/
+python backend/manage.py run_telegram_bot --settings=config.settings.production
+```
+
+The API and every client must use HTTPS.
+
+Build each React app with `VITE_API_BASE_URL=https://api.docnear.uz/api/v1` and
+`VITE_TELEGRAM_BOT_USERNAME=<username>`. Build Flutter with:
+
+```bash
+flutter build appbundle --release \
+  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/ \
+  --dart-define=TELEGRAM_BOT_USERNAME=<username>
 ```
 
 Release gates include CI on the exact commit, backup/restore verification,

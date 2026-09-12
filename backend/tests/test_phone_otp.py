@@ -117,6 +117,14 @@ def test_telegram_link_requires_own_contact_and_link_for_otp(client, settings):
     assert not link.is_active
 
 
+def test_telegram_otp_can_be_disabled_without_affecting_sms(client, settings):
+    user = otp_user("+998901234573")
+    settings.TELEGRAM_OTP_ENABLED = False
+    response = request_otp(client, user.phone_number, channel="telegram")
+    assert error(response, 503)["code"] == "telegram_otp_disabled"
+    assert request_otp(client, user.phone_number, channel="sms").status_code == 200
+
+
 def test_sms_registration_attaches_prelinked_telegram_contact(client, settings):
     settings.TELEGRAM_BOT_SECRET = "test-bot-secret"
     phone = "+998901234572"

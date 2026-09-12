@@ -11,4 +11,5 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"
 OTP_TEST_CODE = "111111"
 OTP_TEST_MODE = True
 OTP_SMS_PROVIDER = "console"
+TELEGRAM_OTP_ENABLED = True
 LEGACY_PASSWORD_AUTH_ENABLED = True

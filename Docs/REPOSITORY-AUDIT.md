@@ -33,7 +33,7 @@ references it.
 - Ruff: passed.
 - PostgreSQL 16 migrations: all applied successfully.
 - Migration drift check: `No changes detected`.
-- Pytest: **2327 passed in 188.34 seconds** against an isolated PostgreSQL
+- Pytest: **2335 passed in 62.57 seconds** against an isolated PostgreSQL
   cluster; double-booking and permission tests were retained.
 - Production deploy check: passed with zero issues using non-secret QA values.
 - Production email/password authentication is disabled. All roles authenticate

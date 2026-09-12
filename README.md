@@ -13,15 +13,22 @@ a login identifier in any client.
 Start the local backend and all web clients:
 
 ```bash
-export DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env"
-./run-docnear-dev.sh
+DOCNEAR_ENV_FILE=.runtime/local.env ./run-docnear-dev.sh
+```
+
+Start the Telegram bot in another terminal:
+
+```bash
+DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py run_telegram_bot --settings=config.settings.development
 ```
 
 Run the Flutter app on an Android emulator:
 
 ```bash
 cd DocNear-Mobile
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
+flutter run \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
+  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
 ```
 
 See [Docs/RUNNING.md](Docs/RUNNING.md) for setup and APK commands,

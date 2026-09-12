@@ -11,6 +11,9 @@ if [[ ! -x "$PYTHON" ]]; then echo "Python virtualenv topilmadi: $ROOT_DIR/.venv
 if [[ -z "${DOCNEAR_ENV_FILE:-}" && -r "$HOME/docnear-env-backup/repo-root.env" ]]; then
   export DOCNEAR_ENV_FILE="$HOME/docnear-env-backup/repo-root.env"
 fi
+if [[ -n "${DOCNEAR_ENV_FILE:-}" && "$DOCNEAR_ENV_FILE" != /* ]]; then
+  export DOCNEAR_ENV_FILE="$ROOT_DIR/${DOCNEAR_ENV_FILE#./}"
+fi
 if [[ -n "${DOCNEAR_ENV_FILE:-}" && ! -r "$DOCNEAR_ENV_FILE" ]]; then
   echo "DOCNEAR_ENV_FILE o‘qib bo‘lmaydi: $DOCNEAR_ENV_FILE" >&2
   exit 1
@@ -18,6 +21,20 @@ fi
 if [[ -z "${DATABASE_URL:-}" && -z "${DOCNEAR_ENV_FILE:-}" ]]; then
   echo "DATABASE_URL yoki tashqi DOCNEAR_ENV_FILE ni sozlang." >&2
   exit 1
+fi
+if [[ -z "${VITE_TELEGRAM_BOT_USERNAME:-}" ]]; then
+  if [[ -n "${TELEGRAM_BOT_USERNAME:-}" ]]; then
+    export VITE_TELEGRAM_BOT_USERNAME="$TELEGRAM_BOT_USERNAME"
+  elif [[ -n "${DOCNEAR_ENV_FILE:-}" ]]; then
+    VITE_TELEGRAM_BOT_USERNAME="$("$PYTHON" - "$DOCNEAR_ENV_FILE" <<'PY'
+from dotenv import dotenv_values
+import sys
+
+print(dotenv_values(sys.argv[1]).get("TELEGRAM_BOT_USERNAME", ""))
+PY
+)"
+    export VITE_TELEGRAM_BOT_USERNAME
+  fi
 fi
 "$PYTHON" - "$BACKEND_PORT" "$WEB_PORT" "$DOCTOR_PORT" "$ADMIN_PORT" "$OWNER_PORT" <<'PY'
 import socket, sys

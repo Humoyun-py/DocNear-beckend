@@ -27,6 +27,12 @@ class OtpDeliveryFailed(APIException):
     default_detail = "Tasdiqlash kodini yuborib bo‘lmadi. Keyinroq qayta urinib ko‘ring."
 
 
+class TelegramOtpDisabled(APIException):
+    status_code = 503
+    default_code = "telegram_otp_disabled"
+    default_detail = "Telegram orqali tasdiqlash kodi vaqtincha mavjud emas."
+
+
 GENERIC_REQUEST_MESSAGE = "Agar raqamdan foydalanish mumkin bo‘lsa, tasdiqlash kodi yuborildi."
 GENERIC_VERIFY_ERROR = "Tasdiqlash kodi noto‘g‘ri yoki muddati tugagan."
 
@@ -75,6 +81,8 @@ def _eligible_user(phone_number: str, purpose: str, names: dict) -> User | None:
 
 
 def request_code(*, request, phone_number: str, purpose: str, channel: str, **names) -> str:
+    if channel == PhoneOTP.Channel.TELEGRAM and not settings.TELEGRAM_OTP_ENABLED:
+        raise TelegramOtpDisabled()
     ip = client_ip(request)
     with transaction.atomic():
         _rate_limit(phone_number, ip)

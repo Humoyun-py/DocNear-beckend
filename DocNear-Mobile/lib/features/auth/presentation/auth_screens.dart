@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/settings_controller.dart';
 import 'auth_controller.dart';
@@ -199,6 +200,9 @@ class _PhoneAuthScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
+  static const configuredTelegramUsername = String.fromEnvironment(
+    'TELEGRAM_BOT_USERNAME',
+  );
   final phone = TextEditingController(text: '+998');
   final code = TextEditingController();
   final firstName = TextEditingController();
@@ -218,6 +222,21 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
 
   bool get validPhone =>
       RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(phone.text.trim());
+
+  String get telegramUsername => configuredTelegramUsername.trim().replaceFirst(
+    RegExp(r'^@'),
+    '',
+  );
+
+  Future<void> openTelegramBot() async {
+    final opened = await launchUrl(
+      Uri.https('t.me', '/$telegramUsername'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      setState(() => error = 'Telegram botni ochib bo‘lmadi.');
+    }
+  }
 
   Future<void> send(String channel) async {
     setState(() => error = null);
@@ -403,6 +422,12 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                         'Telegram uchun avval DocNear botida telefon raqamingizni ulashing.',
                         textAlign: TextAlign.center,
                       ),
+                    ),
+                  if (!codeStep && telegramUsername.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: busy ? null : openTelegramBot,
+                      icon: const Icon(LucideIcons.externalLink),
+                      label: const Text('Telegram botni ochish'),
                     ),
                   const SizedBox(height: 8),
                   TextButton(

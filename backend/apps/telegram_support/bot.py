@@ -1,0 +1,227 @@
+"""Telegram polling bot for secure phone linking and OTP requests."""
+
+import json
+import re
+import time
+from urllib import error, request
+
+
+PHONE_PATTERN = re.compile(r"^\+[1-9]\d{7,14}$")
+NOT_LINKED_MESSAGE = "Avval telefon raqamingizni ulashing. Buning uchun /link_phone buyrug‘idan foydalaning."
+
+
+class BotServiceError(RuntimeError):
+    def __init__(self, message: str, code: str = ""):
+        super().__init__(message)
+        self.code = code
+
+
+class TelegramApi:
+    def __init__(self, token: str):
+        self._base_url = f"https://api.telegram.org/bot{token}/"
+
+    def _call(self, method: str, payload: dict) -> dict:
+        body = json.dumps(payload).encode()
+        req = request.Request(
+            self._base_url + method,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with request.urlopen(req, timeout=40) as response:  # noqa: S310 - fixed Telegram API host
+                result = json.load(response)
+        except (error.URLError, TimeoutError, ValueError):
+            # Telegram embeds the token in the request URL, so never chain the
+            # transport exception into logs or command output.
+            raise BotServiceError("Telegram serveri bilan bog‘lanib bo‘lmadi.") from None
+        if not result.get("ok"):
+            raise BotServiceError("Telegram so‘rovni qabul qilmadi.")
+        return result.get("result")
+
+    def get_updates(self, offset: int, timeout: int) -> list[dict]:
+        return self._call("getUpdates", {"offset": offset, "timeout": timeout, "allowed_updates": ["message"]})
+
+    def send_text(self, chat_id: int, text: str, reply_markup: dict | None = None) -> None:
+        payload = {"chat_id": chat_id, "text": text}
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+        self._call("sendMessage", payload)
+
+
+class BackendClient:
+    def __init__(self, base_url: str, secret: str):
+        self.base_url = base_url.rstrip("/")
+        self.secret = secret
+
+    def _request(self, path: str, payload: dict, method: str = "POST") -> dict:
+        req = request.Request(
+            self.base_url + path,
+            data=json.dumps(payload).encode(),
+            headers={
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-Telegram-Bot-Secret": self.secret,
+            },
+            method=method,
+        )
+        try:
+            with request.urlopen(req, timeout=15) as response:  # noqa: S310 - operator-configured DocNear API
+                result = json.load(response)
+        except error.HTTPError as exc:
+            try:
+                result = json.load(exc)
+            except (ValueError, AttributeError):
+                result = {}
+            raise BotServiceError(result.get("message", "So‘rov bajarilmadi."), result.get("code", "")) from exc
+        except (error.URLError, TimeoutError, ValueError) as exc:
+            raise BotServiceError("DocNear serveri bilan bog‘lanib bo‘lmadi. Keyinroq qayta urinib ko‘ring.") from exc
+        if result.get("success") is False:
+            raise BotServiceError(result.get("message", "So‘rov bajarilmadi."), result.get("code", ""))
+        return result.get("data", result)
+
+    def link_phone(self, payload: dict) -> dict:
+        return self._request("/telegram/phone-link/", payload)
+
+    def request_code(self, telegram_user_id: int, purpose: str) -> dict:
+        return self._request(
+            "/telegram/request-otp/",
+            {"telegram_user_id": telegram_user_id, "purpose": purpose},
+        )
+
+    def unlink(self, telegram_user_id: int) -> dict:
+        return self._request("/telegram/phone-link/", {"telegram_user_id": telegram_user_id}, "DELETE")
+
+
+def normalize_phone(value: str) -> str:
+    value = re.sub(r"[\s\-()]", "", value.strip())
+    if not value.startswith("+"):
+        value = "+" + value
+    if not PHONE_PATTERN.fullmatch(value):
+        raise BotServiceError("Telefon raqamni xalqaro formatda kiriting: +998901234567")
+    return value
+
+
+class DocNearTelegramBot:
+    def __init__(self, telegram: TelegramApi, backend: BackendClient):
+        self.telegram = telegram
+        self.backend = backend
+
+    @staticmethod
+    def contact_keyboard() -> dict:
+        return {
+            "keyboard": [[{"text": "Telefon raqamni ulash", "request_contact": True}]],
+            "resize_keyboard": True,
+            "one_time_keyboard": True,
+        }
+
+    def handle_update(self, update: dict) -> None:
+        message = update.get("message") or {}
+        sender = message.get("from") or {}
+        chat = message.get("chat") or {}
+        if not sender.get("id") or not chat.get("id"):
+            return
+        if message.get("contact"):
+            self._handle_contact(message, sender, chat)
+            return
+        text = (message.get("text") or "").strip()
+        command, *arguments = text.split()
+        command = command.split("@", 1)[0].lower()
+        handlers = {
+            "/start": self._start,
+            "/link_phone": self._link_phone,
+            "/code": self._code,
+            "/unlink": self._unlink,
+            "/help": self._help,
+        }
+        handler = handlers.get(command)
+        if handler:
+            handler(chat["id"], sender["id"], arguments)
+        else:
+            self.telegram.send_text(chat["id"], "Mavjud buyruqlarni ko‘rish uchun /help buyrug‘ini yuboring.")
+
+    def _start(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
+        del telegram_user_id, arguments
+        self.telegram.send_text(
+            chat_id,
+            "DocNear botiga xush kelibsiz. Telefon raqamingizni ulash uchun /link_phone buyrug‘idan foydalaning.",
+        )
+
+    def _link_phone(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
+        del telegram_user_id, arguments
+        self.telegram.send_text(
+            chat_id,
+            "Quyidagi tugma orqali o‘zingizga tegishli telefon kontaktini yuboring.",
+            self.contact_keyboard(),
+        )
+
+    def _handle_contact(self, message: dict, sender: dict, chat: dict) -> None:
+        contact = message["contact"]
+        if contact.get("user_id") != sender["id"]:
+            self.telegram.send_text(chat["id"], "Faqat o‘zingizga tegishli kontaktni ulashingiz mumkin.")
+            return
+        try:
+            phone_number = normalize_phone(contact.get("phone_number", ""))
+            self.backend.link_phone({
+                "phone_number": phone_number,
+                "telegram_user_id": sender["id"],
+                "telegram_chat_id": chat["id"],
+                "contact_user_id": contact["user_id"],
+                "sender_user_id": sender["id"],
+            })
+        except BotServiceError as exc:
+            self.telegram.send_text(chat["id"], str(exc))
+            return
+        self.telegram.send_text(
+            chat["id"],
+            "Telefon raqamingiz muvaffaqiyatli ulandi.\nEndi tasdiqlash kodini Telegram orqali olishingiz mumkin.",
+            {"remove_keyboard": True},
+        )
+
+    def _code(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
+        purpose = "register" if arguments and arguments[0].lower() == "register" else "login"
+        try:
+            self.backend.request_code(telegram_user_id, purpose)
+        except BotServiceError as exc:
+            message = NOT_LINKED_MESSAGE if exc.code == "telegram_not_linked" else str(exc)
+            self.telegram.send_text(chat_id, message)
+            return
+        self.telegram.send_text(
+            chat_id,
+            "Tasdiqlash kodi yuborildi. Kod 5 daqiqa amal qiladi. Uni hech kimga bermang.",
+        )
+
+    def _unlink(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
+        del arguments
+        try:
+            self.backend.unlink(telegram_user_id)
+        except BotServiceError as exc:
+            self.telegram.send_text(chat_id, str(exc))
+            return
+        self.telegram.send_text(chat_id, "Telefon raqamingiz Telegram botdan uzildi.")
+
+    def _help(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
+        del telegram_user_id, arguments
+        self.telegram.send_text(
+            chat_id,
+            "/link_phone - telefon raqamni ulash\n"
+            "/code - kirish kodini olish\n"
+            "/code register - ro‘yxatdan o‘tish kodini olish\n"
+            "/unlink - bog‘lanishni o‘chirish\n"
+            "/help - yordam",
+        )
+
+    def poll(self, timeout: int = 30, once: bool = False) -> None:
+        offset = 0
+        while True:
+            try:
+                updates = self.telegram.get_updates(offset, timeout)
+                for update in updates:
+                    offset = max(offset, int(update["update_id"]) + 1)
+                    self.handle_update(update)
+            except BotServiceError:
+                if once:
+                    raise
+                time.sleep(3)
+            if once:
+                return

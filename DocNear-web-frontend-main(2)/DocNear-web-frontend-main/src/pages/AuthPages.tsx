@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAppointments } from '../context/AppointmentContext';
 
 const phonePattern = /^\+[1-9]\d{7,14}$/;
+const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '').trim().replace(/^@/, '');
+const telegramBotUrl = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : '';
 
 function PhoneAuthPage({ purpose }: { purpose: 'login' | 'register' }) {
   const { requestOtp, verifyOtp, isLoggedIn } = useAuth();
@@ -52,6 +54,7 @@ function PhoneAuthPage({ purpose }: { purpose: 'login' | 'register' }) {
       <button disabled={busy} onClick={()=>send('sms')} className="w-full bg-blue-600 text-white rounded-xl p-3 font-bold flex justify-center gap-2"><Phone size={18}/>{busy ? 'Yuborilmoqda...' : 'Tasdiqlash kodini yuborish'}</button>
       <button disabled={busy} onClick={()=>send('telegram')} className="w-full border rounded-xl p-3 font-bold flex justify-center gap-2"><Bot size={18}/>Kodni Telegram orqali olish</button>
       <p className="text-xs text-slate-500">Telegram uchun avval DocNear botida telefon raqamingizni ulashing.</p>
+      {telegramBotUrl && <a href={telegramBotUrl} target="_blank" rel="noreferrer" className="block text-center text-sm text-blue-600 font-bold">Telegram botni ochish</a>}
     </div> : <form onSubmit={verify} className="space-y-4">
       <label className="block text-sm font-semibold">Tasdiqlash kodini kiriting<input className="mt-1 w-full border rounded-xl p-3 tracking-[0.4em] text-center" inputMode="numeric" maxLength={6} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/></label>
       <button disabled={busy} className="w-full bg-blue-600 text-white rounded-xl p-3 font-bold flex justify-center gap-2"><ShieldCheck size={18}/>{busy ? 'Tekshirilmoqda...' : 'Tasdiqlash'}</button>

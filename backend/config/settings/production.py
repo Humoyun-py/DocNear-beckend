@@ -11,8 +11,8 @@ if OTP_SMS_PROVIDER != "http":  # noqa: F405
     raise ValueError("Production requires OTP_SMS_PROVIDER=http.")
 if not SMS_API_URL or not SMS_API_KEY:  # noqa: F405
     raise ValueError("Production requires SMS_API_URL and SMS_API_KEY.")
-if not TELEGRAM_BOT_TOKEN or not TELEGRAM_BOT_SECRET:  # noqa: F405
-    raise ValueError("Production requires TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_SECRET.")
+if TELEGRAM_OTP_ENABLED and (not TELEGRAM_BOT_TOKEN or not TELEGRAM_BOT_SECRET):  # noqa: F405
+    raise ValueError("Enabled Telegram OTP requires TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_WEBHOOK_SECRET.")
 if LEGACY_PASSWORD_AUTH_ENABLED:  # noqa: F405
     raise ValueError("Legacy password authentication must remain disabled in production.")
 insecure_cors_origins = [origin for origin in CORS_ALLOWED_ORIGINS if not origin.startswith("https://")]  # noqa: F405

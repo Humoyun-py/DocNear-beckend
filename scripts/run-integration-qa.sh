@@ -3,6 +3,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 QA_DIR="$ROOT/.runtime/integration"
 PG_BIN="${PG_BIN:-/usr/lib/postgresql/16/bin}"
+QA_PORT="${DOCNEAR_QA_PORT:-8001}"
 PG_STARTED=false
 cleanup() {
   if [[ "$PG_STARTED" == true ]]; then
@@ -28,9 +29,9 @@ export DATABASE_URL="postgresql:///docnear_integration_qa?host=$QA_DIR&port=5543
 export DEBUG=true DJANGO_SETTINGS_MODULE=config.settings.test DOCNEAR_QA_LIVE=1
 export OTP_SMS_PROVIDER=console OTP_TEST_CODE=111111 OTP_REQUEST_RATE=100/min OTP_VERIFY_RATE=100/min
 export DOCNEAR_QA_RUNTIME_DIR="$QA_DIR"
-export DOCNEAR_QA_BASE_URL="${DOCNEAR_QA_BASE_URL:-http://127.0.0.1:8001}"
+export DOCNEAR_QA_BASE_URL="${DOCNEAR_QA_BASE_URL:-http://127.0.0.1:$QA_PORT}"
 export TELEGRAM_BOT_SECRET="$(cat "$QA_DIR/telegram-secret")"
 export CORS_ALLOWED_ORIGINS="http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://127.0.0.1:3001,http://127.0.0.1:3002,http://127.0.0.1:3003,http://127.0.0.1:3004"
 cd "$ROOT/backend"
 "$ROOT/.venv/bin/python" -m qa.prepare_live
-"$ROOT/.venv/bin/python" manage.py runserver 0.0.0.0:8001 --noreload
+"$ROOT/.venv/bin/python" manage.py runserver "0.0.0.0:$QA_PORT" --noreload

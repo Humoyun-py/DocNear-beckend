@@ -12,7 +12,9 @@ notifications come from the Django REST API.
 
 ```bash
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
+flutter run \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
+  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
 ```
 
 For a physical phone, replace `10.0.2.2` with the backend computer's LAN IP.
@@ -22,7 +24,8 @@ Production builds should use:
 
 ```bash
 flutter build apk --release \
-  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/
+  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/ \
+  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
 ```
 
 ## Verify

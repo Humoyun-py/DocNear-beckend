@@ -9,7 +9,7 @@ Test date: 2026-09-12 (Asia/Tashkent).
 - Ruff: passed.
 - PostgreSQL migration application: passed.
 - Migration drift check: no changes detected.
-- Pytest: **2327 passed**, zero failed.
+- Pytest: **2335 passed**, zero failed.
 - Live Newman acceptance: **24 requests and 59 assertions passed**, zero failed.
 - Playwright patient/doctor booking flow: passed with zero browser errors.
 - Playwright admin/owner/Telegram ecosystem flow: passed with zero browser errors.
@@ -40,6 +40,10 @@ Postman inventory consistency.
 
 Double-booking and permission tests remain enabled. Tests use PostgreSQL rather
 than SQLite.
+
+Telegram bot tests cover missing-token behavior, `/start`, `/link_phone`, own
+and foreign contacts, `/code`, `/unlink`, disabled delivery, and protection
+against OTP or token disclosure through output and chained transport errors.
 
 ## Security observations
 

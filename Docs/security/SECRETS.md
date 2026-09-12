@@ -20,7 +20,8 @@ for immediate delivery and must not log it. Deterministic `111111` exists only
 in `config.settings.test`. Rotate any token or key that has ever entered Git,
 chat, screenshots or shared logs.
 
-The maintained Telegram worker is
-`DocNear-web-frontend-main(2)/DocNear-web-frontend-main/telegram_bot.py`. It
-requires `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_SECRET` and
-`DOCNEAR_API_BASE_URL`; it does not generate or persist OTP codes.
+The maintained Telegram worker is the Django `run_telegram_bot` management
+command. It requires `TELEGRAM_OTP_ENABLED=true`, `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_BOT_WEBHOOK_SECRET` and `DOCNEAR_API_BASE_URL`; it does not generate
+or persist OTP codes. Store the local values in ignored `.runtime/local.env`
+with mode `0600`. Only the non-secret username may be exposed to clients.

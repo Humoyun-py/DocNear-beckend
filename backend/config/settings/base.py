@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ENV_FILE = os.getenv("DOCNEAR_ENV_FILE")
 if ENV_FILE:
-    load_dotenv(Path(ENV_FILE).expanduser())
+    # An explicitly selected file is the source of truth for that process.
+    load_dotenv(Path(ENV_FILE).expanduser(), override=True)
 elif os.getenv("DJANGO_SETTINGS_MODULE", "").endswith(".development"):
     load_dotenv(BASE_DIR.parent / ".env")
 SECRET_KEY = os.environ.get("SECRET_KEY", "development-only-change-this-before-deploying-docnear")
@@ -115,8 +116,12 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "DocNear <noreply@docnear.uz>")
 PASSWORD_RESET_URL = os.getenv("PASSWORD_RESET_URL", "http://localhost:5173/reset-password")
-TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "")
+TELEGRAM_BOT_WEBHOOK_SECRET = os.getenv("TELEGRAM_BOT_WEBHOOK_SECRET", "")
+TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "") or TELEGRAM_BOT_WEBHOOK_SECRET
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
+TELEGRAM_OTP_ENABLED = os.getenv("TELEGRAM_OTP_ENABLED", "false").lower() == "true"
+DOCNEAR_API_BASE_URL = os.getenv("DOCNEAR_API_BASE_URL", "http://127.0.0.1:8001/api/v1").rstrip("/")
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
 OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
 OTP_PHONE_REQUEST_LIMIT = int(os.getenv("OTP_PHONE_REQUEST_LIMIT", "3"))

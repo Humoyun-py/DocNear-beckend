@@ -24,7 +24,8 @@ Content-Type: application/json
 `purpose` is `login` or `register`; `channel` is `sms` or `telegram`.
 Registration may also include `first_name` and `last_name`. The response is
 generic so it does not disclose whether a login phone exists. Telegram returns
-`telegram_not_linked` when that phone has no active bot link.
+`telegram_not_linked` when that phone has no active bot link and
+`telegram_otp_disabled` when the Telegram channel is disabled by configuration.
 
 Verify:
 
