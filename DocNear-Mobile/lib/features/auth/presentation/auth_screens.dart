@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -209,6 +212,9 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
   final lastName = TextEditingController();
   bool codeStep = false;
   bool sending = false;
+  int cooldown = 0;
+  String lastChannel = 'sms';
+  Timer? cooldownTimer;
   String? error;
 
   @override
@@ -217,16 +223,24 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
     code.dispose();
     firstName.dispose();
     lastName.dispose();
+    cooldownTimer?.cancel();
     super.dispose();
   }
 
-  bool get validPhone =>
-      RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(phone.text.trim());
+  String get normalizedPhone {
+    var digits = phone.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('00')) digits = digits.substring(2);
+    if (digits.length == 10 && digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+    if (digits.length == 9) digits = '998$digits';
+    return '+$digits';
+  }
 
-  String get telegramUsername => configuredTelegramUsername.trim().replaceFirst(
-    RegExp(r'^@'),
-    '',
-  );
+  bool get validPhone => RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(normalizedPhone);
+
+  String get telegramUsername =>
+      configuredTelegramUsername.trim().replaceFirst(RegExp(r'^@'), '');
 
   Future<void> openTelegramBot() async {
     final opened = await launchUrl(
@@ -252,34 +266,55 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
       return;
     }
     setState(() => sending = true);
+    final normalized = normalizedPhone;
     final message = await ref
         .read(authProvider.notifier)
         .requestOtp(
-          phoneNumber: phone.text.trim(),
+          phoneNumber: normalized,
           purpose: widget.purpose,
           channel: channel,
           firstName: firstName.text.trim(),
           lastName: lastName.text.trim(),
         );
-    if (mounted)
+    if (mounted) {
+      final shouldCooldown =
+          message == null || message.contains('biroz kuting');
       setState(() {
         sending = false;
         error = message;
-        if (message == null) codeStep = true;
+        if (message == null) {
+          phone.text = normalized;
+          codeStep = true;
+          lastChannel = channel;
+        }
+        if (shouldCooldown) cooldown = 60;
       });
+      if (shouldCooldown) {
+        cooldownTimer?.cancel();
+        cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (!mounted || cooldown <= 1) {
+            timer.cancel();
+            if (mounted) setState(() => cooldown = 0);
+          } else {
+            setState(() => cooldown -= 1);
+          }
+        });
+      }
+    }
   }
 
   Future<void> verify() async {
     setState(() => error = null);
-    if (!RegExp(r'^\d{6}$').hasMatch(code.text)) {
+    final normalizedCode = code.text.trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(normalizedCode)) {
       setState(() => error = '6 xonali tasdiqlash kodini kiriting.');
       return;
     }
     await ref
         .read(authProvider.notifier)
         .verifyOtp(
-          phoneNumber: phone.text.trim(),
-          code: code.text,
+          phoneNumber: normalizedPhone,
+          code: normalizedCode,
           purpose: widget.purpose,
         );
   }
@@ -318,8 +353,10 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Email va parol talab qilinmaydi.',
+                  Text(
+                    widget.purpose == 'login'
+                        ? 'Kirish kodi so‘raladi. Email va parol talab qilinmaydi.'
+                        : 'Ro‘yxatdan o‘tish kodi so‘raladi. Email va parol talab qilinmaydi.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -364,6 +401,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                     TextField(
                       controller: code,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       maxLength: 6,
                       textAlign: TextAlign.center,
                       decoration: const InputDecoration(
@@ -410,10 +448,21 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                       label: const Text('Kodni Telegram orqali olish'),
                     ),
                   if (codeStep)
-                    TextButton.icon(
-                      onPressed: busy ? null : () => send('sms'),
-                      icon: const Icon(LucideIcons.refreshCw),
-                      label: const Text('Kodni qayta yuborish'),
+                    Column(
+                      children: [
+                        const Text('Faqat oxirgi yuborilgan kod amal qiladi.'),
+                        TextButton.icon(
+                          onPressed: busy || cooldown > 0
+                              ? null
+                              : () => send(lastChannel),
+                          icon: const Icon(LucideIcons.refreshCw),
+                          label: Text(
+                            cooldown > 0
+                                ? 'Qayta yuborish (${cooldown}s)'
+                                : 'Kodni qayta yuborish',
+                          ),
+                        ),
+                      ],
                     ),
                   if (!codeStep)
                     const Padding(

@@ -11,8 +11,10 @@ Test date: 2026-09-12 (Asia/Tashkent).
 - Migration drift check: no changes detected.
 - Pytest: **2345 passed**, zero failed.
 - Live Newman acceptance: **24 requests and 59 assertions passed**, zero failed.
-- Playwright patient/doctor booking flow: passed with zero browser errors.
-- Playwright admin/owner/Telegram ecosystem flow: passed with zero browser errors.
+- Playwright patient/doctor booking flow: passed with zero browser errors;
+  phone-only login/register controls and six-digit numeric OTP input verified.
+- Playwright admin/owner/Telegram ecosystem flow: passed with zero browser
+  errors, including a fresh phone OTP registration.
 - Live Flutter repository flow: **1 passed**, zero failed.
 - Production deploy check: passed with zero issues after the OpenAPI enum fix.
 
@@ -45,6 +47,12 @@ Telegram bot tests cover safe `getMe` diagnostics, webhook cleanup,
 missing-token behavior, `/start`, `/link_phone`, own
 and foreign contacts, `/code`, `/unlink`, disabled delivery, and protection
 against OTP or token disclosure through output and chained transport errors.
+
+All five auth clients now normalize Uzbek phone input before sending it, keep
+the last delivery channel for resend, disable resend for 60 seconds, and state
+that only the latest code remains valid. The isolated QA runner raises only its
+test-local OTP request ceilings so the sequential Newman and Playwright suites
+can share one fixture database without bypassing production limits.
 
 ## Security observations
 

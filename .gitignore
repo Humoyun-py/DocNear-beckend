@@ -4,6 +4,7 @@
 *.jks
 *.keystore
 keystore.properties
+key.properties
 local.properties
 .idea/
 artifacts/*.apk

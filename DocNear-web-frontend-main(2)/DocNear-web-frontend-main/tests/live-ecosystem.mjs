@@ -7,6 +7,7 @@ const v=Object.fromEntries(JSON.parse(readFileSync(resolve(dir,'postman.env.json
 const booking=JSON.parse(readFileSync(resolve(dir,'e2e-appointment.json'),'utf8'));
 const api=await request.newContext({baseURL:'http://127.0.0.1:8001/api/v1/'});
 const login=async phone=>{let r=await api.post('auth/request-otp/',{data:{phone_number:phone,purpose:'login',channel:'sms'}});expect(r.status()).toBe(200);r=await api.post('auth/verify-otp/',{data:{phone_number:phone,purpose:'login',code:v.otp_test_code}});expect(r.status()).toBe(200);return (await r.json()).data};
+const register=async phone=>{let r=await api.post('auth/request-otp/',{data:{phone_number:phone,purpose:'register',channel:'sms',first_name:'QA Register'}});expect(r.status()).toBe(200);r=await api.post('auth/verify-otp/',{data:{phone_number:phone,purpose:'register',code:v.otp_test_code}});expect(r.status()).toBe(200);return (await r.json()).data};
 const loginUi=async(page,port,phone)=>{await page.goto('http://localhost:'+port+'/login');await page.locator('input[type=tel]').fill(phone);await page.getByRole('button',{name:'Tasdiqlash kodini yuborish',exact:true}).click();await page.locator('input[inputmode=numeric]').fill(v.otp_test_code);await page.getByRole('button',{name:'Tasdiqlash',exact:true}).click();await expect(page).not.toHaveURL(/login/)};
 const patient=await login(v.patient_phone),patientB=await login(v.patient_b_phone),admin=await login(v.super_admin_phone);
 const headers=t=>({Authorization:'Bearer '+t.access});
@@ -15,6 +16,9 @@ const adminPage=await browser.newPage(),ownerPage=await browser.newPage();
 const errors=[];for(const page of [adminPage,ownerPage])page.on('pageerror',e=>errors.push(e.message));
 const report={};
 try{
+ const registered=await register('+99894'+Date.now().toString().slice(-7));
+ expect(registered.user.role).toBe('patient');
+ report.phoneRegisterOtp=true;
  for(const [page,port,phone] of [[adminPage,3003,v.super_admin_phone],[ownerPage,3004,v.clinic_owner_phone]]){
   await loginUi(page,port,phone);
   await page.goto('http://localhost:'+port+'/appointments');

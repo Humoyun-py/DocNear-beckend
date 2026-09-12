@@ -276,4 +276,5 @@ def test_unknown_login_requests_are_generic_and_rate_limited_by_phone(client, se
     second = data(request_otp(client, phone))
     assert first["message"] == second["message"]
     assert PhoneOTP.objects.filter(phone_number=phone, user__isnull=True).count() == 2
-    assert request_otp(client, phone).status_code == 429
+    limited = request_otp(client, phone)
+    assert error(limited, 429)["code"] == "too_many_requests"

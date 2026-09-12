@@ -22,9 +22,10 @@ Start the Telegram bot in another terminal:
 DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py run_telegram_bot --settings=config.settings.development
 ```
 
-Use `telegram_status` to validate the BotFather token and `telegram_links` to
-inspect masked link/account readiness. A linked phone without an existing
-DocNear account can request its registration OTP with `/code register`.
+Use `telegram_status` to validate the BotFather token and webhook state,
+`telegram_links` to inspect masked link/account readiness, and `otp_status` to
+inspect aggregate OTP state without revealing codes. A linked phone without an
+existing DocNear account can request its registration OTP with `/code register`.
 
 Run the Flutter app on an Android emulator:
 
@@ -36,7 +37,7 @@ flutter run \
 ```
 
 See [Docs/RUNNING.md](Docs/RUNNING.md) for setup and APK commands,
-[Docs/api-contract-v1.md](Docs/api-contract-v1.md) for the OTP API and
+[Docs/api-contract-v1.md](Docs/api-contract-v1.md) for the complete client API and
 [Docs/DEPLOYMENT.md](Docs/DEPLOYMENT.md) for production SMS and Telegram setup.
 CI checks PostgreSQL migrations/tests, every React build, Flutter analysis/tests
 and a debug APK build.

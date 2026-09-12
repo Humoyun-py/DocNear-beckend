@@ -6,11 +6,23 @@ const expect = baseExpect.configure({timeout:20000});
 const root = resolve('../..');
 const directory = resolve(root,'.runtime/integration');
 const values = Object.fromEntries(JSON.parse(readFileSync(resolve(directory,'postman.env.json'),'utf8')).values.map(v=>[v.key,v.value]));
+async function assertPatientAuthUi(page, path) {
+ await page.goto('http://localhost:3001/'+path);
+ await expect(page.locator('input[type=tel]')).toBeVisible();
+ await expect(page.locator('input[type=email]')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Tasdiqlash kodini yuborish',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Kodni Telegram orqali olish',exact:true})).toBeVisible();
+}
 async function loginWithOtp(page, port, phone) {
  await page.goto('http://localhost:'+port+'/login');
  await page.locator('input[type=tel]').fill(phone);
  await page.getByRole('button',{name:'Tasdiqlash kodini yuborish',exact:true}).click();
- await page.locator('input[inputmode=numeric]').fill(values.otp_test_code);
+ const otpInput=page.locator('input[inputmode=numeric]');
+ await expect(otpInput).toHaveAttribute('maxlength','6');
+ await otpInput.fill('12a 3');
+ await expect(otpInput).toHaveValue('123');
+ await otpInput.fill(values.otp_test_code);
+ await expect(otpInput).toHaveValue(values.otp_test_code);
  await page.getByRole('button',{name:'Tasdiqlash',exact:true}).click();
  await expect(page).not.toHaveURL(/\/login$/);
 }
@@ -23,6 +35,8 @@ const failures=[];
 patient.on('pageerror',e=>failures.push(e.message));
 doctor.on('pageerror',e=>failures.push(e.message));
 try {
+ await assertPatientAuthUi(patient,'register');
+ await assertPatientAuthUi(patient,'login');
  await loginWithOtp(patient,3001,values.patient_phone);
  await patient.goto('http://localhost:3001/doctors/'+values.doctor_id);
  await expect(patient.getByRole('heading',{name:'QA Doctor',exact:true})).toBeVisible();

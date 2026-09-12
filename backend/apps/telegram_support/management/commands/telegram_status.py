@@ -19,8 +19,14 @@ class Command(BaseCommand):
         if not token_loaded:
             raise CommandError("Telegram getMe: token missing")
         try:
-            bot = TelegramApi(settings.TELEGRAM_BOT_TOKEN).get_me()
+            api = TelegramApi(settings.TELEGRAM_BOT_TOKEN)
+            bot = api.get_me()
+            webhook = api.get_webhook_info()
         except BotServiceError:
             raise CommandError("Telegram getMe: failed") from None
         self.stdout.write(self.style.SUCCESS("Telegram getMe: success"))
         self.stdout.write(f"Bot username: @{bot.get('username', 'unknown')}")
+        webhook_configured = bool(webhook.get("url"))
+        self.stdout.write(f"Webhook status: {'configured' if webhook_configured else 'clear'}")
+        self.stdout.write(f"Polling compatibility: {'no' if webhook_configured else 'yes'}")
+        self.stdout.write(f"Pending updates: {int(webhook.get('pending_update_count', 0))}")

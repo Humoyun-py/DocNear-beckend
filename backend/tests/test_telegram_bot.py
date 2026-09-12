@@ -132,10 +132,16 @@ def test_telegram_status_never_prints_token(settings, monkeypatch, capsys):
         "apps.telegram_support.management.commands.telegram_status.TelegramApi.get_me",
         lambda self: {"username": "docnear_bot"},
     )
+    monkeypatch.setattr(
+        "apps.telegram_support.management.commands.telegram_status.TelegramApi.get_webhook_info",
+        lambda self: {"url": "", "pending_update_count": 0},
+    )
     call_command("telegram_status")
     output = capsys.readouterr().out
     assert "Telegram getMe: success" in output
     assert "@docnear_bot" in output
+    assert "Webhook status: clear" in output
+    assert "Polling compatibility: yes" in output
     assert token not in output
 
 

@@ -74,6 +74,7 @@ Verify the token and inspect phone links without exposing secrets or chat IDs:
 ```bash
 DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_status --settings=config.settings.development
 DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_links --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py otp_status --settings=config.settings.development
 ```
 
 Development polling removes an old webhook with `drop_pending_updates=false`
@@ -141,3 +142,40 @@ open this Flutter app.
 For a release, keep the upload keystore outside Git, copy
 `android/key.properties.example` to the ignored `android/key.properties`, then
 build with the HTTPS production API URL. The Play Console expects an AAB.
+
+## Verify the complete repository
+
+Run backend checks from the repository root:
+
+```bash
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py check --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py makemigrations --check --dry-run --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py migrate --settings=config.settings.development
+.venv/bin/python -m compileall -q backend
+.venv/bin/ruff check backend
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/pytest -q
+```
+
+In each React project run `npm ci`, `npm run lint`, `npm run test
+--if-present`, and `npm run build`. The project directories are Patient Web,
+`DocNear-Doctor-panel-main(2)/DocNear-Doctor-panel-main`,
+`DocNear-admin-panel`, and `DocNear-clinic-owner-panel`.
+
+For an isolated PostgreSQL/API acceptance run, start
+`./scripts/run-integration-qa.sh`. In another terminal run:
+
+```bash
+npx --yes newman run postman/DocNear.postman_collection.json \
+  -e .runtime/integration/postman.env.json \
+  --folder '00 End-to-end booking verification'
+cd 'DocNear-web-frontend-main(2)/DocNear-web-frontend-main'
+node tests/live-booking.mjs
+node tests/live-ecosystem.mjs
+cd ../..
+.venv/bin/python scripts/run-mobile-integration.py
+```
+
+The browser flow checks phone-only auth, six-digit input, booking creation,
+doctor acceptance, shared Booking ID visibility, owner scope, and HTTP 409 for
+a duplicate slot. The isolated QA environment uses test-only OTP configuration;
+it must never be used as a deployed environment.

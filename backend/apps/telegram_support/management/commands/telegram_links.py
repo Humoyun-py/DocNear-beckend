@@ -12,9 +12,10 @@ class Command(BaseCommand):
         self.stdout.write(f"Telegram links count: {links.count()}")
         for link in links:
             account_ready = bool(link.user and link.user.is_active and link.user.is_verified)
+            role = link.user.role if link.user else "none"
             self.stdout.write(
                 f"{mask_phone_number(link.phone_number)} -> "
                 f"chat_id {'exists' if link.telegram_chat_id else 'missing'}, "
                 f"active={str(link.is_active).lower()}, "
-                f"account_ready={str(account_ready).lower()}"
+                f"account_ready={str(account_ready).lower()}, role={role}"
             )

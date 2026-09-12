@@ -45,6 +45,9 @@ class TelegramApi:
     def get_me(self) -> dict:
         return self._call("getMe", {})
 
+    def get_webhook_info(self) -> dict:
+        return self._call("getWebhookInfo", {})
+
     def delete_webhook(self, *, drop_pending_updates: bool = False) -> None:
         self._call("deleteWebhook", {"drop_pending_updates": drop_pending_updates})
 

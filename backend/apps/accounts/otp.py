@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
 from django.utils import timezone
-from rest_framework.exceptions import APIException, Throttled, ValidationError
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.telegram_support.models import TelegramPhoneLink
@@ -47,7 +47,13 @@ class TelegramSendFailed(APIException):
 class TelegramAccountUnavailable(APIException):
     status_code = 400
     default_code = "telegram_account_unavailable"
-    default_detail = "Bu telefon raqamga faol DocNear hisobi topilmadi. Avval ro‘yxatdan o‘ting."
+    default_detail = "Bu raqam uchun DocNear hisobi topilmadi. Avval ro‘yxatdan o‘ting."
+
+
+class OtpRateLimited(APIException):
+    status_code = 429
+    default_code = "too_many_requests"
+    default_detail = "Yangi kod so‘rashdan oldin biroz kuting."
 
 
 GENERIC_REQUEST_MESSAGE = "Agar raqamdan foydalanish mumkin bo‘lsa, tasdiqlash kodi yuborildi."
@@ -70,9 +76,9 @@ def _rate_limit(phone_number: str, ip: str | None) -> None:
     since = timezone.now() - timedelta(minutes=10)
     recent = PhoneOTP.objects.filter(phone_number=phone_number, created_at__gte=since).count()
     if recent >= settings.OTP_PHONE_REQUEST_LIMIT:
-        raise Throttled(detail="Yangi kod so‘rashdan oldin biroz kuting.")
+        raise OtpRateLimited()
     if ip and PhoneOTP.objects.filter(request_ip=ip, created_at__gte=since).count() >= settings.OTP_IP_REQUEST_LIMIT:
-        raise Throttled(detail="Juda ko‘p so‘rov yuborildi. Keyinroq qayta urinib ko‘ring.")
+        raise OtpRateLimited()
 
 
 def _eligible_user(phone_number: str, purpose: str, names: dict) -> User | None:

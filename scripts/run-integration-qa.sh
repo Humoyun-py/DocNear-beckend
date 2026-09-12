@@ -28,6 +28,7 @@ fi
 export DATABASE_URL="postgresql:///docnear_integration_qa?host=$QA_DIR&port=55439"
 export DEBUG=true DJANGO_SETTINGS_MODULE=config.settings.test DOCNEAR_QA_LIVE=1
 export OTP_SMS_PROVIDER=console OTP_TEST_CODE=111111 OTP_REQUEST_RATE=100/min OTP_VERIFY_RATE=100/min
+export OTP_PHONE_REQUEST_LIMIT=100 OTP_IP_REQUEST_LIMIT=100
 export DOCNEAR_QA_RUNTIME_DIR="$QA_DIR"
 export DOCNEAR_QA_BASE_URL="${DOCNEAR_QA_BASE_URL:-http://127.0.0.1:$QA_PORT}"
 export TELEGRAM_BOT_SECRET="$(cat "$QA_DIR/telegram-secret")"
