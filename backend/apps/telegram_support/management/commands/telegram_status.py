@@ -21,11 +21,16 @@ class Command(BaseCommand):
         try:
             api = TelegramApi(settings.TELEGRAM_BOT_TOKEN)
             bot = api.get_me()
-            webhook = api.get_webhook_info()
         except BotServiceError:
             raise CommandError("Telegram getMe: failed") from None
         self.stdout.write(self.style.SUCCESS("Telegram getMe: success"))
         self.stdout.write(f"Bot username: @{bot.get('username', 'unknown')}")
+        try:
+            webhook = api.get_webhook_info()
+        except BotServiceError:
+            self.stdout.write("Webhook status: unknown")
+            self.stdout.write("Polling compatibility: unknown")
+            raise CommandError("Telegram getWebhookInfo: failed") from None
         webhook_configured = bool(webhook.get("url"))
         self.stdout.write(f"Webhook status: {'configured' if webhook_configured else 'clear'}")
         self.stdout.write(f"Polling compatibility: {'no' if webhook_configured else 'yes'}")

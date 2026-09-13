@@ -237,7 +237,9 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
     return '+$digits';
   }
 
-  bool get validPhone => RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(normalizedPhone);
+  bool get validPhone =>
+      !RegExp(r'[^\d+\s().-]').hasMatch(phone.text) &&
+      RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(normalizedPhone);
 
   String get telegramUsername =>
       configuredTelegramUsername.trim().replaceFirst(RegExp(r'^@'), '');
@@ -253,7 +255,9 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
   }
 
   Future<void> send(String channel) async {
+    if (sending || cooldown > 0 || ref.read(authProvider).verifying) return;
     setState(() => error = null);
+    ref.read(authProvider.notifier).clearError();
     if (!validPhone) {
       setState(
         () =>
@@ -267,7 +271,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
     }
     setState(() => sending = true);
     final normalized = normalizedPhone;
-    final message = await ref
+    final failure = await ref
         .read(authProvider.notifier)
         .requestOtp(
           phoneNumber: normalized,
@@ -278,12 +282,15 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
         );
     if (mounted) {
       final shouldCooldown =
-          message == null || message.contains('biroz kuting');
+          failure == null ||
+          failure.statusCode == 429 ||
+          failure.code == 'too_many_requests';
       setState(() {
         sending = false;
-        error = message;
-        if (message == null) {
+        error = failure?.message;
+        if (failure == null) {
           phone.text = normalized;
+          code.clear();
           codeStep = true;
           lastChannel = channel;
         }
@@ -304,6 +311,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
   }
 
   Future<void> verify() async {
+    if (sending || ref.read(authProvider).verifying) return;
     setState(() => error = null);
     final normalizedCode = code.text.trim();
     if (!RegExp(r'^\d{6}$').hasMatch(normalizedCode)) {
@@ -322,7 +330,8 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authProvider);
-    final busy = sending || state.status == AuthStatus.checking;
+    final busy =
+        sending || state.status == AuthStatus.checking || state.verifying;
     final visibleError = error ?? state.error;
     return Scaffold(
       appBar: widget.purpose == 'register'
@@ -366,6 +375,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                         Expanded(
                           child: TextField(
                             controller: firstName,
+                            enabled: !busy,
                             decoration: const InputDecoration(
                               labelText: 'Ism',
                               prefixIcon: Icon(LucideIcons.user),
@@ -376,6 +386,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                         Expanded(
                           child: TextField(
                             controller: lastName,
+                            enabled: !busy,
                             decoration: const InputDecoration(
                               labelText: 'Familiya',
                             ),
@@ -387,7 +398,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                   ],
                   TextField(
                     controller: phone,
-                    enabled: !codeStep,
+                    enabled: !codeStep && !busy,
                     keyboardType: TextInputType.phone,
                     autofillHints: const [AutofillHints.telephoneNumber],
                     decoration: const InputDecoration(
@@ -422,7 +433,7 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                   ],
                   const SizedBox(height: 20),
                   FilledButton.icon(
-                    onPressed: busy
+                    onPressed: busy || (!codeStep && cooldown > 0)
                         ? null
                         : codeStep
                         ? verify
@@ -443,7 +454,9 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                   const SizedBox(height: 10),
                   if (!codeStep)
                     OutlinedButton.icon(
-                      onPressed: busy ? null : () => send('telegram'),
+                      onPressed: busy || cooldown > 0
+                          ? null
+                          : () => send('telegram'),
                       icon: const Icon(LucideIcons.send),
                       label: const Text('Kodni Telegram orqali olish'),
                     ),
@@ -464,6 +477,12 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                         ),
                       ],
                     ),
+                  if (!codeStep)
+                    if (cooldown > 0)
+                      Text(
+                        'Qayta yuborish (${cooldown}s)',
+                        textAlign: TextAlign.center,
+                      ),
                   if (!codeStep)
                     const Padding(
                       padding: EdgeInsets.only(top: 8),

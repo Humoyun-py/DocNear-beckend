@@ -2,13 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../shared/models/models.dart';
 
 enum AuthStatus { checking, authenticated, unauthenticated }
 
 @immutable
 class AuthState {
-  const AuthState({required this.status, this.user, this.error});
+  const AuthState({
+    required this.status,
+    this.user,
+    this.error,
+    this.verifying = false,
+  });
   const AuthState.checking() : this(status: AuthStatus.checking);
   const AuthState.unauthenticated([String? error])
     : this(status: AuthStatus.unauthenticated, error: error);
@@ -18,6 +24,7 @@ class AuthState {
   final AuthStatus status;
   final UserModel? user;
   final String? error;
+  final bool verifying;
 }
 
 class AuthController extends StateNotifier<AuthState> {
@@ -44,7 +51,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<String?> requestOtp({
+  Future<ApiException?> requestOtp({
     required String phoneNumber,
     required String purpose,
     required String channel,
@@ -63,7 +70,7 @@ class AuthController extends StateNotifier<AuthState> {
           );
       return null;
     } catch (error) {
-      return _message(error);
+      return error is ApiException ? error : ApiException(_message(error));
     }
   }
 
@@ -72,7 +79,11 @@ class AuthController extends StateNotifier<AuthState> {
     required String code,
     required String purpose,
   }) async {
-    state = const AuthState.checking();
+    if (state.verifying) return false;
+    state = const AuthState(
+      status: AuthStatus.unauthenticated,
+      verifying: true,
+    );
     try {
       state = AuthState.authenticated(
         await ref

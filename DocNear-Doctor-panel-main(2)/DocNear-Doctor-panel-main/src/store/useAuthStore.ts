@@ -11,7 +11,7 @@ const empty = {user: null, profile: null, token: null, isAuthenticated: false, i
 export const useAuthStore = create<AuthState>((set, get) => ({
  ...empty, isLoading: true, error: null,
  async restore() { set({isLoading: true}); try { const data = await authService.getCurrentSession(); set(data ? {...data, isAuthenticated: true, isLoading: false} : empty); } catch (error) { set({...empty, error: String(error)}); } },
- async requestOtp(phone,channel='sms') { set({isLoading:true,error:null}); try { await authService.requestOtp(phone,channel); set({isLoading:false}); } catch(error){const message=error instanceof Error?error.message:'Tasdiqlash kodini yuborib bo‘lmadi.';set({isLoading:false,error:message});throw new Error(message);} },
+ async requestOtp(phone,channel='sms') { set({isLoading:true,error:null}); try { await authService.requestOtp(phone,channel); set({isLoading:false}); } catch(error){const message=error instanceof Error?error.message:'Tasdiqlash kodini yuborib bo‘lmadi.';set({isLoading:false,error:message});throw error;} },
  async verifyOtp(credentials) {
   set({isLoading: true, error: null});
   try { const data = await authService.verifyOtp(credentials); set({...data, isAuthenticated: true, isLoading: false}); return true; }

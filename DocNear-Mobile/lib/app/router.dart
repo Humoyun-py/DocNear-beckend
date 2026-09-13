@@ -13,11 +13,15 @@ import '../shared/models/models.dart';
 import 'settings_controller.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authProvider);
-  final settings = ref.watch(appSettingsProvider);
-  return GoRouter(
+  final refresh = _RouterRefresh();
+  ref.listen(authProvider, (_, __) => refresh.refresh());
+  ref.listen(appSettingsProvider, (_, __) => refresh.refresh());
+  final router = GoRouter(
     initialLocation: '/',
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      final settings = ref.read(appSettingsProvider);
       final path = state.uri.path;
       if (!settings.onboardingComplete) {
         return path == '/onboarding' ? null : '/onboarding';
@@ -26,6 +30,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/splash';
       }
       final public = {'/splash', '/onboarding', '/login', '/register'};
+      if (auth.status == AuthStatus.unauthenticated &&
+          {'/splash', '/onboarding'}.contains(path)) {
+        return '/login';
+      }
       if (auth.status == AuthStatus.unauthenticated && !public.contains(path)) {
         return '/login';
       }
@@ -148,7 +156,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.onDispose(() {
+    router.dispose();
+    refresh.dispose();
+  });
+  return router;
 });
+
+class _RouterRefresh extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
 
 class _MissingRouteData extends StatelessWidget {
   const _MissingRouteData();

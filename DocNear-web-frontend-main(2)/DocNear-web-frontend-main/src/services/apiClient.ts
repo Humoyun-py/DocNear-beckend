@@ -5,6 +5,9 @@ export const AUTH_EXPIRED = 'docnear:auth-expired';
 export class ApiError extends Error {
   constructor(message: string, public status: number, public data: unknown) { super(message); }
 }
+export function isOtpRateLimited(error: unknown) {
+  return error instanceof ApiError && (error.status === 429 || (error.data as { code?: string } | null)?.code === 'too_many_requests');
+}
 type Envelope<T> = { success: boolean; data: T; message?: string; errors?: unknown };
 export type Page<T> = { results: T[]; count: number; next: string | null; previous: string | null };
 let refreshPromise: Promise<string | null> | null = null;

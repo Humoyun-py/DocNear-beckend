@@ -15,6 +15,23 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 mkdir -p "$QA_DIR"
 chmod 700 "$QA_DIR"
+"$ROOT/.venv/bin/python" - "$QA_DIR/telegram-secret" <<'PY'
+import os
+from pathlib import Path
+import secrets
+import sys
+
+path = Path(sys.argv[1])
+try:
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+except FileExistsError:
+    path.chmod(0o600)
+    if not path.read_text().strip():
+        raise SystemExit("QA Telegram secret is empty; restore or remove the empty QA secret file before retrying.")
+else:
+    with os.fdopen(fd, "w") as file:
+        file.write(secrets.token_urlsafe(32))
+PY
 if [[ ! -f "$QA_DIR/pg/PG_VERSION" ]]; then
   "$PG_BIN/initdb" -D "$QA_DIR/pg" -A trust --no-locale --encoding=UTF8 > "$QA_DIR/initdb.log"
 fi
@@ -31,7 +48,8 @@ export OTP_SMS_PROVIDER=console OTP_TEST_CODE=111111 OTP_REQUEST_RATE=100/min OT
 export OTP_PHONE_REQUEST_LIMIT=100 OTP_IP_REQUEST_LIMIT=100
 export DOCNEAR_QA_RUNTIME_DIR="$QA_DIR"
 export DOCNEAR_QA_BASE_URL="${DOCNEAR_QA_BASE_URL:-http://127.0.0.1:$QA_PORT}"
-export TELEGRAM_BOT_SECRET="$(cat "$QA_DIR/telegram-secret")"
+TELEGRAM_BOT_SECRET="$(cat "$QA_DIR/telegram-secret")"
+export TELEGRAM_BOT_SECRET
 export CORS_ALLOWED_ORIGINS="http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://127.0.0.1:3001,http://127.0.0.1:3002,http://127.0.0.1:3003,http://127.0.0.1:3004"
 cd "$ROOT/backend"
 "$ROOT/.venv/bin/python" -m qa.prepare_live

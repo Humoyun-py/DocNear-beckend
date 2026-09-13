@@ -1,10 +1,13 @@
+from datetime import timedelta
 from urllib.parse import parse_qs
 from urllib.error import HTTPError
 
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.utils import timezone
 
+from apps.accounts.models import PhoneOTP
 from apps.accounts.telegram_otp import send_telegram_code
 from apps.accounts.sms import SmsDeliveryError
 from apps.telegram_support.bot import (
@@ -143,6 +146,88 @@ def test_telegram_status_never_prints_token(settings, monkeypatch, capsys):
     assert "Webhook status: clear" in output
     assert "Polling compatibility: yes" in output
     assert token not in output
+
+
+@pytest.mark.parametrize("failed_method", ["get_me", "get_webhook_info"])
+def test_telegram_status_distinguishes_failed_api_call_without_exposing_secrets(
+    settings, monkeypatch, capsys, failed_method,
+):
+    settings.TELEGRAM_BOT_TOKEN = "private-diagnostic-token"
+    settings.TELEGRAM_BOT_SECRET = "private-diagnostic-secret"
+    calls = []
+
+    def get_me(self):
+        calls.append("get_me")
+        if failed_method == "get_me":
+            raise BotServiceError(settings.TELEGRAM_BOT_TOKEN)
+        return {"username": "docnear_bot"}
+
+    def get_webhook_info(self):
+        calls.append("get_webhook_info")
+        raise BotServiceError(settings.TELEGRAM_BOT_SECRET)
+
+    monkeypatch.setattr(TelegramApi, "get_me", get_me)
+    monkeypatch.setattr(TelegramApi, "get_webhook_info", get_webhook_info)
+    expected = "Telegram getMe: failed" if failed_method == "get_me" else "Telegram getWebhookInfo: failed"
+    with pytest.raises(CommandError, match=expected) as caught:
+        call_command("telegram_status")
+    output = capsys.readouterr()
+    observable = output.out + output.err + str(caught.value)
+    assert settings.TELEGRAM_BOT_TOKEN not in observable
+    assert settings.TELEGRAM_BOT_SECRET not in observable
+    assert caught.value.__suppress_context__
+    if failed_method == "get_me":
+        assert calls == ["get_me"]
+        assert "Telegram getMe: success" not in observable
+    else:
+        assert calls == ["get_me", "get_webhook_info"]
+        assert "Telegram getMe: success" in observable
+        assert "Polling compatibility: unknown" in observable
+        assert "Telegram getMe: failed" not in observable
+
+
+def test_telegram_status_with_webhook_does_not_disclose_url(settings, monkeypatch, capsys):
+    settings.TELEGRAM_BOT_TOKEN = "configured-token"
+    private_url = "https://example.test/private-webhook-token"
+    monkeypatch.setattr(TelegramApi, "get_me", lambda self: {"username": "docnear_bot"})
+    monkeypatch.setattr(
+        TelegramApi, "get_webhook_info",
+        lambda self: {"url": private_url, "pending_update_count": 3},
+    )
+    call_command("telegram_status")
+    output = capsys.readouterr().out
+    assert "Webhook status: configured" in output
+    assert "Polling compatibility: no" in output
+    assert "Pending updates: 3" in output
+    assert private_url not in output
+
+
+@pytest.mark.django_db
+def test_otp_status_excludes_consumed_and_exhausted_challenges_without_disclosing_details(capsys):
+    now = timezone.now()
+    phone = "+998901234567"
+    code_hash = "private-otp-hash"
+    for overrides in [
+        {},
+        {"max_attempts": 2, "attempts": 2},
+        {"expires_at": now - timedelta(minutes=1)},
+        {"verified_at": now},
+    ]:
+        values = {
+            "phone_number": phone,
+            "code_hash": code_hash,
+            "purpose": PhoneOTP.Purpose.LOGIN,
+            "channel": PhoneOTP.Channel.SMS,
+            "expires_at": now + timedelta(minutes=5),
+        }
+        PhoneOTP.objects.create(**(values | overrides))
+    call_command("otp_status")
+    output = capsys.readouterr().out
+    assert "Active OTP count: 1" in output
+    assert "Expired OTP count: 1" in output
+    assert "Exhausted OTP count: 1" in output
+    assert phone not in output
+    assert code_hash not in output
 
 
 def test_missing_token_returns_delivery_error_without_crashing_django(settings):

@@ -1,4 +1,7 @@
 import axios from 'axios';
+export function isOtpRateLimited(error: unknown) {
+ return axios.isAxiosError(error) && (error.response?.status === 429 || error.response?.data?.code === 'too_many_requests');
+}
 export const apiClient = axios.create({baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001/api/v1', timeout: 20000});
 export function clearSession() {
  sessionStorage.removeItem('docnear_doctor_token'); sessionStorage.removeItem('docnear_doctor_refresh');
@@ -38,7 +41,7 @@ apiClient.interceptors.response.use(response => {
   clearSession();
  }
  error.message = error.response?.data?.message || error.message;
- if (error.response?.data?.errors) error.message += ': ' + JSON.stringify(error.response.data.errors);
+ if (error.response?.data?.errors && Object.keys(error.response.data.errors).length) error.message += ': ' + JSON.stringify(error.response.data.errors);
  throw error;
 });
 export async function apiList<T>(path: string, params: Record<string,string> = {}): Promise<T[]> {

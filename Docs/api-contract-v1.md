@@ -17,7 +17,7 @@ responses have this envelope:
 Errors have this envelope:
 
 ```json
-{"success":false,"code":"validation_error","message":"Request validation failed.","errors":{}}
+{"success":false,"code":"validation_error","message":"Please check the submitted information.","errors":{}}
 ```
 
 List endpoints normally put Django REST Framework pagination inside `data`:
@@ -51,8 +51,9 @@ Content-Type: application/json
 ```
 
 `purpose` is `login` or `register`; `channel` is `sms` or `telegram`.
-Registration may include `first_name` and `last_name`. Login responses are
-generic so they do not disclose whether a phone is registered.
+Registration may include `first_name` and `last_name`. SMS request responses are
+generic even when no eligible account exists. Telegram requests instead return
+the explicit link/account errors below when delivery cannot proceed.
 
 Verify:
 
@@ -104,8 +105,8 @@ Telegram accepts the `sendMessage` request.
 - `GET /api/v1/doctors/` and `GET /api/v1/doctors/{id}/`
 - `GET /api/v1/doctors/nearby/?latitude=&longitude=&radius=`
 - `GET /api/v1/doctors/{id}/availability/?clinic_id={id}&date=YYYY-MM-DD`
-- `GET /api/v1/specialties/`
-- `GET /api/v1/services/`
+- `GET /api/v1/specialties/` and `GET /api/v1/specialties/{id}/`
+- `GET /api/v1/services/` and `GET /api/v1/services/{id}/`
 - `GET /api/v1/search/?q={text}`
 - `GET /api/v1/reviews/?doctor={id}&clinic={id}`
 
@@ -126,10 +127,10 @@ These routes require the `patient` role:
 - `POST|DELETE /api/v1/favorites/doctors/{doctor_id}/`
 - `GET /api/v1/favorites/clinics/`
 - `POST|DELETE /api/v1/favorites/clinics/{clinic_id}/`
-- `GET /api/v1/notifications/`
-- `POST /api/v1/notifications/{id}/read/`
-- `POST /api/v1/notifications/read-all/`
 - `POST /api/v1/reviews/`
+- `GET|POST /api/v1/waitlists/` and `GET /api/v1/waitlists/{id}/`
+- `POST /api/v1/waitlists/{id}/cancel/`
+- `POST /api/v1/waitlists/{id}/mark-booked/`
 
 Create a booking:
 
@@ -151,6 +152,18 @@ second active booking for the same doctor and overlapping slot returns:
 
 with HTTP 409. Rescheduling changes the existing appointment and retains its
 database identity and Booking ID.
+
+## Notifications
+
+Every authenticated role can access its own notifications through these routes:
+
+- `GET /api/v1/notifications/` and `GET /api/v1/notifications/{id}/`
+- `POST /api/v1/notifications/{id}/read/`
+- `POST /api/v1/notifications/read-all/`
+
+Lists support `unread=true`, `is_read`, and `type` filters. Their paginated
+response includes `data.unread_count` for all unread notifications belonging to
+the current user. Reading another user's notification returns `404`.
 
 ## Doctor panel
 
@@ -188,27 +201,39 @@ pagination. Status changes are validated by the backend transition service.
 Settings, audit logs, and admin-user management require `super_admin`.
 
 - `GET /api/v1/admin-panel/dashboard/` and `/analytics/`
-- CRUD: `/clinics/`, `/doctors/`, `/specialties/`, `/services/`,
-  `/clinic-images/`, `/affiliations/`, `/owners/`
-- list/retrieve/patch and enable/disable: `/patients/`
-- super-admin CRUD: `/admin-users/`
-- list/retrieve/patch: `/appointments/`
-- review moderation: `/reviews/{id}/approve/`, `/hide/`, and `DELETE`
-- notifications: `GET /notifications/`, `POST /notifications/send/`, and
-  `POST /notifications/broadcast/`
-- super-admin audit: `GET /logs/`
+- list/create and retrieve/patch/delete: `/clinics/`, `/doctors/`,
+  `/specialties/`, `/services/`, `/clinic-images/`, `/affiliations/`
+- list/retrieve/patch and `POST /{id}/enable/` or `/disable/`: `/patients/`
+- list/create, retrieve/patch, and `POST /{id}/enable/` or `/disable/`: `/owners/`
+- super-admin list/create, retrieve/patch, and
+  `POST /{id}/enable/` or `/disable/`: `/admin-users/`
+- list/retrieve and `PATCH /appointments/{id}/` for a validated status change;
+  `POST /appointments/{id}/cancel/` and `/reschedule/` are also supported
+- review list/retrieve, `POST /reviews/{id}/approve/` or `/hide/`, and
+  `DELETE /reviews/{id}/`
+- notifications: list/retrieve via `GET /notifications/` or
+  `/notifications/{id}/`, plus `POST /notifications/send/` and `/broadcast/`
+- super-admin audit: `GET /logs/` and `/logs/{id}/`
 - super-admin settings: `GET|PATCH /settings/`
 
-Clinic actions are `verify`, `disable`, `enable`, `mark-partner`, and
-`remove-partner`. Doctor actions are `verify`, `suspend`, and `activate`.
+Paths in this section are relative to `/api/v1/admin-panel/`. `PUT` is not
+supported. Patients, owners, and admin-user accounts have no DELETE endpoint;
+use their enable/disable actions. DELETE on clinics, doctors, specialties,
+services, and affiliations deactivates the object rather than removing its row.
+
+Clinic actions use `POST /clinics/{id}/{action}/`, where action is `verify`,
+`disable`, `enable`, `mark-partner`, or `remove-partner`. Doctor actions use
+`POST /doctors/{id}/{action}/` with `verify`, `suspend`, or `activate`.
 Appointment search includes Booking ID, patient, doctor, and clinic; filters
 include date and status.
 
 ## Clinic owner panel
 
 These routes require `clinic_owner`. Every queryset is restricted to clinics
-owned by the authenticated user. When an owner has multiple clinics,
-clinic-specific singleton routes require `?clinic_id={id}`.
+owned by the authenticated user. The `/clinic/` and `/services/` routes require
+`?clinic_id={id}` when an owner has multiple clinics. Dashboard and analytics
+aggregate the owner's clinics unless that query parameter is supplied.
+Schedule lists span the owner's clinics.
 
 - `GET /api/v1/clinic-owner/dashboard/` and `/analytics/`
 - `GET /api/v1/clinic-owner/clinics/`
@@ -223,21 +248,66 @@ clinic-specific singleton routes require `?clinic_id={id}`.
 Owner appointment lists support Booking ID search, patient/doctor search,
 status/date filters, and pagination.
 
+Owner `/doctors/{id}/` addresses a doctor-clinic affiliation ID. Use the
+returned doctor profile ID when calling public doctor detail, availability,
+or booking endpoints.
+
 ## Telegram bot bridge
 
-These server-to-server routes require `X-Telegram-Bot-Secret`; public clients
-must not call them directly:
+Bot write/identity routes use `X-Telegram-Bot-Secret`, which must remain on the
+bot server. Phone-link and OTP routes receive the Telegram user ID in the JSON
+body:
 
 - `POST /api/v1/telegram/phone-link/` accepts a contact only when
   `contact_user_id == sender_user_id == telegram_user_id`.
 - `DELETE /api/v1/telegram/phone-link/` disables the sender's link.
 - `POST /api/v1/telegram/request-otp/` requests login or registration OTP for
   the linked phone.
-- `GET|POST /api/v1/telegram/appointments/` works through the linked active
-  patient identity.
+- `POST /api/v1/telegram/link/` redeems a one-time link code with
+  `{"code":"...","telegram_user_id":123}`.
+
+Appointment routes require **both** `X-Telegram-Bot-Secret` and
+`X-Telegram-User-Id`. The backend resolves an active linked patient from these
+headers; a patient JWT is not used for these routes:
+
+- `GET|POST /api/v1/telegram/appointments/`
+- `GET /api/v1/telegram/appointments/my/`
+- `GET /api/v1/telegram/appointments/{id}/`
+- `POST /api/v1/telegram/appointments/{id}/cancel/`
+- `POST /api/v1/telegram/appointments/{id}/reschedule/`
 - `GET /api/v1/telegram/appointments/by-booking-id/{booking_id}/`
 
-A phone link alone grants no patient access. `/code register` prepares the
-registration flow; `/code` requires an active, verified DocNear account.
-Booking ID lookup is still scoped to the linked patient and cannot expose
+`POST|DELETE /api/v1/telegram/link-code/` instead uses the normal patient JWT:
+POST creates a ten-minute link code; DELETE removes the legacy account link
+and invalidates unused link codes. `/phone-link/` manages contact-based links
+separately.
+
+Public discovery aliases require no bot secret:
+
+- `GET /api/v1/telegram/clinics/nearby/`
+- `GET /api/v1/telegram/search/`
+- `GET /api/v1/telegram/doctors/{id}/availability/`
+
+A phone link does not create a DocNear account or issue JWTs. `/code register`
+prepares registration; `/code` requires an active, verified DocNear account.
+Booking ID lookup is scoped to the linked active patient and cannot expose
 another user's appointment.
+
+## Local diagnostics
+
+`python backend/manage.py telegram_status` checks getMe and getWebhookInfo
+separately. A failed webhook-info call reports unknown webhook/polling status
+without incorrectly reporting token authentication failure. Polling
+compatibility means that Telegram has no configured webhook; it does not prove
+that a local polling process is running. Tokens, webhook secrets, and webhook
+URLs are omitted from output.
+
+`python backend/manage.py otp_status` reports aggregate unconsumed challenge
+counts. Active challenges have time and attempts remaining; exhausted means
+the attempt limit has been reached before expiry. Expired challenges are
+counted separately. Consumed/invalidated challenges are excluded, and no phone,
+hash, or code is printed.
+
+The isolated QA launcher `scripts/run-integration-qa.sh` creates its own random
+bridge secret on first run at `.runtime/integration/telegram-secret` with file
+mode `0600` and reuses it on later runs. This secret is for local QA only.

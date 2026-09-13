@@ -1,4 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
+export function isOtpRateLimited(error: unknown) {
+ return axios.isAxiosError(error) && (error.response?.status === 429 || error.response?.data?.code === 'too_many_requests');
+}
 const baseURL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001/api/v1').replace(/\/$/, '');
 const ACCESS_KEY = 'docnear_owner_access', REFRESH_KEY = 'docnear_owner_refresh';
 export const apiClient = axios.create({baseURL, timeout:20000, headers:{Accept:'application/json'}});
@@ -26,7 +29,7 @@ apiClient.interceptors.response.use(r=>r,async error=>{
  }
  const body=error.response?.data;
  error.message=body?.message||error.message;
- if(body?.errors)error.message+=': '+Object.entries(body.errors).map(([k,v])=>k+': '+String(v)).join('; ');
+ if(body?.errors && Object.keys(body.errors).length)error.message+=': '+Object.entries(body.errors).map(([k,v])=>k+': '+String(v)).join('; ');
  throw error;
 });
 export async function request<T=Record<string,any>>(config:AxiosRequestConfig):Promise<T>{
