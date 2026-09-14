@@ -14,3 +14,16 @@
 - [ ] Superuser was created through a controlled shell session, never in an image.
 - [ ] Logs redact tokens, OTPs, phone numbers and request bodies; alerts are configured.
 - [ ] Backup restore and rollback were rehearsed before traffic cutover.
+
+## Before production, staging must pass
+
+- [ ] Backend health endpoint returns 200.
+- [ ] Patient, doctor, admin and clinic-owner panels open over HTTPS.
+- [ ] Phone OTP request, verification, expiry and rate limits work with staging credentials.
+- [ ] The staging Telegram bot links a private chat and delivers an OTP.
+- [ ] Patient booking flow and duplicate-slot conflict work.
+- [ ] Admin, doctor and clinic-owner approval/status flows work.
+- [ ] Backup and restore were tested in an isolated staging database.
+- [ ] Logs contain no secrets, OTPs, tokens, full phone numbers or request bodies.
+- [ ] HTTPS certificates, redirects and security headers work.
+- [ ] Flutter mobile smoke test passed on a real device against the staging HTTPS API.
