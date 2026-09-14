@@ -1,181 +1,91 @@
-# DocNear local development
+# DocNear local and production runbook
 
-## Start backend and web clients
+## Local development
 
-PostgreSQL must be running. Keep the populated local file in the ignored
-`.runtime/` directory:
+PostgreSQL must be running. Keep populated local values in the ignored
+`.runtime/local.env` file with mode `0600`:
 
 ```bash
 sudo systemctl enable --now postgresql
 cd /home/humoyun/DocNear-web-beckend
 mkdir -p .runtime
 cp .env.example .runtime/local.env
-# Edit .runtime/local.env and replace placeholders before continuing.
-chmod 700 .runtime
-chmod 600 .runtime/local.env
+chmod 700 .runtime && chmod 600 .runtime/local.env
 DOCNEAR_ENV_FILE=.runtime/local.env ./run-docnear-dev.sh
 ```
 
-Services:
+The local API is `http://127.0.0.1:8001`; patient, doctor, admin and owner
+panels use ports 3001–3004. Health check: `http://127.0.0.1:8001/health/`.
+Local OTP uses the console sink and never prints codes. Deterministic `111111`
+is available only with `config.settings.test` in an isolated QA database.
 
-| Service | URL |
-| --- | --- |
-| Django API | `http://127.0.0.1:8001` |
-| Patient Web | `http://localhost:3001` |
-| Doctor Panel | `http://localhost:3002` |
-| Admin Panel | `http://localhost:3003` |
-| Clinic Owner Panel | `http://localhost:3004` |
+## Local Telegram bot
 
-Health check: `http://127.0.0.1:8001/health/`.
-
-Local development uses `OTP_SMS_PROVIDER=console`. The console provider never
-prints an OTP. To exercise a deterministic OTP, run only with
-`DJANGO_SETTINGS_MODULE=config.settings.test`; its code is `111111`. Never put a
-deterministic OTP in development or production settings.
-
-QA phones are:
-
-- Patient: `+998900000001`
-- Second patient: `+998900000002`
-- Doctor: `+998900000003`
-- Clinic owner: `+998900000004`
-- Admin: `+998900000005`
-- Super admin: `+998900000006`
-
-Create them only in an isolated debug/test database with:
+Set Telegram values only in `.runtime/local.env`, then run in a separate
+terminal:
 
 ```bash
-DJANGO_SETTINGS_MODULE=config.settings.test   .venv/bin/python backend/manage.py seed_qa
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py run_telegram_bot --settings=config.settings.development
 ```
 
-## Telegram bot
-
-Set these values in `.runtime/local.env` without committing the file:
-
-```text
-TELEGRAM_OTP_ENABLED=true
-TELEGRAM_DELETE_WEBHOOK_ON_START=true
-TELEGRAM_BOT_TOKEN=<BotFather token>
-TELEGRAM_BOT_USERNAME=<username without @>
-TELEGRAM_BOT_WEBHOOK_SECRET=<random local secret>
-DOCNEAR_API_BASE_URL=http://127.0.0.1:8001/api/v1
-```
-
-Keep `run-docnear-dev.sh` running, then start the bot in another terminal:
+Diagnostics never print tokens or chat IDs:
 
 ```bash
-cd /home/humoyun/DocNear-web-beckend
-source .venv/bin/activate
-DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py run_telegram_bot --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py telegram_status --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py telegram_links --settings=config.settings.development
+DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py otp_status --settings=config.settings.development
 ```
 
-Verify the token and inspect phone links without exposing secrets or chat IDs:
+## Local mobile and checks
 
 ```bash
-DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_status --settings=config.settings.development
-DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py telegram_links --settings=config.settings.development
-DOCNEAR_ENV_FILE=.runtime/local.env python backend/manage.py otp_status --settings=config.settings.development
-```
-
-Development polling removes an old webhook with `drop_pending_updates=false`
-when `TELEGRAM_DELETE_WEBHOOK_ON_START=true`. Restart the bot command after
-changing its code or environment.
-
-The user sends `/start`, then `/link_phone`, and shares the contact button. The
-bot accepts only a contact whose Telegram `user_id` matches the sender. `/code`
-requests a login OTP, `/code register` requests a registration OTP, and
-`/unlink` disables the link. The backend generates, hashes and sends the OTP;
-the polling process does not store it.
-
-`/code` requires an active, verified DocNear account with the same normalized
-phone number. A newly linked phone without an account must first use
-`/code register` and complete registration. `telegram_links` reports this state as
-`account_ready=false`. Telegram delivery failures return
-`telegram_send_failed`; the API does not report a successful delivery.
-
-Use `https://t.me/<TELEGRAM_BOT_USERNAME>` or the “Telegram botni ochish” link
-on a configured login screen. Telegram OTP is unavailable when
-`TELEGRAM_OTP_ENABLED=false`.
-
-## Run Flutter
-
-Android emulator:
-
-```bash
-cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile
+cd DocNear-Mobile
 flutter pub get
-flutter run \
-  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
-  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/
+flutter analyze && flutter test
 ```
 
-Physical Android device on the same network:
+For a physical phone use the computer LAN address. For an emulator, `10.0.2.2`
+maps to the host. Run React `npm ci`, `npm run lint`, `npm run test --if-present`
+and `npm run build` in each panel directory.
+
+## Production runbook
+
+## Backend
+
+Create `/etc/docnear/docnear.production.env` on the server with mode `0600`
+from `.env.production.example`; populate it through the server secret manager.
+Never copy `.runtime/local.env` or a developer `.env` to production.
 
 ```bash
-flutter run \
-  --dart-define=API_BASE_URL=http://YOUR_LAN_IP:8001/api/v1/ \
-  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
+cd /srv/docnear
+python -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
+DOCNEAR_ENV_FILE=/etc/docnear/docnear.production.env .venv/bin/python backend/manage.py check --deploy --settings=config.settings.production
+.venv/bin/python backend/manage.py migrate --noinput --settings=config.settings.production
+.venv/bin/python backend/manage.py collectstatic --noinput --settings=config.settings.production
+sudo systemctl enable --now docnear-backend docnear-telegram-bot
 ```
 
-Or use ADB port reverse and `http://127.0.0.1:8001/api/v1/`:
+Run Nginx with the example in `deploy/nginx/`, install a certificate with an ACME
+client, and allow only 80/443 at the public firewall. Keep port 8000 private.
+
+## Web panels
+
+Set `VITE_API_BASE_URL=https://api.docnear.uz/api/v1` and the non-secret
+`VITE_TELEGRAM_BOT_USERNAME` per panel, run `npm ci && npm run build`, then serve
+each `dist/` directory behind HTTPS. Google Maps keys are browser keys and must
+be restricted by API and allowed origins.
+
+## Flutter release
 
 ```bash
-~/Android/Sdk/platform-tools/adb reverse tcp:8001 tcp:8001
-```
-
-## Test and build APK
-
-```bash
-cd /home/humoyun/DocNear-web-beckend/DocNear-Mobile
+cd DocNear-Mobile
 flutter pub get
-flutter analyze
-flutter test
-flutter build apk --debug \
-  --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1/ \
-  --dart-define=TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
+flutter build appbundle --release \
+  --dart-define=API_BASE_URL=https://api.docnear.uz/api/v1/ \
+  --dart-define=TELEGRAM_BOT_USERNAME=DocNearBot
 ```
 
-Output: `DocNear-Mobile/build/app/outputs/flutter-apk/app-debug.apk`.
-`./run-docnear-mobile.sh` can build, start the configured emulator, install and
-open this Flutter app.
-
-For a release, keep the upload keystore outside Git, copy
-`android/key.properties.example` to the ignored `android/key.properties`, then
-build with the HTTPS production API URL. The Play Console expects an AAB.
-
-## Verify the complete repository
-
-Run backend checks from the repository root:
-
-```bash
-DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py check --settings=config.settings.development
-DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py makemigrations --check --dry-run --settings=config.settings.development
-DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/python backend/manage.py migrate --settings=config.settings.development
-.venv/bin/python -m compileall -q backend
-.venv/bin/ruff check backend
-DOCNEAR_ENV_FILE=.runtime/local.env .venv/bin/pytest -q
-```
-
-In each React project run `npm ci`, `npm run lint`, `npm run test
---if-present`, and `npm run build`. The project directories are Patient Web,
-`DocNear-Doctor-panel-main(2)/DocNear-Doctor-panel-main`,
-`DocNear-admin-panel`, and `DocNear-clinic-owner-panel`.
-
-For an isolated PostgreSQL/API acceptance run, start
-`./scripts/run-integration-qa.sh`. In another terminal run:
-
-```bash
-npx --yes newman run postman/DocNear.postman_collection.json \
-  -e .runtime/integration/postman.env.json \
-  --folder '00 End-to-end booking verification'
-cd 'DocNear-web-frontend-main(2)/DocNear-web-frontend-main'
-node tests/live-booking.mjs
-node tests/live-ecosystem.mjs
-cd ../..
-.venv/bin/python scripts/run-mobile-integration.py
-```
-
-The browser flow checks phone-only auth, six-digit input, booking creation,
-doctor acceptance, shared Booking ID visibility, owner scope, and HTTP 409 for
-a duplicate slot. The isolated QA environment uses test-only OTP configuration;
-it must never be used as a deployed environment.
+Use `android/key.properties` only on the build machine; it is ignored by Git.
+Install the signed AAB on a real device and verify OTP, Telegram linking, maps,
+booking conflict handling and logout.

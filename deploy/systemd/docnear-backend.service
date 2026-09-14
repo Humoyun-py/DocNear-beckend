@@ -1,0 +1,16 @@
+[Unit]
+Description=DocNear Django API
+After=network-online.target
+
+[Service]
+User=docnear
+Group=docnear
+WorkingDirectory=/srv/docnear/backend
+EnvironmentFile=/etc/docnear/docnear.production.env
+ExecStart=/srv/docnear/.venv/bin/gunicorn config.wsgi:application --config /srv/docnear/deploy/gunicorn.conf.py
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -55,6 +55,48 @@ python backend/manage.py run_telegram_bot --settings=config.settings.production
 
 The API and every client must use HTTPS.
 
+## Deployment options
+
+For a small host, copy `deploy/systemd/*.service` to `/etc/systemd/system/`,
+store the populated environment at `/etc/docnear/docnear.production.env` with
+mode `0600`, then run migrations and static collection before enabling the
+services. The service files run Gunicorn and the Telegram worker separately.
+
+For container deployment, copy `.env.production.example` to a server-only
+`.env.production`, set the matching `POSTGRES_*` variables in the shell, review
+the image tags and certificate paths, then use:
+
+```bash
+docker compose -f docker-compose.production.example.yml build
+docker compose -f docker-compose.production.example.yml up -d
+docker compose -f docker-compose.production.example.yml exec backend python manage.py createsuperuser --settings=config.settings.production
+```
+
+The compose file is a template: replace example domains/certificates, use a
+managed database or harden the included PostgreSQL volume, and keep all ports
+except Nginx private.
+
+## Static, media and SMS
+
+`collectstatic` writes `STATIC_ROOT`; Nginx serves it from the shared static
+volume. User profile, doctor and clinic images are under `MEDIA_ROOT`. For more
+than one host set `AWS_STORAGE_BUCKET_NAME` and use a private S3-compatible
+bucket with lifecycle/versioning; serve media through signed URLs or a private
+CDN rather than a public bucket. Test upload, download and deletion policy.
+
+`apps.accounts.sms.HttpSmsProvider` is the vendor-neutral adapter. Select a
+provider only after adapting its JSON payload and response status in staging;
+provide an HTTPS endpoint and secret through the environment. Production rejects
+the console provider and refuses startup when the HTTP adapter is incomplete.
+
+## Release signing
+
+Generate a release keystore on a protected build machine, keep its password and
+`DocNear-Mobile/android/key.properties` outside Git, and use the ignored
+`key.properties.example` as the shape. Restrict Maps keys by package/SHA-1 on
+Android and bundle ID on iOS. Build the signed AAB with the HTTPS command in
+`Docs/RUNNING.md`; install it on a real device before publishing.
+
 Build each React app with `VITE_API_BASE_URL=https://api.docnear.uz/api/v1` and
 `VITE_TELEGRAM_BOT_USERNAME=<username>`. Build Flutter with:
 

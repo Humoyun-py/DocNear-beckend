@@ -6,7 +6,10 @@ from .base import *  # noqa: F403
 if (not os.getenv("SECRET_KEY") or len(SECRET_KEY) < 50 or len(set(SECRET_KEY)) < 5  # noqa: F405
         or any(marker in SECRET_KEY.lower() for marker in ("change", "development", "example", "django-insecure", "ci-only"))):  # noqa: F405
     raise ValueError("Production SECRET_KEY must be set and at least 50 characters.")
-missing = [name for name in ("DATABASE_URL", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS") if not os.getenv(name)]
+missing = [name for name in (
+    "DATABASE_URL", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "CSRF_TRUSTED_ORIGINS",
+    "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME", "TELEGRAM_BOT_WEBHOOK_SECRET",
+) if not os.getenv(name)]
 if missing:
     raise ValueError(f"Production settings require: {', '.join(missing)}.")
 if os.getenv("DEBUG", "false").lower() not in {"false", "0"}:
@@ -23,7 +26,7 @@ sms_url = urlsplit(SMS_API_URL)  # noqa: F405
 if sms_url.scheme != "https" or not sms_url.hostname or sms_url.username or sms_url.password:
     raise ValueError("Production SMS_API_URL requires HTTPS without embedded credentials.")
 if TELEGRAM_OTP_ENABLED and (not TELEGRAM_BOT_TOKEN or not TELEGRAM_BOT_SECRET):  # noqa: F405
-    raise ValueError("Enabled Telegram OTP requires TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_WEBHOOK_SECRET.")
+    raise ValueError("Enabled Telegram OTP requires Telegram credentials.")
 if LEGACY_PASSWORD_AUTH_ENABLED:  # noqa: F405
     raise ValueError("Legacy password authentication must remain disabled in production.")
 insecure_cors_origins = [origin for origin in CORS_ALLOWED_ORIGINS if (  # noqa: F405
@@ -33,6 +36,13 @@ insecure_cors_origins = [origin for origin in CORS_ALLOWED_ORIGINS if (  # noqa:
 )]
 if insecure_cors_origins:
     raise ValueError("Production CORS_ALLOWED_ORIGINS must contain only HTTPS origins.")
+insecure_csrf_origins = [origin for origin in CSRF_TRUSTED_ORIGINS if (  # noqa: F405
+    urlsplit(origin).scheme != "https" or not urlsplit(origin).hostname or "*" in origin
+    or urlsplit(origin).username or urlsplit(origin).password
+    or urlsplit(origin).path or urlsplit(origin).query or urlsplit(origin).fragment
+)]
+if insecure_csrf_origins:
+    raise ValueError("Production CSRF_TRUSTED_ORIGINS must contain only HTTPS origins.")
 if not 1 <= OTP_MAX_ATTEMPTS <= 5 or not 1 <= OTP_EXPIRE_MINUTES <= 5:  # noqa: F405
     raise ValueError("Production OTP lifetime and attempts must be between 1 and 5.")
 if REST_FRAMEWORK["NUM_PROXIES"] < 0:  # noqa: F405
