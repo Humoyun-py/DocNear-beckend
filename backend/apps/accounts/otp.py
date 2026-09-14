@@ -11,6 +11,7 @@ from django.utils import timezone
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.throttling import BaseThrottle
+from common.security import security_event
 
 from apps.telegram_support.models import TelegramPhoneLink
 
@@ -86,12 +87,20 @@ def _lock_identity(*keys: str) -> None:
             cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_id])
 
 
-def _rate_limit(phone_number: str, ip: str | None) -> None:
+def _rate_limit(phone_number: str, ip: str | None, request=None) -> None:
     since = timezone.now() - timedelta(minutes=10)
     recent = PhoneOTP.objects.filter(phone_number=phone_number, created_at__gte=since).count()
     if recent >= settings.OTP_PHONE_REQUEST_LIMIT:
+        security_event(
+            "otp_request_rate_limited", request,
+            phone=mask_phone_number(phone_number), scope="phone", status=429, outcome="blocked",
+        )
         raise OtpRateLimited()
     if ip and PhoneOTP.objects.filter(request_ip=ip, created_at__gte=since).count() >= settings.OTP_IP_REQUEST_LIMIT:
+        security_event(
+            "otp_request_rate_limited", request,
+            phone=mask_phone_number(phone_number), scope="peer", status=429, outcome="blocked",
+        )
         raise OtpRateLimited()
 
 
@@ -128,7 +137,7 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
         logger.info("OTP requested: phone=%s channel=%s", masked_phone, channel)
     with transaction.atomic():
         _lock_identity(*([f"ip:{ip}"] if ip else []), f"phone:{phone_number}")
-        _rate_limit(phone_number, ip)
+        _rate_limit(phone_number, ip, request)
         user = _eligible_user(phone_number, purpose, names)
         if user:
             TelegramPhoneLink.objects.filter(phone_number=phone_number).exclude(user=user).update(
@@ -140,6 +149,10 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
             link = TelegramPhoneLink.objects.filter(phone_number=phone_number, is_active=True).first()
             logger.info("Telegram link found: %s", "yes" if link else "no")
             if not link or link.telegram_chat_id != link.telegram_user_id or link.telegram_chat_id <= 0:
+                security_event(
+                    "telegram_otp_link_rejected", request,
+                    phone=masked_phone, status=400, outcome="blocked",
+                )
                 raise TelegramNotLinked()
             logger.info("Telegram chat id exists: %s", "yes" if link.telegram_chat_id else "no")
             if user is None:
@@ -174,12 +187,16 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
         PhoneOTP.objects.filter(pk=otp.pk).update(verified_at=timezone.now())
         if channel == PhoneOTP.Channel.TELEGRAM:
             logger.warning("Telegram sendMessage failed: delivery service unavailable")
+            security_event(
+                "telegram_otp_delivery_failed", request,
+                phone=masked_phone, status=503, outcome="failed",
+            )
             raise TelegramSendFailed() from None
         raise OtpDeliveryFailed() from exc
     return GENERIC_REQUEST_MESSAGE
 
 
-def verify_code(*, phone_number: str, purpose: str, code: str) -> tuple[User, str, str]:
+def verify_code(*, phone_number: str, purpose: str, code: str, request=None) -> tuple[User, str, str]:
     invalid = False
     with transaction.atomic():
         _lock_identity(f"phone:{phone_number}")
@@ -213,6 +230,10 @@ def verify_code(*, phone_number: str, purpose: str, code: str) -> tuple[User, st
                     otp.save(update_fields=["attempts", "verified_at", "updated_at"])
                     PhoneOTP.objects.filter(phone_number=phone_number, verified_at__isnull=True).exclude(pk=otp.pk).update(verified_at=now)
     if invalid:
+        security_event(
+            "otp_verification_failed", request,
+            phone=mask_phone_number(phone_number), purpose=purpose, status=400, outcome="blocked",
+        )
         raise ValidationError(GENERIC_VERIFY_ERROR)
     refresh = RefreshToken.for_user(user)
     return user, str(refresh.access_token), str(refresh)

@@ -89,6 +89,13 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True, "BLACKLIST_AFTER_ROTATION": True, "CHECK_REVOKE_TOKEN": True,
 }
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"security": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}},
+    "handlers": {"security_console": {"class": "logging.StreamHandler", "formatter": "security"}},
+    "loggers": {"docnear.security": {"handlers": ["security_console"], "level": "WARNING", "propagate": False}},
+}
 SPECTACULAR_SETTINGS = {
     "TITLE": "DocNear API",
     "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see Docs/api-contract.md.",

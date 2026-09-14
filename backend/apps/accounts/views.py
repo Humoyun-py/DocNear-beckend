@@ -77,7 +77,7 @@ class VerifyOTPView(AuthView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, access, refresh = verify_code(**serializer.validated_data)
+        user, access, refresh = verify_code(request=request, **serializer.validated_data)
         return Response({"access": access, "refresh": refresh, "user": UserSerializer(user).data})
 
 

@@ -1,4 +1,5 @@
 import os
+import logging
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,16 @@ from apps.accounts.otp import client_ip, request_code, OtpRateLimited
 from apps.telegram_support.bot import DocNearTelegramBot
 from apps.telegram_support.models import TelegramPhoneLink
 from .test_telegram_bot import FakeTelegram, FakeBackend, update
+from .conftest import payload
+
+
+@pytest.fixture
+def security_logs(caplog):
+    logger = logging.getLogger('docnear.security')
+    logger.addHandler(caplog.handler)
+    caplog.set_level(logging.WARNING, logger='docnear.security')
+    yield caplog
+    logger.removeHandler(caplog.handler)
 
 
 def test_forwarded_header_does_not_override_direct_peer(settings):
@@ -32,6 +43,49 @@ def test_spoofed_ip_cannot_bypass_otp_quota(settings):
             'phone_number': f'+99890000000{index}', 'purpose': 'register', 'channel': 'sms',
         }, HTTP_X_FORWARDED_FOR=f'192.0.2.{index}')
         assert response.status_code == expected
+
+
+@pytest.mark.django_db
+def test_security_log_masks_otp_attack_data(settings, security_logs):
+    settings.OTP_PHONE_REQUEST_LIMIT = 1
+    phone = '+998900000096'
+    client = APIClient()
+    body = {'phone_number': phone, 'purpose': 'register', 'channel': 'sms'}
+    assert client.post('/api/v1/auth/request-otp/', body).status_code == 200
+    assert client.post('/api/v1/auth/request-otp/', body).status_code == 429
+    assert client.post('/api/v1/auth/verify-otp/', {**body, 'code': '000000'}).status_code == 400
+    log = "\n".join(record.getMessage() for record in security_logs.records if record.name == 'docnear.security')
+    assert 'event=otp_request_rate_limited' in log
+    assert 'event=otp_verification_failed' in log
+    assert '+99890****096' in log
+    for secret in [phone, '000000', 'Authorization', 'refresh', 'password']:
+        assert secret not in log
+
+
+@pytest.mark.django_db
+def test_security_log_traces_role_idor_auth_conflict_and_page_abuse(client, world, security_logs):
+    client.credentials(HTTP_AUTHORIZATION='Bearer invalid-secret-token')
+    assert client.get('/api/v1/auth/me/').status_code == 401
+    client.credentials()
+    assert client.post('/api/v1/auth/token/refresh/', {'refresh': 'invalid-refresh-token'}).status_code == 401
+    client.force_authenticate(world.patient)
+    appointment = client.post('/api/v1/appointments/', payload(world)).json()['data']
+    assert client.get('/api/v1/admin-panel/appointments/').status_code == 403
+    assert client.get('/api/v1/clinics/', {'page_size': 100000}).status_code == 200
+    client.force_authenticate(world.other)
+    assert client.get(f"/api/v1/appointments/{appointment['id']}/").status_code == 404
+    client.force_authenticate(world.patient)
+    assert client.post('/api/v1/appointments/', payload(world)).status_code == 409
+    log = "\n".join(record.getMessage() for record in security_logs.records if record.name == 'docnear.security')
+    for event in [
+        'authentication_failed', 'token_refresh_failed', 'authorization_denied', 'page_size_capped',
+        'object_scope_denied', 'booking_or_state_conflict',
+    ]:
+        assert f'event={event}' in log
+    assert 'invalid-secret-token' not in log
+    assert 'invalid-refresh-token' not in log
+    assert f"appointments/{appointment['id']}" not in log
+    assert 'route=api/v1/appointments/(?P<pk>[^/.]+)/$' in log
 
 
 @pytest.mark.django_db

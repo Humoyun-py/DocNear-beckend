@@ -4,7 +4,7 @@
 
 Lokal kod auditi, boshqariladigan pentest va regressiya tekshiruvlari bajarildi.
 Quyidagi 10 muammo toifasiga tuzatish kiritildi. Yakuniy backend natijasi:
-**2 374 passed**. Bu hisobot zaifliklar umuman yo‘qligi kafolati yoki tashqi
+**2 376 passed**. Bu hisobot zaifliklar umuman yo‘qligi kafolati yoki tashqi
 sertifikatsiya emas; tekshirilgan lokal MVP uchun dalillarga asoslangan bahodir.
 
 ## Scope
@@ -101,6 +101,18 @@ yuqori hajmli trafik, tashqi pentest yoki haqiqiy SMS/Telegram OTP yuborish baja
 - Test: anonymous, patient, invalid JWT, staff, backend failure va rate limit.
 - Multi-instance limit va xarajat budgeti alohida production vazifasi bo‘lib qoladi.
 
+### S11 — Medium: bloklangan hujumlar uchun yagona forensic event yo‘q edi
+
+- Joy: DRF exception handler, OTP, pagination va production logging.
+- Sabab: Django status loglari bor edi, ammo role, xavfsiz route shabloni va event
+  turi yagona formatda emas edi; OTP abuse correlation qiyin edi.
+- Tuzatish: `docnear.security` structured eventlari qo‘shildi. Request body, token,
+  OTP, secret, chat ID va to‘liq telefon chiqarilmaydi; IP fingerprint qilinadi.
+- Qamrov: OTP request/verify, Telegram delivery/link, auth/refresh, 403, authenticated
+  404 IDOR, booking/database conflict, global throttle va katta page size.
+- Test: synthetic attacklar event nomi/status/role/route va sensitive qiymatlar
+  yo‘qligini tekshiradi. Detection va investigation: `FORENSIC-LOGGING.md`.
+
 ## Backend security
 
 OTP hash, expiry, attempts, resend, safe delivery failures, JWT rotation/blacklist,
@@ -142,6 +154,15 @@ qabul qilindi; untrusted origin uchun allow-origin yo‘q. Search SQL/XSS satrla
 ORM/API orqali xavfsiz ishladi; bu SQLi uchun exhaustive fuzzing emas.
 Pagination maksimumi 100. Production secure cookies/HSTS/HTTPS redirect saqlangan.
 JWT header authda cookie CSRF qo‘llanmaydi; Django admin sessionida CSRF middleware bor.
+
+## Forensic tracing
+
+Bloklangan local attack simulyatsiyalari `docnear.security` server outputida ko‘rinadi.
+Har eventda method, route shabloni, actor ID/role, peer fingerprint, status va outcome
+bor. DB ta’siri va alert tavsiyalari [FORENSIC-LOGGING.md](FORENSIC-LOGGING.md)da.
+Regression testlar invalid access/refresh, OTP abuse, patient→admin 403, cross-patient
+404, booking 409 va page-size abuse’ni qamraydi. Sensitive synthetic qiymatlar logda
+yo‘qligi assertion bilan isbotlangan.
 
 ## Dependency security
 
@@ -210,8 +231,9 @@ flutter build apk --debug --dart-define=API_BASE_URL=http://10.0.2.2:8001/api/v1
 
 ## Test results
 
-- Yakuniy backend: 2 374 passed.
-- Oxirgi focused backend: 46 passed.
+- Yakuniy backend: **2 376 passed** (`--reuse-db`, 3:24).
+- Forensic/OTP/Telegram focused run: security regression tests passed; full run
+  was repeated after the earlier stale test-database lock.
 - Django check/migration drift/migrate, compileall, Ruff: passed; yangi migration yo‘q.
 - To‘rtta React install/lint/build/audit: passed.
 - Patient test runner: 3 test fayli passed; qolgan panellarda test script yo‘q.
