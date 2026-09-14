@@ -171,6 +171,9 @@ def test_production_configuration_fails_closed(override):
         'DATABASE_URL': 'postgresql://test:test@localhost/test', 'ALLOWED_HOSTS': 'example.test',
         'CORS_ALLOWED_ORIGINS': 'https://example.test', 'REDIS_URL': 'redis://localhost:6379/0',
         'OTP_SMS_PROVIDER': 'http', 'SMS_API_URL': 'https://sms.example.test/send', 'SMS_API_KEY': 'test-only',
+        'CSRF_TRUSTED_ORIGINS': 'https://example.test',
+        'TELEGRAM_BOT_TOKEN': 'dummy-ci-token', 'TELEGRAM_BOT_USERNAME': 'dummy_bot',
+        'TELEGRAM_BOT_WEBHOOK_SECRET': 'dummy-ci-secret', 'TELEGRAM_OTP_ENABLED': 'false',
     })
     env.update(override)
     result = subprocess.run([sys.executable, '-c', 'import config.settings.production'], env=env, capture_output=True)
