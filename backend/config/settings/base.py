@@ -66,6 +66,9 @@ CORS_ALLOWED_ORIGINS = [v.strip() for v in os.getenv(
 ).split(",") if v.strip()]
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 REST_FRAMEWORK = {
+    # Forwarded headers are trusted only when an operator configures the exact
+    # number of trusted proxies and prevents direct access to this service.
+    "NUM_PROXIES": int(os.getenv("TRUSTED_PROXY_COUNT", "0")),
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["common.responses.EnvelopeRenderer"],

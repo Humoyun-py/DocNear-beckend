@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
+import { aiSecurity } from './serverAiSecurity';
 
 dotenv.config();
 
@@ -21,6 +22,10 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json({ limit: '1mb' }));
+app.use('/api/gemini', aiSecurity({
+  enabled: () => Boolean(process.env.GEMINI_API_KEY),
+  apiBase: process.env.DOCNEAR_API_BASE_URL || 'http://127.0.0.1:8001/api/v1',
+}));
 
 // Lazy Gemini client helper
 let geminiClient: GoogleGenAI | null = null;

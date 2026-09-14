@@ -107,7 +107,7 @@ def test_telegram_link_requires_own_contact_and_link_for_otp(client, settings):
     body = {
         "phone_number": phone,
         "telegram_user_id": 101,
-        "telegram_chat_id": 202,
+        "telegram_chat_id": 101,
         "contact_user_id": 999,
         "sender_user_id": 101,
     }
@@ -140,7 +140,7 @@ def test_telegram_login_never_returns_false_success_for_unregistered_link(client
     TelegramPhoneLink.objects.create(
         phone_number=phone,
         telegram_user_id=701,
-        telegram_chat_id=702,
+        telegram_chat_id=701,
         is_active=True,
     )
     response = request_otp(client, phone, channel="telegram")
@@ -155,7 +155,7 @@ def test_telegram_send_failure_returns_specific_error_and_invalidates_otp(client
         user=user,
         phone_number=user.phone_number,
         telegram_user_id=801,
-        telegram_chat_id=802,
+        telegram_chat_id=801,
         is_active=True,
     )
 
@@ -178,7 +178,7 @@ def test_telegram_send_success_stores_only_hashed_otp(client, settings, monkeypa
         user=user,
         phone_number=user.phone_number,
         telegram_user_id=901,
-        telegram_chat_id=902,
+        telegram_chat_id=901,
         is_active=True,
     )
     delivered = {}
@@ -192,7 +192,7 @@ def test_telegram_send_success_stores_only_hashed_otp(client, settings, monkeypa
     otp = PhoneOTP.objects.get(phone_number=user.phone_number)
     assert otp.code_hash != delivered["code"]
     assert check_password(delivered["code"], otp.code_hash)
-    assert delivered["chat_id"] == 902
+    assert delivered["chat_id"] == 901
     assert delivered["code"] not in caplog.text
     assert settings.TELEGRAM_BOT_TOKEN not in caplog.text
 
@@ -204,7 +204,7 @@ def test_phone_link_endpoint_normalizes_local_uzbek_number(client, settings):
         {
             "phone_number": "90 000 00 77",
             "telegram_user_id": 1001,
-            "telegram_chat_id": 1002,
+            "telegram_chat_id": 1001,
             "contact_user_id": 1001,
             "sender_user_id": 1001,
         },
@@ -221,7 +221,7 @@ def test_sms_registration_attaches_prelinked_telegram_contact(client, settings):
     body = {
         "phone_number": phone,
         "telegram_user_id": 303,
-        "telegram_chat_id": 404,
+        "telegram_chat_id": 303,
         "contact_user_id": 303,
         "sender_user_id": 303,
     }

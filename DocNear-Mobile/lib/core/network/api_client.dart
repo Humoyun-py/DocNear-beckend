@@ -10,9 +10,7 @@ class ApiClient {
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: AppConfig.apiBaseUrl.endsWith('/')
-                  ? AppConfig.apiBaseUrl
-                  : '${AppConfig.apiBaseUrl}/',
+              baseUrl: AppConfig.validateApiUrl(AppConfig.apiBaseUrl),
               connectTimeout: const Duration(seconds: 15),
               receiveTimeout: const Duration(seconds: 20),
               sendTimeout: const Duration(seconds: 20),

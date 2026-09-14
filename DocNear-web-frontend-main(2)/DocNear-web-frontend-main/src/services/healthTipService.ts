@@ -24,6 +24,7 @@ export const healthTipService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(sessionStorage.getItem('docnear_access_token') ? { Authorization: 'Bearer ' + sessionStorage.getItem('docnear_access_token') } : {}),
         },
         body: JSON.stringify({
           preferences: preferences || {

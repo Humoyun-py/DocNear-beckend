@@ -1,3 +1,4 @@
+import { BoldText } from './BoldText';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Bot,
@@ -149,7 +150,8 @@ export const AIChatBubble: React.FC = () => {
 
       const res = await fetch('/api/gemini/medical-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          ...(sessionStorage.getItem('docnear_access_token') ? { Authorization: 'Bearer ' + sessionStorage.getItem('docnear_access_token') } : {}) },
         body: JSON.stringify({
           message: query,
           history: historyPayload,
@@ -369,7 +371,7 @@ export const AIChatBubble: React.FC = () => {
             return (
               <div key={idx} className="flex items-start gap-1.5 ml-1">
                 <span className="text-blue-500 font-bold leading-none mt-1">•</span>
-                <span dangerouslySetInnerHTML={{ __html: formatBoldSpans(bulletText) }} />
+                <BoldText text={bulletText} />
               </div>
             );
           }
@@ -377,7 +379,7 @@ export const AIChatBubble: React.FC = () => {
           return (
             <p
               key={idx}
-              dangerouslySetInnerHTML={{ __html: formatBoldSpans(trimmed) }}
+              children={<BoldText text={trimmed} />}
               className="text-slate-800 dark:text-slate-200"
             />
           );
@@ -386,9 +388,6 @@ export const AIChatBubble: React.FC = () => {
     );
   };
 
-  const formatBoldSpans = (text: string) => {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
-  };
 
   return (
     <div id="docnear-ai-chat-container" className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 pointer-events-auto">

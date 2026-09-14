@@ -43,6 +43,8 @@ if ! "$PG_BIN/psql" -h "$QA_DIR" -p 55439 -d postgres -Atc "SELECT 1 FROM pg_dat
   "$PG_BIN/createdb" -h "$QA_DIR" -p 55439 docnear_integration_qa
 fi
 export DATABASE_URL="postgresql:///docnear_integration_qa?host=$QA_DIR&port=55439"
+# Never let an inherited development env override the isolated test database.
+unset DOCNEAR_ENV_FILE
 export DEBUG=true DJANGO_SETTINGS_MODULE=config.settings.test DOCNEAR_QA_LIVE=1
 export OTP_SMS_PROVIDER=console OTP_TEST_CODE=111111 OTP_REQUEST_RATE=100/min OTP_VERIFY_RATE=100/min
 export OTP_PHONE_REQUEST_LIMIT=100 OTP_IP_REQUEST_LIMIT=100
@@ -53,4 +55,4 @@ export TELEGRAM_BOT_SECRET
 export CORS_ALLOWED_ORIGINS="http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://127.0.0.1:3001,http://127.0.0.1:3002,http://127.0.0.1:3003,http://127.0.0.1:3004"
 cd "$ROOT/backend"
 "$ROOT/.venv/bin/python" -m qa.prepare_live
-"$ROOT/.venv/bin/python" manage.py runserver "0.0.0.0:$QA_PORT" --noreload
+"$ROOT/.venv/bin/python" manage.py runserver "127.0.0.1:$QA_PORT" --noreload

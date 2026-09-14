@@ -69,3 +69,21 @@ staging SMS delivery, Telegram link/code/unlink smoke tests, OTP rate-limit
 checks and the full booking acceptance flow including `slot_unavailable`.
 Keystores, SMS keys, bot tokens, JWTs, OTPs and patient data must not appear in
 application or proxy logs.
+
+## Security requirements after the September 2026 audit
+
+Production now requires a non-placeholder random `SECRET_KEY`, explicit
+`ALLOWED_HOSTS`, exact HTTPS CORS origins, an HTTPS SMS endpoint, and a shared
+`REDIS_URL`. `DEBUG=true`, wildcard hosts/origins and console SMS fail startup.
+Keep `TRUSTED_PROXY_COUNT=0` unless the exact reverse-proxy chain is configured,
+forwarded headers are overwritten, and direct backend access is blocked.
+
+Android release requests require an HTTPS `API_BASE_URL`; HTTP is allowed only
+in the debug manifest. A debug emulator build is not a production distribution.
+
+When `GEMINI_API_KEY` is configured, the web AI endpoints require a patient JWT
+validated against `DOCNEAR_API_BASE_URL` (default: local backend). They also apply
+a per-process socket-IP limit of 10 requests/minute. Multi-instance production
+needs an edge/shared quota and a provider spending cap; no proxy header is trusted
+by this limiter. Frontend browser tokens remain in sessionStorage and therefore
+remain accessible to scripts running in the same origin.

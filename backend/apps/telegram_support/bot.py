@@ -128,10 +128,14 @@ class DocNearTelegramBot:
         chat = message.get("chat") or {}
         if not sender.get("id") or not chat.get("id"):
             return
+        if chat.get("type", "private") != "private" or chat["id"] != sender["id"]:
+            return
         if message.get("contact"):
             self._handle_contact(message, sender, chat)
             return
         text = (message.get("text") or "").strip()
+        if not text:
+            return
         command, *arguments = text.split()
         command = command.split("@", 1)[0].lower()
         handlers = {

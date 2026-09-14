@@ -1,13 +1,16 @@
 import logging
 import secrets
+import hashlib
+import ipaddress
 from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils import timezone
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.throttling import BaseThrottle
 
 from apps.telegram_support.models import TelegramPhoneLink
 
@@ -68,8 +71,19 @@ def generate_code() -> str:
 
 
 def client_ip(request) -> str | None:
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    return (forwarded.split(",", 1)[0].strip() if forwarded else request.META.get("REMOTE_ADDR")) or None
+    try:
+        return str(ipaddress.ip_address(BaseThrottle().get_ident(request)))
+    except ValueError:
+        return None
+
+
+def _lock_identity(*keys: str) -> None:
+    # Transaction-scoped PostgreSQL locks also cover identities without rows.
+    # Use the same phone lock for request and verify; serialize IP quota checks.
+    with connection.cursor() as cursor:
+        for key in sorted(keys):
+            lock_id = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], signed=True)
+            cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_id])
 
 
 def _rate_limit(phone_number: str, ip: str | None) -> None:
@@ -84,7 +98,7 @@ def _rate_limit(phone_number: str, ip: str | None) -> None:
 def _eligible_user(phone_number: str, purpose: str, names: dict) -> User | None:
     user = User.objects.filter(phone_number=phone_number).first()
     if purpose == PhoneOTP.Purpose.REGISTER:
-        if user and user.is_verified:
+        if user and (user.is_verified or user.role != User.Role.PATIENT or user.is_active):
             return None
         if user is None:
             user = User.objects.create_user(
@@ -113,6 +127,7 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
     else:
         logger.info("OTP requested: phone=%s channel=%s", masked_phone, channel)
     with transaction.atomic():
+        _lock_identity(*([f"ip:{ip}"] if ip else []), f"phone:{phone_number}")
         _rate_limit(phone_number, ip)
         user = _eligible_user(phone_number, purpose, names)
         if user:
@@ -124,7 +139,7 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
         if channel == PhoneOTP.Channel.TELEGRAM:
             link = TelegramPhoneLink.objects.filter(phone_number=phone_number, is_active=True).first()
             logger.info("Telegram link found: %s", "yes" if link else "no")
-            if not link:
+            if not link or link.telegram_chat_id != link.telegram_user_id or link.telegram_chat_id <= 0:
                 raise TelegramNotLinked()
             logger.info("Telegram chat id exists: %s", "yes" if link.telegram_chat_id else "no")
             if user is None:
@@ -167,6 +182,7 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
 def verify_code(*, phone_number: str, purpose: str, code: str) -> tuple[User, str, str]:
     invalid = False
     with transaction.atomic():
+        _lock_identity(f"phone:{phone_number}")
         otp = PhoneOTP.objects.select_for_update().filter(
             phone_number=phone_number,
             purpose=purpose,
@@ -183,6 +199,8 @@ def verify_code(*, phone_number: str, purpose: str, code: str) -> tuple[User, st
             else:
                 user = otp.user
                 if not user:
+                    invalid = True
+                elif purpose == PhoneOTP.Purpose.REGISTER and (user.role != User.Role.PATIENT or user.is_verified):
                     invalid = True
                 elif purpose == PhoneOTP.Purpose.REGISTER:
                     user.is_active = True

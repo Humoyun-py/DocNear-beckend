@@ -71,6 +71,8 @@ class PhoneContactSerializer(serializers.Serializer):
     sender_user_id = serializers.IntegerField(min_value=1)
 
     def validate(self, attrs):
+        if attrs["telegram_chat_id"] != attrs["sender_user_id"]:
+            raise serializers.ValidationError("Telefonni faqat bot bilan shaxsiy chatda ulang.")
         if attrs["contact_user_id"] != attrs["sender_user_id"] or attrs["telegram_user_id"] != attrs["sender_user_id"]:
             raise serializers.ValidationError("Faqat o‘zingizga tegishli kontaktni ulashingiz mumkin.")
         return attrs

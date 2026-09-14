@@ -25,6 +25,8 @@ def qa_runner(tmp_path, monkeypatch):
         "    sys.argv = sys.argv[1:]\n"
         "    exec(compile(sys.stdin.read(), '<qa-secret-bootstrap>', 'exec'))\n"
         "else:\n"
+        "    assert 'DOCNEAR_ENV_FILE' not in os.environ\n"
+        "    if 'runserver' in sys.argv: assert '127.0.0.1:8001' in sys.argv\n"
         "    path = pathlib.Path(os.environ['DOCNEAR_QA_RUNTIME_DIR']) / 'telegram-secret'\n"
         "    assert os.environ['TELEGRAM_BOT_SECRET'] == path.read_text()\n"
         "    assert len(path.read_text()) >= 40\n"
@@ -42,6 +44,8 @@ def qa_runner(tmp_path, monkeypatch):
         )
         executable.chmod(0o700)
     monkeypatch.setenv("PG_BIN", str(project / "fake-pg"))
+    monkeypatch.setenv("DOCNEAR_ENV_FILE", "/nonexistent/development.env")
+    monkeypatch.delenv("DOCNEAR_QA_PORT", raising=False)
     return runner, project / ".runtime/integration/telegram-secret"
 
 

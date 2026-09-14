@@ -259,7 +259,8 @@ bot server. Phone-link and OTP routes receive the Telegram user ID in the JSON
 body:
 
 - `POST /api/v1/telegram/phone-link/` accepts a contact only when
-  `contact_user_id == sender_user_id == telegram_user_id`.
+  `contact_user_id == sender_user_id == telegram_user_id == telegram_chat_id`.
+  Only private chats are accepted; old non-private links cannot receive OTPs.
 - `DELETE /api/v1/telegram/phone-link/` disables the sender's link.
 - `POST /api/v1/telegram/request-otp/` requests login or registration OTP for
   the linked phone.

@@ -46,7 +46,7 @@ class FakeBackend:
         self.unlinked.append(telegram_user_id)
 
 
-def update(text=None, contact=None, sender=101, chat=202):
+def update(text=None, contact=None, sender=101, chat=101):
     message = {"from": {"id": sender}, "chat": {"id": chat}}
     if text is not None:
         message["text"] = text
@@ -74,7 +74,7 @@ def test_own_contact_links_and_foreign_contact_is_rejected():
     assert backend.linked[0] == {
         "phone_number": "+998900000001",
         "telegram_user_id": 101,
-        "telegram_chat_id": 202,
+        "telegram_chat_id": 101,
         "contact_user_id": 101,
         "sender_user_id": 101,
     }
