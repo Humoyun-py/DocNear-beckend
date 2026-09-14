@@ -1,0 +1,16 @@
+[Unit]
+Description=DocNear Telegram OTP bot
+After=network-online.target docnear-backend.service
+
+[Service]
+User=docnear
+Group=docnear
+WorkingDirectory=/srv/docnear/backend
+EnvironmentFile=/etc/docnear/docnear.production.env
+ExecStart=/srv/docnear/.venv/bin/python manage.py run_telegram_bot --settings=config.settings.production
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
