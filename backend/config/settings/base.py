@@ -64,7 +64,9 @@ CORS_ALLOWED_ORIGINS = [v.strip() for v in os.getenv(
     "CORS_ALLOWED_ORIGINS",
     "http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002,http://localhost:3003,http://127.0.0.1:3003,http://localhost:3004,http://127.0.0.1:3004",
 ).split(",") if v.strip()]
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+CSRF_TRUSTED_ORIGINS = [v.strip() for v in os.getenv(
+    "CSRF_TRUSTED_ORIGINS", ",".join(CORS_ALLOWED_ORIGINS)
+).split(",") if v.strip()]
 REST_FRAMEWORK = {
     # Forwarded headers are trusted only when an operator configures the exact
     # number of trusted proxies and prevents direct access to this service.

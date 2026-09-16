@@ -72,6 +72,14 @@ docker compose -f docker-compose.production.example.yml up -d
 docker compose -f docker-compose.production.example.yml exec backend python manage.py createsuperuser --settings=config.settings.production
 ```
 
+Before any production start, run the non-secret host and environment gates:
+
+```bash
+./scripts/server-preflight.sh .env.production docker-compose.production.example.yml
+python scripts/validate-deploy-env.py .env.production
+docker compose --env-file .env.production -f docker-compose.production.example.yml config --quiet
+```
+
 The compose file is a template: replace example domains/certificates, use a
 managed database or harden the included PostgreSQL volume, and keep all ports
 except Nginx private.

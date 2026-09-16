@@ -14,6 +14,11 @@
 - [ ] Superuser was created through a controlled shell session, never in an image.
 - [ ] Logs redact tokens, OTPs, phone numbers and request bodies; alerts are configured.
 - [ ] Backup restore and rollback were rehearsed before traffic cutover.
+- [ ] Ubuntu 24.04 host passed `scripts/server-preflight.sh` with no blocking failures.
+- [ ] `.env.production` passed `scripts/validate-deploy-env.py` without displaying values.
+- [ ] Docker Engine and Compose v2 are enabled and pinned images were reviewed.
+- [ ] Ports 80/443 are intentional; PostgreSQL, Redis and backend ports are not public.
+- [ ] `scripts/deploy-status.sh` reports healthy backend, PostgreSQL and Redis services.
 
 ## Before production, staging must pass
 
@@ -27,3 +32,5 @@
 - [ ] Logs contain no secrets, OTPs, tokens, full phone numbers or request bodies.
 - [ ] HTTPS certificates, redirects and security headers work.
 - [ ] Flutter mobile smoke test passed on a real device against the staging HTTPS API.
+- [ ] `scripts/backup-staging-postgres.sh` produced a mode `0600` dump and an isolated restore succeeded.
+- [ ] `scripts/rollback-staging.sh` was rehearsed with an explicit immutable target.

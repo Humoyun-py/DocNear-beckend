@@ -26,3 +26,6 @@ build/
 coverage/
 *.log
 .runtime/
+backups/
+*.dump
+*.dump.partial

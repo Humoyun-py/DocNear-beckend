@@ -17,17 +17,30 @@ Redis and port 8000 remain private.
 cp .env.staging.example .env.staging
 chmod 600 .env.staging
 # Edit .env.staging through a secret manager or protected editor.
-# Also set POSTGRES_PASSWORD in the shell or a server-only Compose env file.
-export POSTGRES_PASSWORD='staging-only-password'
-docker compose -f docker-compose.staging.example.yml config
-docker compose -f docker-compose.staging.example.yml build
-docker compose -f docker-compose.staging.example.yml up -d
+python scripts/validate-deploy-env.py .env.staging
+./scripts/server-preflight.sh .env.staging docker-compose.staging.example.yml
+
+BACKEND_URL=https://API_DOMAIN \
+PATIENT_WEB_URL=https://STAGING_DOMAIN \
+DOCTOR_PANEL_URL=https://doctor.STAGING_DOMAIN \
+ADMIN_PANEL_URL=https://admin.STAGING_DOMAIN \
+CLINIC_OWNER_PANEL_URL=https://owner.STAGING_DOMAIN \
+ENABLE_TELEGRAM_BOT=false ENABLE_NGINX=true RUN_SMOKE_TEST=true \
+  ./scripts/deploy-staging.sh
 ```
 
 Replace every `example` domain, placeholder key and certificate path before
 starting. Generate a random staging `SECRET_KEY`; never reuse production keys.
-The compose backend runs migrations and `collectstatic` on startup. To rerun
-them explicitly:
+The deployment helper validates Compose, starts PostgreSQL/Redis, runs Django
+deployment checks, migrations and `collectstatic`, then starts and health-checks
+the backend. Telegram and Nginx start only when their explicit flags are true.
+External smoke testing is opt-in with `RUN_SMOKE_TEST=true` and requires all
+five URL variables shown above. When it is false, the helper reports only the
+internal backend health result and explicitly says the external test was
+skipped. A requested external smoke test is rejected when Compose Nginx is
+disabled, so a private backend is never reported as externally verified.
+The Compose backend command also runs idempotent migrations and `collectstatic`
+on container recreation. To rerun them explicitly:
 
 ```bash
 docker compose -f docker-compose.staging.example.yml exec backend \
@@ -60,18 +73,26 @@ endpoint from outside the host.
 
 ## Rollback and cleanup
 
-Pin the staging image or Git commit. To roll back, stop Nginx traffic, deploy the
-previous image, run `check --deploy`, verify migration compatibility, restart the
-backend and worker, then rerun the smoke test. Restore only a staging backup in
-an isolated database; do not run destructive SQL against production.
+Pin the staging image or Git commit. `rollback-staging.sh` requires either a full
+commit SHA or an immutable image digest, stops Nginx first, displays the migration
+plan and never reverses migrations or deletes volumes. Operators must review
+schema compatibility before continuing with a rollback.
+
+Before stopping traffic, the helper records whether Nginx and the Telegram bot
+are running. A successful rollback restores both services to those exact states;
+no `ENABLE_NGINX` or `ENABLE_TELEGRAM_BOT` flag is needed. On failure it prints a
+prominent recovery block and restores a previously running Nginx when the
+backend state is safe. External rollback smoke testing is separately opt-in via
+`RUN_SMOKE_TEST=true` and the five required URL variables.
 
 ```bash
-docker compose -f docker-compose.staging.example.yml down
+./scripts/rollback-staging.sh --commit FULL_GIT_COMMIT_SHA
+# or
+./scripts/rollback-staging.sh --image registry.example/docnear@sha256:IMAGE_DIGEST
 ```
 
-Do not use `down -v` unless the staging database and Redis volumes are
-deliberately being destroyed. Keep `.env.staging` outside Git and delete it from
-the server only through the secret manager’s rotation procedure.
+Do not use `down -v`. Keep `.env.staging` outside Git and delete it from the
+server only through the secret manager’s rotation procedure.
 
 ## Common errors
 

@@ -8,7 +8,6 @@ if (not os.getenv("SECRET_KEY") or len(SECRET_KEY) < 50 or len(set(SECRET_KEY)) 
     raise ValueError("Production SECRET_KEY must be set and at least 50 characters.")
 missing = [name for name in (
     "DATABASE_URL", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "CSRF_TRUSTED_ORIGINS",
-    "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_USERNAME", "TELEGRAM_BOT_WEBHOOK_SECRET",
 ) if not os.getenv(name)]
 if missing:
     raise ValueError(f"Production settings require: {', '.join(missing)}.")
