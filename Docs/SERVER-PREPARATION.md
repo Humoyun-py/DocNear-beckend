@@ -44,7 +44,8 @@ Use a read-only deploy key or another scoped credential. Do this manually:
 cd /srv/docnear/releases
 git clone PRIVATE_REPOSITORY_URL docnear
 cd docnear
-git switch feature/server-readiness
+git switch main
+git pull --ff-only origin main
 git rev-parse HEAD
 ```
 
