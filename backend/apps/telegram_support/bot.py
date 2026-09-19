@@ -8,6 +8,13 @@ from apps.accounts.phone import normalize_phone_number
 
 NOT_LINKED_MESSAGE = "Avval telefon raqamingizni ulashing. Buning uchun /link_phone buyrug‘idan foydalaning."
 ACCOUNT_UNAVAILABLE_MESSAGE = "Bu raqamga DocNear hisobi topilmadi. Ro‘yxatdan o‘tish kodi uchun /code register buyrug‘idan foydalaning."
+REGISTER_FROM_APP_MESSAGE = (
+    "Ro‘yxatdan o‘tish uchun DocNear ilovasi yoki saytida Ro‘yxatdan o‘tish sahifasidan boshlang."
+)
+ACCOUNT_ALREADY_EXISTS_MESSAGE = (
+    "Bu telefon raqami bilan hisob allaqachon mavjud.\n"
+    "DocNear sayt yoki ilovasidagi Kirish sahifasidan foydalaning."
+)
 
 
 class BotServiceError(RuntimeError):
@@ -98,6 +105,16 @@ class BackendClient:
             {"telegram_user_id": telegram_user_id, "purpose": purpose},
         )
 
+    def claim_handoff(self, token: str, telegram_user_id: int, telegram_chat_id: int) -> dict:
+        return self._request("/telegram/handoff/claim/", {
+            "token": token,
+            "telegram_user_id": telegram_user_id,
+            "telegram_chat_id": telegram_chat_id,
+        })
+
+    def complete_handoff(self, payload: dict) -> dict:
+        return self._request("/telegram/handoff/complete/", payload)
+
     def unlink(self, telegram_user_id: int) -> dict:
         return self._request("/telegram/phone-link/", {"telegram_user_id": telegram_user_id}, "DELETE")
 
@@ -113,11 +130,12 @@ class DocNearTelegramBot:
     def __init__(self, telegram: TelegramApi, backend: BackendClient):
         self.telegram = telegram
         self.backend = backend
+        self.pending_handoffs: dict[tuple[int, int], dict] = {}
 
     @staticmethod
     def contact_keyboard() -> dict:
         return {
-            "keyboard": [[{"text": "Telefon raqamni ulash", "request_contact": True}]],
+            "keyboard": [[{"text": "Telefon raqamni yuborish", "request_contact": True}]],
             "resize_keyboard": True,
             "one_time_keyboard": True,
         }
@@ -152,10 +170,24 @@ class DocNearTelegramBot:
             self.telegram.send_text(chat["id"], "Mavjud buyruqlarni ko‘rish uchun /help buyrug‘ini yuboring.")
 
     def _start(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
-        del telegram_user_id, arguments
+        if arguments:
+            try:
+                handoff = self.backend.claim_handoff(arguments[0], telegram_user_id, chat_id)
+            except BotServiceError as exc:
+                self.telegram.send_text(chat_id, str(exc))
+                return
+            self.pending_handoffs[(telegram_user_id, chat_id)] = handoff
+            self.telegram.send_text(
+                chat_id,
+                "DocNear'da davom etish uchun telefon raqamingizni yuboring.",
+                self.contact_keyboard(),
+            )
+            return
         self.telegram.send_text(
             chat_id,
-            "DocNear botiga xush kelibsiz. Telefon raqamingizni ulash uchun /link_phone buyrug‘idan foydalaning.",
+            "DocNear botiga xush kelibsiz.\n"
+            "Davom etish uchun quyidagi tugma orqali telefon raqamingizni yuboring.",
+            self.contact_keyboard(),
         )
 
     def _link_phone(self, chat_id: int, telegram_user_id: int, arguments: list[str]) -> None:
@@ -173,19 +205,57 @@ class DocNearTelegramBot:
             return
         try:
             phone_number = normalize_phone(contact.get("phone_number", ""))
-            self.backend.link_phone({
+            pending_handoff = self.pending_handoffs.get((sender["id"], chat["id"]))
+            if pending_handoff and phone_number != pending_handoff["phone_number"]:
+                self.telegram.send_text(
+                    chat["id"],
+                    "Sayt yoki ilovada kiritilgan telefon raqamiga tegishli kontaktni yuboring.",
+                )
+                return
+            payload = {
                 "phone_number": phone_number,
                 "telegram_user_id": sender["id"],
                 "telegram_chat_id": chat["id"],
                 "contact_user_id": contact["user_id"],
                 "sender_user_id": sender["id"],
-            })
+            }
+            try:
+                handoff = self.backend.complete_handoff(payload)
+            except BotServiceError as handoff_exc:
+                if handoff_exc.code == "account_already_exists":
+                    self.pending_handoffs.pop((sender["id"], chat["id"]), None)
+                    self.telegram.send_text(chat["id"], ACCOUNT_ALREADY_EXISTS_MESSAGE, {"remove_keyboard": True})
+                    return
+                if pending_handoff or handoff_exc.code != "telegram_handoff_not_found":
+                    raise
+                handoff = None
+            if handoff:
+                if pending_handoff and handoff["purpose"] != pending_handoff["purpose"]:
+                    raise BotServiceError("Tasdiqlash maqsadi mos kelmadi. Jarayonni qaytadan boshlang.")
+                self.pending_handoffs.pop((sender["id"], chat["id"]), None)
+                success_message = (
+                    "Telefon raqamingiz tasdiqlandi.\nKirish kodi Telegram orqali yuborildi."
+                    if handoff["purpose"] == "login"
+                    else "Telefon raqamingiz tasdiqlandi.\nRo'yxatdan o'tish kodi Telegram orqali yuborildi."
+                )
+                self.telegram.send_text(chat["id"], success_message, {"remove_keyboard": True})
+                return
+            self.backend.link_phone(payload)
         except BotServiceError as exc:
             self.telegram.send_text(chat["id"], str(exc))
             return
+        purpose = "login"
+        try:
+            self.backend.request_code(sender["id"], purpose)
+        except BotServiceError as exc:
+            message = REGISTER_FROM_APP_MESSAGE if exc.code in {
+                "account_not_found", "telegram_account_unavailable",
+            } else str(exc)
+            self.telegram.send_text(chat["id"], message, {"remove_keyboard": True})
+            return
         self.telegram.send_text(
             chat["id"],
-            "Telefon raqamingiz muvaffaqiyatli ulandi.\nEndi tasdiqlash kodini Telegram orqali olishingiz mumkin.",
+            "Telefon raqamingiz tasdiqlandi.\nKirish kodi Telegram orqali yuborildi.",
             {"remove_keyboard": True},
         )
 
@@ -220,11 +290,11 @@ class DocNearTelegramBot:
         del telegram_user_id, arguments
         self.telegram.send_text(
             chat_id,
-            "/link_phone - telefon raqamni ulash\n"
-            "/code - kirish kodini olish\n"
-            "/code register - ro‘yxatdan o‘tish kodini olish\n"
+            "/start - telefon raqamingizni yuborish va kodni avtomatik olish\n"
             "/unlink - bog‘lanishni o‘chirish\n"
-            "/help - yordam",
+            "/help - yordam\n\n"
+            "Kirish uchun /start buyrug‘i yetarli. Ro‘yxatdan o‘tishni DocNear sayti yoki mobil "
+            "ilovasidagi Ro‘yxatdan o‘tish sahifasidan boshlang.",
         )
 
     def poll(self, timeout: int = 30, once: bool = False) -> None:

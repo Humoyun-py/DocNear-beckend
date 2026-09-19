@@ -839,6 +839,19 @@
     ]
   },
   {
+    "path": "/api/auth/telegram-handoff/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
     "path": "/api/auth/token/refresh/",
     "method": "POST",
     "module": "Auth",
@@ -1595,6 +1608,18 @@
       "patient",
       "super_admin"
     ]
+  },
+  {
+    "path": "/api/telegram/handoff/claim/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/telegram/handoff/complete/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
   },
   {
     "path": "/api/telegram/link-code/",
@@ -2489,6 +2514,19 @@
     ]
   },
   {
+    "path": "/api/v1/auth/telegram-handoff/",
+    "method": "POST",
+    "module": "Auth",
+    "allowed_roles": [
+      "admin",
+      "anonymous",
+      "clinic_owner",
+      "doctor",
+      "patient",
+      "super_admin"
+    ]
+  },
+  {
     "path": "/api/v1/auth/token/refresh/",
     "method": "POST",
     "module": "Auth",
@@ -3219,6 +3257,18 @@
       "patient",
       "super_admin"
     ]
+  },
+  {
+    "path": "/api/v1/telegram/handoff/claim/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
+    "path": "/api/v1/telegram/handoff/complete/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
   },
   {
     "path": "/api/v1/telegram/link-code/",

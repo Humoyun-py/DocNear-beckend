@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +6,55 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/settings_controller.dart';
+import '../../../core/network/api_exception.dart';
+import '../../../core/providers.dart';
 import 'auth_controller.dart';
+
+@visibleForTesting
+Future<bool> Function(Uri) launchTelegramUrl = (url) =>
+    launchUrl(url, mode: LaunchMode.externalApplication);
+
+@visibleForTesting
+String formatUzbekPhoneInput(String value) {
+  var digits = value.replaceAll(RegExp(r'\D'), '');
+  if (digits.length <= 3 && '998'.startsWith(digits)) return '+998';
+  if (digits.startsWith('998')) {
+    digits = digits.substring(3);
+  } else if (digits.startsWith('0')) {
+    digits = digits.substring(1);
+  }
+  if (digits.length > 9) digits = digits.substring(0, 9);
+
+  String part(int start, int end) {
+    if (digits.length <= start) return '';
+    final safeEnd = digits.length < end ? digits.length : end;
+    return digits.substring(start, safeEnd);
+  }
+
+  final groups = [
+    part(0, 2),
+    part(2, 5),
+    part(5, 7),
+    part(7, 9),
+  ].where((group) => group.isNotEmpty);
+  return '+998${groups.isEmpty ? '' : ' ${groups.join(' ')}'}';
+}
+
+class UzbekPhoneInputFormatter extends TextInputFormatter {
+  const UzbekPhoneInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final formatted = formatUzbekPhoneInput(newValue.text);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -203,19 +249,15 @@ class _PhoneAuthScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
-  static const configuredTelegramUsername = String.fromEnvironment(
-    'TELEGRAM_BOT_USERNAME',
-  );
   final phone = TextEditingController(text: '+998');
   final code = TextEditingController();
   final firstName = TextEditingController();
   final lastName = TextEditingController();
   bool codeStep = false;
   bool sending = false;
-  int cooldown = 0;
-  String lastChannel = 'sms';
-  Timer? cooldownTimer;
+  Uri? botUrl;
   String? error;
+  String? errorCode;
 
   @override
   void dispose() {
@@ -223,7 +265,6 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
     code.dispose();
     firstName.dispose();
     lastName.dispose();
-    cooldownTimer?.cancel();
     super.dispose();
   }
 
@@ -241,22 +282,20 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
       !RegExp(r'[^\d+\s().-]').hasMatch(phone.text) &&
       RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(normalizedPhone);
 
-  String get telegramUsername =>
-      configuredTelegramUsername.trim().replaceFirst(RegExp(r'^@'), '');
-
-  Future<void> openTelegramBot() async {
-    final opened = await launchUrl(
-      Uri.https('t.me', '/$telegramUsername'),
-      mode: LaunchMode.externalApplication,
-    );
+  Future<bool> openTelegramBot(Uri url) async {
+    final opened = await launchTelegramUrl(url);
     if (!opened && mounted) {
       setState(() => error = 'Telegram botni ochib bo‘lmadi.');
     }
+    return opened;
   }
 
-  Future<void> send(String channel) async {
-    if (sending || cooldown > 0 || ref.read(authProvider).verifying) return;
-    setState(() => error = null);
+  Future<void> startTelegramHandoff() async {
+    if (sending || ref.read(authProvider).verifying) return;
+    setState(() {
+      error = null;
+      errorCode = null;
+    });
     ref.read(authProvider.notifier).clearError();
     if (!validPhone) {
       setState(
@@ -271,42 +310,42 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
     }
     setState(() => sending = true);
     final normalized = normalizedPhone;
-    final failure = await ref
-        .read(authProvider.notifier)
-        .requestOtp(
-          phoneNumber: normalized,
-          purpose: widget.purpose,
-          channel: channel,
-          firstName: firstName.text.trim(),
-          lastName: lastName.text.trim(),
-        );
-    if (mounted) {
-      final shouldCooldown =
-          failure == null ||
-          failure.statusCode == 429 ||
-          failure.code == 'too_many_requests';
+    try {
+      final url = await ref
+          .read(authRepositoryProvider)
+          .createTelegramHandoff(
+            phoneNumber: normalized,
+            purpose: widget.purpose,
+            firstName: firstName.text.trim(),
+            lastName: lastName.text.trim(),
+          );
+      if (!mounted) return;
+      final opened = await openTelegramBot(url);
+      if (!mounted || !opened) return;
       setState(() {
-        sending = false;
-        error = failure?.message;
-        if (failure == null) {
-          phone.text = normalized;
-          code.clear();
-          codeStep = true;
-          lastChannel = channel;
-        }
-        if (shouldCooldown) cooldown = 60;
+        phone.text = formatUzbekPhoneInput(normalized);
+        code.clear();
+        codeStep = true;
+        botUrl = url;
       });
-      if (shouldCooldown) {
-        cooldownTimer?.cancel();
-        cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          if (!mounted || cooldown <= 1) {
-            timer.cancel();
-            if (mounted) setState(() => cooldown = 0);
-          } else {
-            setState(() => cooldown -= 1);
-          }
+    } catch (caught) {
+      if (mounted) {
+        setState(() {
+          errorCode = caught is ApiException ? caught.code : null;
+          error = switch (errorCode) {
+            'account_already_exists' =>
+              'Bu telefon raqami bilan hisob allaqachon mavjud.',
+            'account_not_found' => 'Bu telefon raqami uchun hisob topilmadi.',
+            _
+                when caught is ApiException &&
+                    !caught.message.startsWith('Please check') =>
+              caught.message,
+            _ => 'So‘rov bajarilmadi. Qayta urinib ko‘ring.',
+          };
         });
       }
+    } finally {
+      if (mounted) setState(() => sending = false);
     }
   }
 
@@ -400,14 +439,21 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                     controller: phone,
                     enabled: !codeStep && !busy,
                     keyboardType: TextInputType.phone,
+                    inputFormatters: const [UzbekPhoneInputFormatter()],
                     autofillHints: const [AutofillHints.telephoneNumber],
                     decoration: const InputDecoration(
                       labelText: 'Telefon raqamingizni kiriting',
-                      hintText: '+998901234567',
+                      hintText: '+998 90 123 45 67',
                       prefixIcon: Icon(LucideIcons.phone),
                     ),
                   ),
                   if (codeStep) ...[
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Tasdiqlash kodi Telegram bot orqali yuboriladi.\n'
+                      'Botda telefon raqamingizni yuboring, keyin olgan 6 xonali kodni shu yerga kiriting.',
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: code,
@@ -430,72 +476,60 @@ class _PhoneAuthScreenState extends ConsumerState<_PhoneAuthScreen> {
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
+                    if (errorCode == 'account_already_exists')
+                      TextButton(
+                        onPressed: busy ? null : () => context.go('/login'),
+                        child: const Text('Kirish'),
+                      ),
+                    if (errorCode == 'account_not_found')
+                      TextButton(
+                        onPressed: busy ? null : () => context.go('/register'),
+                        child: const Text('Ro‘yxatdan o‘tish'),
+                      ),
                   ],
                   const SizedBox(height: 20),
                   FilledButton.icon(
-                    onPressed: busy || (!codeStep && cooldown > 0)
+                    onPressed: busy
                         ? null
                         : codeStep
                         ? verify
-                        : () => send('sms'),
+                        : startTelegramHandoff,
                     icon: Icon(
-                      codeStep
-                          ? LucideIcons.shieldCheck
-                          : LucideIcons.messageSquare,
+                      codeStep ? LucideIcons.shieldCheck : LucideIcons.send,
                     ),
                     label: Text(
                       busy
                           ? 'Kutilmoqda...'
                           : codeStep
                           ? 'Tasdiqlash'
-                          : 'Tasdiqlash kodini yuborish',
+                          : 'Tasdiqlash kodini olish',
                     ),
                   ),
                   const SizedBox(height: 10),
-                  if (!codeStep)
-                    OutlinedButton.icon(
-                      onPressed: busy || cooldown > 0
-                          ? null
-                          : () => send('telegram'),
-                      icon: const Icon(LucideIcons.send),
-                      label: const Text('Kodni Telegram orqali olish'),
-                    ),
                   if (codeStep)
                     Column(
                       children: [
                         const Text('Faqat oxirgi yuborilgan kod amal qiladi.'),
                         TextButton.icon(
-                          onPressed: busy || cooldown > 0
+                          onPressed: busy || botUrl == null
                               ? null
-                              : () => send(lastChannel),
-                          icon: const Icon(LucideIcons.refreshCw),
-                          label: Text(
-                            cooldown > 0
-                                ? 'Qayta yuborish (${cooldown}s)'
-                                : 'Kodni qayta yuborish',
-                          ),
+                              : () => openTelegramBot(botUrl!),
+                          icon: const Icon(LucideIcons.externalLink),
+                          label: const Text('Telegram botni qayta ochish'),
+                        ),
+                        TextButton(
+                          onPressed: busy
+                              ? null
+                              : () => setState(() {
+                                  codeStep = false;
+                                  code.clear();
+                                  botUrl = null;
+                                  error = null;
+                                  errorCode = null;
+                                }),
+                          child: const Text('Telefon raqamini o‘zgartirish'),
                         ),
                       ],
-                    ),
-                  if (!codeStep)
-                    if (cooldown > 0)
-                      Text(
-                        'Qayta yuborish (${cooldown}s)',
-                        textAlign: TextAlign.center,
-                      ),
-                  if (!codeStep)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Telegram uchun avval DocNear botida telefon raqamingizni ulashing.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  if (!codeStep && telegramUsername.isNotEmpty)
-                    TextButton.icon(
-                      onPressed: busy ? null : openTelegramBot,
-                      icon: const Icon(LucideIcons.externalLink),
-                      label: const Text('Telegram botni ochish'),
                     ),
                   const SizedBox(height: 8),
                   TextButton(

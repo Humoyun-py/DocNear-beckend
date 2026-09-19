@@ -24,6 +24,29 @@ class AuthRepository {
     await api.post(ApiEndpoints.requestOtp, data: data, anonymous: true);
   }
 
+  Future<Uri> createTelegramHandoff({
+    required String phoneNumber,
+    required String purpose,
+    String? firstName,
+    String? lastName,
+  }) async {
+    final data = await api.post(
+      ApiEndpoints.telegramHandoff,
+      data: {
+        'phone_number': phoneNumber,
+        'purpose': purpose,
+        'first_name': firstName?.trim(),
+        'last_name': lastName?.trim(),
+      },
+      anonymous: true,
+    );
+    final botUrl = Uri.tryParse(asString(data['bot_url']));
+    if (botUrl == null || botUrl.scheme != 'https' || botUrl.host != 't.me') {
+      throw const FormatException('Telegram bot manzili yaroqsiz.');
+    }
+    return botUrl;
+  }
+
   Future<UserModel> verifyOtp({
     required String phoneNumber,
     required String code,

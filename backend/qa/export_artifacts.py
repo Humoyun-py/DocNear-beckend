@@ -21,7 +21,8 @@ VARIABLES = {
     'review_id': '', 'notification_id': '', 'break_id': '', 'blocked_time_id': '', 'image_id': '', 'log_id': '',
     'latitude': '41.3111', 'longitude': '69.2797', 'radius': '5', 'date': '', 'time': '',
     'next_time': '', 'booking_weekday': '', 'q': 'QA', 'telegram_user_id': '123456', 'telegram_bot_secret': '',
-    'telegram_link_code': '', 'reset_uid': '', 'reset_token': '', 'test_password': '', 'new_password': '',
+    'telegram_link_code': '', 'telegram_handoff_token': '', 'reset_uid': '', 'reset_token': '',
+    'test_password': '', 'new_password': '',
     'otp_test_code': '',
     'patient_phone': '+998900000001', 'patient_b_phone': '+998900000002',
     'doctor_phone': '+998900000003', 'clinic_owner_phone': '+998900000004',
@@ -70,6 +71,8 @@ def body_for(path, method):
         return {'identifier':'{{patient_email}}','password':'{{test_password}}'}
     if path in ['/api/auth/request-otp/', '/api/auth/resend-otp/']:
         return {'phone_number':'{{patient_phone}}','purpose':'login','channel':'sms'}
+    if path == '/api/auth/telegram-handoff/':
+        return {'phone_number':'{{patient_phone}}','purpose':'login'}
     if path == '/api/auth/verify-otp/':
         return {'phone_number':'{{patient_phone}}','code':'{{otp_test_code}}','purpose':'login'}
     if path in ['/api/auth/token/refresh/', '/api/auth/logout/']:
@@ -84,6 +87,20 @@ def body_for(path, method):
         return {'first_name':'QA Patient'}
     if path == '/api/telegram/link/':
         return {'code':'{{telegram_link_code}}','telegram_user_id':'{{telegram_user_id}}'}
+    if path == '/api/telegram/handoff/claim/':
+        return {
+            'token':'{{telegram_handoff_token}}',
+            'telegram_user_id':'{{telegram_user_id}}',
+            'telegram_chat_id':'{{telegram_user_id}}',
+        }
+    if path == '/api/telegram/handoff/complete/':
+        return {
+            'phone_number':'{{patient_phone}}',
+            'telegram_user_id':'{{telegram_user_id}}',
+            'telegram_chat_id':'{{telegram_user_id}}',
+            'contact_user_id':'{{telegram_user_id}}',
+            'sender_user_id':'{{telegram_user_id}}',
+        }
     if path.endswith('/reschedule/'):
         return {'date':'{{date}}','time':'{{next_time}}'}
     if path.endswith('/cancel/') or path.endswith('/reject/'):

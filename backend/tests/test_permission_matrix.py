@@ -26,6 +26,8 @@ def test_every_operation_role_boundary(client, world, role, path, method, record
             "/api/telegram/link/",
             "/api/telegram/phone-link/",
             "/api/telegram/request-otp/",
+            "/api/telegram/handoff/claim/",
+            "/api/telegram/handoff/complete/",
         }
         error(response, 403 if canonical in manual_bot_views else 401)
     elif role not in allowed:

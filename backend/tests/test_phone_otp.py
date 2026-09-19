@@ -1,10 +1,12 @@
 from datetime import timedelta
+import re
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 
-from apps.accounts.models import PhoneOTP, User
+from apps.accounts.models import PhoneOTP, TelegramAuthHandoff, User
 from apps.accounts.sms import SmsDeliveryError
 from apps.telegram_support.models import TelegramPhoneLink
 from .conftest import payload
@@ -37,6 +39,213 @@ def otp_user(phone="+998901234567", role="patient"):
         role=role,
         is_verified=True,
     )
+
+
+def create_handoff(client, settings, phone, purpose="login", **names):
+    settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
+    if purpose == "login" and not User.objects.filter(phone_number=phone).exists():
+        otp_user(phone)
+    response = client.post("/api/v1/auth/telegram-handoff/", {
+        "phone_number": phone,
+        "purpose": purpose,
+        **names,
+    })
+    result = data(response)
+    token = parse_qs(urlsplit(result["bot_url"]).query)["start"][0]
+    return result["bot_url"], token
+
+
+def bot_headers(settings):
+    settings.TELEGRAM_BOT_SECRET = "test-bot-secret"
+    return {"HTTP_X_TELEGRAM_BOT_SECRET": "test-bot-secret"}
+
+
+def claim_handoff(client, headers, token, telegram_id=501):
+    return client.post("/api/v1/telegram/handoff/claim/", {
+        "token": token,
+        "telegram_user_id": telegram_id,
+        "telegram_chat_id": telegram_id,
+    }, format="json", **headers)
+
+
+def complete_handoff(client, headers, phone, telegram_id=501, contact_user_id=None):
+    return client.post("/api/v1/telegram/handoff/complete/", {
+        "phone_number": phone,
+        "telegram_user_id": telegram_id,
+        "telegram_chat_id": telegram_id,
+        "contact_user_id": contact_user_id or telegram_id,
+        "sender_user_id": telegram_id,
+    }, format="json", **headers)
+
+
+def test_telegram_handoff_login_is_opaque_and_stores_only_hash(client, settings):
+    phone = "+998901234580"
+    bot_url, token = create_handoff(client, settings, phone)
+    handoff = TelegramAuthHandoff.objects.get()
+    assert token not in handoff.token_hash
+    assert len(handoff.token_hash) == 64
+    assert phone not in bot_url
+    assert "docnear_test_bot" in bot_url
+
+
+def test_telegram_handoff_requires_configured_username(client, settings):
+    settings.TELEGRAM_BOT_USERNAME = ""
+    otp_user("+998901234579")
+    response = client.post("/api/v1/auth/telegram-handoff/", {
+        "phone_number": "+998901234579",
+        "purpose": "login",
+    })
+    assert response.status_code == 400
+    assert "Telegram bot hozircha sozlanmagan." in str(response.data)
+
+
+def test_telegram_handoff_url_has_safe_origin_and_no_personal_data(client, settings):
+    phone = "+998901234578"
+    bot_url, token = create_handoff(
+        client, settings, phone, "register", first_name="Aziza", last_name="Saidova",
+    )
+    parsed = urlsplit(bot_url)
+    assert (parsed.scheme, parsed.netloc) == ("https", "t.me")
+    assert parsed.path == "/docnear_test_bot"
+    assert parse_qs(parsed.query) == {"start": [token]}
+    assert phone not in bot_url and "Aziza" not in bot_url and "Saidova" not in bot_url
+    assert re.fullmatch(r"[A-Za-z0-9_-]{20,}", token)
+
+
+def test_register_handoff_stores_names_outside_bot_url(client, settings):
+    bot_url, _ = create_handoff(
+        client, settings, "+998901234581", "register", first_name="Ali", last_name="Valiyev",
+    )
+    handoff = TelegramAuthHandoff.objects.get()
+    assert (handoff.first_name, handoff.last_name) == ("Ali", "Valiyev")
+    assert "Ali" not in bot_url and "Valiyev" not in bot_url and handoff.phone_number not in bot_url
+
+
+def test_register_handoff_rejects_existing_active_verified_account(client, settings):
+    phone = "+998901234576"
+    otp_user(phone)
+    settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
+    response = client.post("/api/v1/auth/telegram-handoff/", {
+        "phone_number": phone,
+        "purpose": "register",
+        "first_name": "Existing",
+    })
+    result = error(response, 400)
+    assert result["code"] == "account_already_exists"
+    assert "allaqachon mavjud" in result["message"]
+    assert "patient" not in result["message"].lower()
+    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+
+
+@pytest.mark.parametrize("role", [User.Role.DOCTOR, User.Role.ADMIN, User.Role.OWNER])
+def test_register_handoff_rejects_existing_privileged_roles_without_disclosure(client, settings, role):
+    phone = "+998901234575"
+    User.objects.create_user(
+        phone_number=phone, first_name="Existing", role=role, is_active=True, is_verified=True,
+    )
+    settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
+    result = error(client.post("/api/v1/auth/telegram-handoff/", {
+        "phone_number": phone,
+        "purpose": "register",
+        "first_name": "Existing",
+    }), 400)
+    assert result["code"] == "account_already_exists"
+    assert role not in result["message"].lower()
+    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+
+
+def test_login_handoff_missing_account_returns_account_not_found(client, settings):
+    settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
+    result = error(client.post("/api/v1/auth/telegram-handoff/", {
+        "phone_number": "+998901234574",
+        "purpose": "login",
+    }), 400)
+    assert result["code"] == "account_not_found"
+    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+
+
+def test_register_handoff_claim_returns_full_registration_context(client, settings):
+    phone = "+998901234577"
+    _, token = create_handoff(
+        client, settings, phone, "register", first_name="Madina", last_name="Ergasheva",
+    )
+    claimed = data(claim_handoff(client, bot_headers(settings), token, 701))
+    assert claimed == {
+        "claimed": True,
+        "purpose": "register",
+        "phone_number": phone,
+        "first_name": "Madina",
+        "last_name": "Ergasheva",
+    }
+
+
+def test_expired_and_used_handoff_tokens_are_rejected(client, settings):
+    headers = bot_headers(settings)
+    _, expired = create_handoff(client, settings, "+998901234582")
+    TelegramAuthHandoff.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
+    assert error(claim_handoff(client, headers, expired), 400)["code"] == "telegram_handoff_invalid"
+    TelegramAuthHandoff.objects.all().delete()
+    _, used = create_handoff(client, settings, "+998901234583")
+    TelegramAuthHandoff.objects.update(used_at=timezone.now())
+    assert error(claim_handoff(client, headers, used), 400)["code"] == "telegram_handoff_invalid"
+
+
+def test_handoff_contact_mismatch_and_other_contact_do_not_consume(client, settings):
+    headers = bot_headers(settings)
+    _, token = create_handoff(client, settings, "+998901234584")
+    assert claim_handoff(client, headers, token).status_code == 200
+    mismatch = complete_handoff(client, headers, "+998901234585")
+    assert error(mismatch, 400)["code"] == "telegram_handoff_phone_mismatch"
+    assert TelegramAuthHandoff.objects.get().used_at is None
+    assert not PhoneOTP.objects.exists() and not TelegramPhoneLink.objects.exists()
+    other = complete_handoff(client, headers, "+998901234584", contact_user_id=999)
+    assert other.status_code == 400
+    assert TelegramAuthHandoff.objects.get().used_at is None
+
+
+def test_valid_login_handoff_sends_telegram_otp_and_is_single_use(client, settings):
+    headers = bot_headers(settings)
+    phone = "+998901234586"
+    otp_user(phone)
+    _, token = create_handoff(client, settings, phone)
+    assert claim_handoff(client, headers, token).status_code == 200
+    assert data(complete_handoff(client, headers, phone))["purpose"] == "login"
+    assert PhoneOTP.objects.filter(phone_number=phone, purpose="login", channel="telegram").exists()
+    assert TelegramAuthHandoff.objects.get().used_at is not None
+    assert error(claim_handoff(client, headers, token), 400)["code"] == "telegram_handoff_invalid"
+
+
+def test_valid_register_handoff_preserves_names_through_verification(client, settings):
+    headers = bot_headers(settings)
+    phone = "+998901234587"
+    _, token = create_handoff(
+        client, settings, phone, "register", first_name="Dilnoza", last_name="Karimova",
+    )
+    assert claim_handoff(client, headers, token, 601).status_code == 200
+    assert data(complete_handoff(client, headers, phone, 601))["purpose"] == "register"
+    user = User.objects.get(phone_number=phone)
+    assert (user.first_name, user.last_name) == ("Dilnoza", "Karimova")
+    assert data(verify_otp(client, phone, "register"))["user"]["first_name"] == "Dilnoza"
+
+
+def test_register_handoff_completion_detects_account_creation_race(client, settings):
+    headers = bot_headers(settings)
+    phone = "+998901234573"
+    _, token = create_handoff(client, settings, phone, "register", first_name="Race")
+    otp_user(phone)
+    assert claim_handoff(client, headers, token, 801).status_code == 200
+    result = error(complete_handoff(client, headers, phone, 801), 400)
+    assert result["code"] == "account_already_exists"
+    assert User.objects.filter(phone_number=phone).count() == 1
+    assert not PhoneOTP.objects.filter(phone_number=phone).exists()
+    assert TelegramAuthHandoff.objects.get().used_at is None
+
+
+def test_handoff_raw_token_is_not_logged(client, settings, caplog):
+    headers = bot_headers(settings)
+    _, token = create_handoff(client, settings, "+998901234588")
+    assert claim_handoff(client, headers, token).status_code == 200
+    assert token not in caplog.text
 
 
 def test_request_and_verify_login_returns_jwt(client):
@@ -126,6 +335,31 @@ def test_telegram_link_requires_own_contact_and_link_for_otp(client, settings):
     assert not link.is_active
 
 
+def test_phone_cannot_be_relinked_to_another_telegram_user(client, settings):
+    settings.TELEGRAM_BOT_SECRET = "test-bot-secret"
+    headers = {"HTTP_X_TELEGRAM_BOT_SECRET": "test-bot-secret"}
+    phone = "+998901234579"
+    first = {
+        "phone_number": phone,
+        "telegram_user_id": 101,
+        "telegram_chat_id": 101,
+        "contact_user_id": 101,
+        "sender_user_id": 101,
+    }
+    assert client.post("/api/v1/telegram/phone-link/", first, format="json", **headers).status_code == 200
+    second = {
+        "phone_number": phone,
+        "telegram_user_id": 202,
+        "telegram_chat_id": 202,
+        "contact_user_id": 202,
+        "sender_user_id": 202,
+    }
+    assert client.post("/api/v1/telegram/phone-link/", second, format="json", **headers).status_code == 400
+    link = TelegramPhoneLink.objects.get(phone_number=phone)
+    assert link.telegram_user_id == 101
+    assert link.telegram_chat_id == 101
+
+
 def test_telegram_otp_can_be_disabled_without_affecting_sms(client, settings):
     user = otp_user("+998901234573")
     settings.TELEGRAM_OTP_ENABLED = False
@@ -144,7 +378,7 @@ def test_telegram_login_never_returns_false_success_for_unregistered_link(client
         is_active=True,
     )
     response = request_otp(client, phone, channel="telegram")
-    assert error(response, 400)["code"] == "telegram_account_unavailable"
+    assert error(response, 400)["code"] == "account_not_found"
     assert not PhoneOTP.objects.filter(phone_number=phone).exists()
 
 

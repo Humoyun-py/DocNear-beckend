@@ -36,6 +36,15 @@ export const authService = {
       first_name: data.firstName?.trim(), last_name: data.lastName?.trim(),
     }) });
   },
+  async createTelegramHandoff(data: { phone: string; purpose: 'login' | 'register'; firstName?: string; lastName?: string }): Promise<string> {
+    const result = await apiRequest<{bot_url: string}>('auth/telegram-handoff/', { method: 'POST', body: JSON.stringify({
+      phone_number: data.phone.trim(), purpose: data.purpose,
+      first_name: data.firstName?.trim(), last_name: data.lastName?.trim(),
+    }) });
+    const botUrl = new URL(result.bot_url);
+    if (botUrl.protocol !== 'https:' || botUrl.hostname !== 't.me') throw new Error('Telegram bot manzili yaroqsiz.');
+    return botUrl.toString();
+  },
   async verifyOtp(data: { phone: string; code: string; purpose: 'login' | 'register' }): Promise<UserProfile> {
     const session = await apiRequest<SessionDto>('auth/verify-otp/', { method: 'POST', body: JSON.stringify({
       phone_number: data.phone.trim(), code: data.code.trim(), purpose: data.purpose,

@@ -40,6 +40,8 @@ def allowed_roles(path, method):
         "/api/telegram/link/",
         "/api/telegram/phone-link/",
         "/api/telegram/request-otp/",
+        "/api/telegram/handoff/claim/",
+        "/api/telegram/handoff/complete/",
     }:
         return None
     if path == "/api/telegram/link-code/":
