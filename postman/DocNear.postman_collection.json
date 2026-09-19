@@ -186,6 +186,11 @@
       "type": "string"
     },
     {
+      "key": "telegram_handoff_token",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "reset_uid",
       "value": "",
       "type": "string"
@@ -17186,6 +17191,91 @@
           ]
         },
         {
+          "name": "POST /api/auth/telegram-handoff/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/telegram-handoff/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/auth/telegram-handoff/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
           "name": "POST /api/auth/token/refresh/",
           "request": {
             "method": "POST",
@@ -18217,6 +18307,91 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"uid\": \"{{reset_uid}}\",\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/telegram-handoff/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/auth/telegram-handoff/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/auth/telegram-handoff/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"purpose\": \"login\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -30901,6 +31076,208 @@
           ]
         },
         {
+          "name": "POST /api/telegram/handoff/claim/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/telegram/handoff/claim/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{telegram_handoff_token}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/telegram/handoff/claim/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{telegram_handoff_token}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/telegram/handoff/complete/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/telegram/handoff/complete/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\",\n  \"contact_user_id\": \"{{telegram_user_id}}\",\n  \"sender_user_id\": \"{{telegram_user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/telegram/handoff/complete/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\",\n  \"contact_user_id\": \"{{telegram_user_id}}\",\n  \"sender_user_id\": \"{{telegram_user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
           "name": "DELETE /api/telegram/link-code/",
           "request": {
             "method": "DELETE",
@@ -32213,6 +32590,208 @@
                   "type": "noauth"
                 },
                 "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/telegram/handoff/claim/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/telegram/handoff/claim/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{telegram_handoff_token}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/telegram/handoff/claim/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{telegram_handoff_token}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/telegram/handoff/complete/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/telegram/handoff/complete/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Secret",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "X-Telegram-User-Id",
+                "value": "{{telegram_user_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\",\n  \"contact_user_id\": \"{{telegram_user_id}}\",\n  \"sender_user_id\": \"{{telegram_user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/telegram/handoff/complete/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Secret",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "X-Telegram-User-Id",
+                    "value": "{{telegram_user_id}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone_number\": \"{{patient_phone}}\",\n  \"telegram_user_id\": \"{{telegram_user_id}}\",\n  \"telegram_chat_id\": \"{{telegram_user_id}}\",\n  \"contact_user_id\": \"{{telegram_user_id}}\",\n  \"sender_user_id\": \"{{telegram_user_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
               },
               "status": "OK",
               "code": 200,
