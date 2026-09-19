@@ -1,6 +1,13 @@
+import hashlib
+import re
+import secrets
+from datetime import timedelta
+from urllib.parse import urlencode
+
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.password_validation import validate_password
@@ -12,11 +19,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from .models import User
+from .models import TelegramAuthHandoff, User
 from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer, ChangePasswordSerializer,
                           ForgotPasswordSerializer, ResetPasswordSerializer, LogoutSerializer,
-                          RequestOTPSerializer, VerifyOTPSerializer)
-from .otp import request_code, verify_code
+                          RequestOTPSerializer, TelegramHandoffSerializer, VerifyOTPSerializer)
+from .otp import handoff_account_error, request_code, verify_code
 
 
 class PasswordAuthDisabled(APIException):
@@ -64,6 +71,35 @@ class RequestOTPView(AuthView):
         serializer.is_valid(raise_exception=True)
         message = request_code(request=request, **serializer.validated_data)
         return Response({"message": message})
+
+
+class TelegramHandoffView(AuthView):
+    serializer_class = TelegramHandoffSerializer
+    throttle_scope = "otp_request"
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        account_error = handoff_account_error(
+            serializer.validated_data["phone_number"], serializer.validated_data["purpose"],
+        )
+        if account_error:
+            raise account_error
+        username = settings.TELEGRAM_BOT_USERNAME
+        if not re.fullmatch(r"[A-Za-z0-9_]{5,32}", username):
+            raise ValidationError("Telegram bot hozircha sozlanmagan.")
+        raw_token = secrets.token_urlsafe(32)
+        data = serializer.validated_data
+        TelegramAuthHandoff.objects.create(
+            token_hash=hashlib.sha256(raw_token.encode()).hexdigest(),
+            phone_number=data["phone_number"],
+            purpose=data["purpose"],
+            first_name=data.get("first_name", ""),
+            last_name=data.get("last_name", ""),
+            expires_at=timezone.now() + timedelta(minutes=5),
+        )
+        bot_url = f"https://t.me/{username}?{urlencode({'start': raw_token})}"
+        return Response({"bot_url": bot_url})
 
 
 class ResendOTPView(RequestOTPView):

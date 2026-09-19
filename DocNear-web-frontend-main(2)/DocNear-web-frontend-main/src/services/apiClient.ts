@@ -4,6 +4,7 @@ const REFRESH_KEY = 'docnear_refresh_token';
 export const AUTH_EXPIRED = 'docnear:auth-expired';
 export class ApiError extends Error {
   constructor(message: string, public status: number, public data: unknown) { super(message); }
+  get code() { return (this.data as { code?: string } | null)?.code || '' }
 }
 export function isOtpRateLimited(error: unknown) {
   return error instanceof ApiError && (error.status === 429 || (error.data as { code?: string } | null)?.code === 'too_many_requests');
@@ -33,8 +34,7 @@ async function send<T>(path: string, init: RequestInit): Promise<T> {
     if (response.status === 204) return undefined as T;
     const body: Envelope<T> = await response.json().catch(() => ({ message: 'Server javobini o‘qib bo‘lmadi' }));
     if (!response.ok || body.success === false) {
-      const details = body.errors ? Object.entries(body.errors).map(([key, value]) => key + ': ' + String(value)).join('; ') : '';
-      throw new ApiError([body.message || 'So‘rov bajarilmadi', details].filter(Boolean).join('. '), response.status, body);
+      throw new ApiError(body.message || 'So‘rov bajarilmadi', response.status, body);
     }
     if (body.success !== true) throw new ApiError('API javobi kutilgan formatda emas', response.status, body);
     return body.data;
@@ -56,7 +56,7 @@ export async function apiRequest<T = unknown>(path: string, init: RequestInit = 
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-  const isAuthEntry = /^auth\/(login|register|request-otp|resend-otp|verify-otp|token\/refresh)\//.test(path);
+  const isAuthEntry = /^auth\/(login|register|telegram-handoff|request-otp|resend-otp|verify-otp|token\/refresh)\//.test(path);
   const access = sessionStorage.getItem(ACCESS_KEY);
   if (access && !isAuthEntry) headers.set('Authorization', 'Bearer ' + access);
   try { return await send<T>(path, { ...init, headers }); }

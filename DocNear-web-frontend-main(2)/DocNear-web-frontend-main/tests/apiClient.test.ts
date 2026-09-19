@@ -64,3 +64,19 @@ test('a forbidden replay after successful refresh preserves the valid session', 
  await assert.rejects(apiRequest('appointments/'), (e:unknown)=>e instanceof ApiError && e.status===403);
  assert.equal(sessionStorage.getItem('docnear_access_token'),'new');
 });
+
+test('coded auth errors preserve code without leaking validation internals into message', async () => {
+ globalThis.fetch=async()=>new Response(JSON.stringify({
+  success:false,
+  code:'account_already_exists',
+  message:'Bu telefon raqami bilan hisob allaqachon mavjud.',
+  errors:{0:'technical envelope detail'},
+ }),{status:400});
+ await assert.rejects(
+  apiRequest('auth/telegram-handoff/',{method:'POST',body:'{}'}),
+  (error:unknown)=>error instanceof ApiError
+   && error.code==='account_already_exists'
+   && error.message==='Bu telefon raqami bilan hisob allaqachon mavjud.'
+   && !error.message.includes('technical envelope detail'),
+ );
+});

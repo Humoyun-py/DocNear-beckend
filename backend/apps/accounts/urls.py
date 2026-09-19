@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path("request-otp/", views.RequestOTPView.as_view()), path("verify-otp/", views.VerifyOTPView.as_view()),
+    path("telegram-handoff/", views.TelegramHandoffView.as_view()),
     path("resend-otp/", views.ResendOTPView.as_view()),
     path("register/", views.RegisterView.as_view()), path("login/", views.LoginView.as_view()),
     path("token/refresh/", TokenRefreshView.as_view()), path("logout/", views.LogoutView.as_view()),

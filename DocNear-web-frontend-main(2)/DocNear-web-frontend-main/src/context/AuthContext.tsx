@@ -12,6 +12,7 @@ interface AuthContextType {
   openAuthModal: (mode?: 'login' | 'register', onAuthSuccess?: () => void) => void;
   closeAuthModal: () => void;
   requestOtp: (data: { phone: string; purpose: 'login' | 'register'; channel: 'sms' | 'telegram'; firstName?: string; lastName?: string }) => Promise<void>;
+  createTelegramHandoff: (data: { phone: string; purpose: 'login' | 'register'; firstName?: string; lastName?: string }) => Promise<string>;
   verifyOtp: (data: { phone: string; code: string; purpose: 'login' | 'register' }) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -53,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const requestOtp = (data: { phone: string; purpose: 'login' | 'register'; channel: 'sms' | 'telegram'; firstName?: string; lastName?: string }) => authService.requestOtp(data);
+  const createTelegramHandoff = (data: { phone: string; purpose: 'login' | 'register'; firstName?: string; lastName?: string }) => authService.createTelegramHandoff(data);
 
   const verifyOtp = async (data: { phone: string; code: string; purpose: 'login' | 'register' }): Promise<void> => {
     const newUser = await authService.verifyOtp(data);
@@ -113,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         openAuthModal,
         closeAuthModal,
         requestOtp,
+        createTelegramHandoff,
         verifyOtp,
         logout,
         updateProfile,

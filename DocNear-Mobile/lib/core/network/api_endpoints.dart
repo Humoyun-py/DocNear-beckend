@@ -1,5 +1,6 @@
 abstract final class ApiEndpoints {
   static const requestOtp = 'auth/request-otp/';
+  static const telegramHandoff = 'auth/telegram-handoff/';
   static const verifyOtp = 'auth/verify-otp/';
   static const resendOtp = 'auth/resend-otp/';
   static const refresh = 'auth/token/refresh/';

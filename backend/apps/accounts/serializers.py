@@ -35,6 +35,21 @@ class VerifyOTPSerializer(serializers.Serializer):
     purpose = serializers.ChoiceField(choices=["register", "login"])
 
 
+class TelegramHandoffSerializer(serializers.Serializer):
+    phone_number = PhoneNumberField()
+    purpose = serializers.ChoiceField(choices=["register", "login"])
+    first_name = serializers.CharField(max_length=100, required=False, allow_blank=True, trim_whitespace=True)
+    last_name = serializers.CharField(max_length=100, required=False, allow_blank=True, trim_whitespace=True)
+
+    def validate(self, attrs):
+        if attrs["purpose"] == "register" and not attrs.get("first_name", "").strip():
+            raise serializers.ValidationError({"first_name": "Ismingizni kiriting."})
+        if attrs["purpose"] == "login":
+            attrs["first_name"] = ""
+            attrs["last_name"] = ""
+        return attrs
+
+
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="get_full_name", read_only=True)
 
