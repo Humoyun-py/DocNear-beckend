@@ -100,7 +100,7 @@ LOGGING = {
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "DocNear API",
-    "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see Docs/api-contract.md.",
+    "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see docs/api-contract.md.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
@@ -131,7 +131,7 @@ PASSWORD_RESET_URL = os.getenv("PASSWORD_RESET_URL", "http://localhost:5173/rese
 TELEGRAM_BOT_WEBHOOK_SECRET = os.getenv("TELEGRAM_BOT_WEBHOOK_SECRET", "")
 TELEGRAM_BOT_SECRET = os.getenv("TELEGRAM_BOT_SECRET", "") or TELEGRAM_BOT_WEBHOOK_SECRET
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip().strip("\"'").lstrip("@")
 TELEGRAM_OTP_ENABLED = os.getenv("TELEGRAM_OTP_ENABLED", "false").lower() == "true"
 TELEGRAM_DELETE_WEBHOOK_ON_START = os.getenv("TELEGRAM_DELETE_WEBHOOK_ON_START", "false").lower() == "true"
 DOCNEAR_API_BASE_URL = os.getenv("DOCNEAR_API_BASE_URL", "http://127.0.0.1:8001/api/v1").rstrip("/")

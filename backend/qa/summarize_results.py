@@ -23,7 +23,7 @@ def main():
     summary = {'source':str(source.name),'date':run_date,'total':len(tests),
                'passed':sum(g['passed'] for g in groups.values()),'failed':sum(g['failed'] for g in groups.values()),
                'skipped':sum(g['skipped'] for g in groups.values()),'permission_probes':len(results),'modules':dict(groups)}
-    out = root/'Docs/qa'
+    out = root/'docs/qa'
     (out/'test-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     (out/'permission-results.json').write_text(json.dumps(results,indent=2)+'\n')
     by_endpoint = defaultdict(list)

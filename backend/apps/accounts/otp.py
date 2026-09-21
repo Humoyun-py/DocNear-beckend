@@ -54,6 +54,18 @@ class TelegramAccountUnavailable(APIException):
     default_detail = "Bu raqam uchun DocNear hisobi topilmadi. Avval ro‘yxatdan o‘ting."
 
 
+class AccountAlreadyExists(APIException):
+    status_code = 400
+    default_code = "account_already_exists"
+    default_detail = "Bu telefon raqami bilan hisob allaqachon mavjud. Kirish sahifasidan foydalaning."
+
+
+class AccountNotFound(APIException):
+    status_code = 400
+    default_code = "account_not_found"
+    default_detail = "Bu telefon raqami uchun DocNear hisobi topilmadi. Avval ro‘yxatdan o‘ting."
+
+
 class OtpRateLimited(APIException):
     status_code = 429
     default_code = "too_many_requests"
@@ -104,10 +116,14 @@ def _rate_limit(phone_number: str, ip: str | None, request=None) -> None:
         raise OtpRateLimited()
 
 
-def _eligible_user(phone_number: str, purpose: str, names: dict) -> User | None:
+def _eligible_user(
+    phone_number: str, purpose: str, names: dict, *, reject_registration_conflict: bool = False,
+) -> User | None:
     user = User.objects.filter(phone_number=phone_number).first()
     if purpose == PhoneOTP.Purpose.REGISTER:
         if user and (user.is_verified or user.role != User.Role.PATIENT or user.is_active):
+            if reject_registration_conflict:
+                raise AccountAlreadyExists()
             return None
         if user is None:
             user = User.objects.create_user(
@@ -126,6 +142,16 @@ def _eligible_user(phone_number: str, purpose: str, names: dict) -> User | None:
     return None
 
 
+def handoff_account_error(phone_number: str, purpose: str) -> APIException | None:
+    user = User.objects.filter(phone_number=phone_number).first()
+    if purpose == PhoneOTP.Purpose.REGISTER:
+        if user and (user.is_verified or user.is_active or user.role != User.Role.PATIENT):
+            return AccountAlreadyExists()
+    elif not user or not user.is_active or not user.is_verified or user.role != User.Role.PATIENT:
+        return AccountNotFound()
+    return None
+
+
 def request_code(*, request, phone_number: str, purpose: str, channel: str, **names) -> str:
     if channel == PhoneOTP.Channel.TELEGRAM and not settings.TELEGRAM_OTP_ENABLED:
         raise TelegramOtpDisabled()
@@ -138,7 +164,12 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
     with transaction.atomic():
         _lock_identity(*([f"ip:{ip}"] if ip else []), f"phone:{phone_number}")
         _rate_limit(phone_number, ip, request)
-        user = _eligible_user(phone_number, purpose, names)
+        user = _eligible_user(
+            phone_number,
+            purpose,
+            names,
+            reject_registration_conflict=channel == PhoneOTP.Channel.TELEGRAM,
+        )
         if user:
             TelegramPhoneLink.objects.filter(phone_number=phone_number).exclude(user=user).update(
                 user=user,
@@ -156,6 +187,8 @@ def request_code(*, request, phone_number: str, purpose: str, channel: str, **na
                 raise TelegramNotLinked()
             logger.info("Telegram chat id exists: %s", "yes" if link.telegram_chat_id else "no")
             if user is None:
+                if purpose == PhoneOTP.Purpose.LOGIN:
+                    raise AccountNotFound()
                 raise TelegramAccountUnavailable()
         PhoneOTP.objects.filter(
             phone_number=phone_number,

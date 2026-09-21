@@ -21,7 +21,8 @@ VARIABLES = {
     'review_id': '', 'notification_id': '', 'break_id': '', 'blocked_time_id': '', 'image_id': '', 'log_id': '',
     'latitude': '41.3111', 'longitude': '69.2797', 'radius': '5', 'date': '', 'time': '',
     'next_time': '', 'booking_weekday': '', 'q': 'QA', 'telegram_user_id': '123456', 'telegram_bot_secret': '',
-    'telegram_link_code': '', 'reset_uid': '', 'reset_token': '', 'test_password': '', 'new_password': '',
+    'telegram_link_code': '', 'telegram_handoff_token': '', 'reset_uid': '', 'reset_token': '',
+    'test_password': '', 'new_password': '',
     'otp_test_code': '',
     'patient_phone': '+998900000001', 'patient_b_phone': '+998900000002',
     'doctor_phone': '+998900000003', 'clinic_owner_phone': '+998900000004',
@@ -70,6 +71,8 @@ def body_for(path, method):
         return {'identifier':'{{patient_email}}','password':'{{test_password}}'}
     if path in ['/api/auth/request-otp/', '/api/auth/resend-otp/']:
         return {'phone_number':'{{patient_phone}}','purpose':'login','channel':'sms'}
+    if path == '/api/auth/telegram-handoff/':
+        return {'phone_number':'{{patient_phone}}','purpose':'login'}
     if path == '/api/auth/verify-otp/':
         return {'phone_number':'{{patient_phone}}','code':'{{otp_test_code}}','purpose':'login'}
     if path in ['/api/auth/token/refresh/', '/api/auth/logout/']:
@@ -84,6 +87,20 @@ def body_for(path, method):
         return {'first_name':'QA Patient'}
     if path == '/api/telegram/link/':
         return {'code':'{{telegram_link_code}}','telegram_user_id':'{{telegram_user_id}}'}
+    if path == '/api/telegram/handoff/claim/':
+        return {
+            'token':'{{telegram_handoff_token}}',
+            'telegram_user_id':'{{telegram_user_id}}',
+            'telegram_chat_id':'{{telegram_user_id}}',
+        }
+    if path == '/api/telegram/handoff/complete/':
+        return {
+            'phone_number':'{{patient_phone}}',
+            'telegram_user_id':'{{telegram_user_id}}',
+            'telegram_chat_id':'{{telegram_user_id}}',
+            'contact_user_id':'{{telegram_user_id}}',
+            'sender_user_id':'{{telegram_user_id}}',
+        }
     if path.endswith('/reschedule/'):
         return {'date':'{{date}}','time':'{{next_time}}'}
     if path.endswith('/cancel/') or path.endswith('/reject/'):
@@ -148,7 +165,7 @@ def request_item(path, method, name=None, token=None, body=None, status=None, ex
     selected_token = token or bearer(path, method)
     request = {'method':method, 'url':raw, 'header':[{'key':'Accept','value':'application/json'}],
                'auth':{'type':'bearer','bearer':[{'key':'token','value':'{{'+selected_token+'}}','type':'string'}]} if selected_token else {'type':'noauth'},
-               'description':'Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.'}
+               'description':'Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.'}
     if allowed_roles(path, method) is None:
         request['header'] += [{'key':'X-Telegram-Bot-Secret','value':'{{telegram_bot_secret}}'},{'key':'X-Telegram-User-Id','value':'{{telegram_user_id}}'}]
     payload = body if body is not None else body_for(path, method)
@@ -233,8 +250,8 @@ def main():
                     'if (!pm.environment.get("date")) { const day=new Date(Date.now()+86400000+5*3600000); pm.environment.set("date",day.toISOString().slice(0,10)); pm.environment.set("booking_weekday",(day.getUTCDay()+6)%7); }']}}], 'item':folders}
     dump(ROOT/'postman/DocNear.postman_collection.json', collection)
     dump(ROOT/'postman/DocNear.local.postman_environment.json', {'name':'DocNear local QA','_postman_variable_scope':'environment','values':[{'key':key,'value':value,'enabled':True,'type':'secret' if ('token' in key or 'password' in key or 'secret' in key or key == 'otp_test_code') else 'default'} for key,value in VARIABLES.items()]})
-    dump(ROOT/'Docs/qa/endpoints.json',[{'path':path,'method':method,'module':module(path),'allowed_roles':sorted(allowed_roles(path,method)) if allowed_roles(path,method) is not None else None} for path,method in ops])
-    (ROOT/'Docs/qa/API_ENDPOINTS.md').write_text('\n'.join(inventory)+'\n')
+    dump(ROOT/'docs/qa/endpoints.json',[{'path':path,'method':method,'module':module(path),'allowed_roles':sorted(allowed_roles(path,method)) if allowed_roles(path,method) is not None else None} for path,method in ops])
+    (ROOT/'docs/qa/API_ENDPOINTS.md').write_text('\n'.join(inventory)+'\n')
     print(f'Exported {len(ops)} operations and {len(folders[0]["item"])} E2E requests; no credentials embedded.')
 
 if __name__=='__main__':

@@ -22,7 +22,7 @@ command = [
 ]
 result = subprocess.run(
     command,
-    cwd=root / "DocNear-Mobile",
+    cwd=root / "mobile" / "flutter",
     capture_output=True,
     text=True,
     timeout=240,

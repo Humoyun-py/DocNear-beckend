@@ -11,10 +11,12 @@ from apps.accounts.models import PhoneOTP
 from apps.accounts.telegram_otp import send_telegram_code
 from apps.accounts.sms import SmsDeliveryError
 from apps.telegram_support.bot import (
+    ACCOUNT_ALREADY_EXISTS_MESSAGE,
     ACCOUNT_UNAVAILABLE_MESSAGE,
     BotServiceError,
     DocNearTelegramBot,
     NOT_LINKED_MESSAGE,
+    REGISTER_FROM_APP_MESSAGE,
     TelegramApi,
 )
 
@@ -31,16 +33,41 @@ class FakeBackend:
     def __init__(self):
         self.linked = []
         self.codes = []
+        self.code_requests = []
         self.unlinked = []
         self.code_error = None
+        self.code_errors = {}
+        self.link_error = None
+        self.claimed = []
+        self.claim_result = {
+            "purpose": "register",
+            "phone_number": "+998900000001",
+            "first_name": "Ali",
+            "last_name": "Valiyev",
+        }
+        self.handoff_result = None
 
     def link_phone(self, payload):
+        if self.link_error:
+            raise self.link_error
         self.linked.append(payload)
 
     def request_code(self, telegram_user_id, purpose):
+        self.code_requests.append((telegram_user_id, purpose))
+        if purpose in self.code_errors:
+            raise self.code_errors[purpose]
         if self.code_error:
             raise self.code_error
         self.codes.append((telegram_user_id, purpose))
+
+    def claim_handoff(self, token, telegram_user_id, telegram_chat_id):
+        self.claimed.append((token, telegram_user_id, telegram_chat_id))
+        return self.claim_result
+
+    def complete_handoff(self, payload):
+        if self.handoff_result is None:
+            raise BotServiceError("not found", "telegram_handoff_not_found")
+        return self.handoff_result
 
     def unlink(self, telegram_user_id):
         self.unlinked.append(telegram_user_id)
@@ -60,15 +87,86 @@ def bot():
     return DocNearTelegramBot(telegram, backend), telegram, backend
 
 
-def test_start_and_link_phone_are_formal_and_request_contact():
+def test_start_requests_contact_immediately():
     service, telegram, _ = bot()
     service.handle_update(update("/start"))
-    assert "/link_phone" in telegram.sent[-1][1]
+    assert telegram.sent[-1][1] == (
+        "DocNear botiga xush kelibsiz.\n"
+        "Davom etish uchun quyidagi tugma orqali telefon raqamingizni yuboring."
+    )
+    assert telegram.sent[-1][2]["keyboard"][0][0] == {
+        "text": "Telefon raqamni yuborish",
+        "request_contact": True,
+    }
+
+
+def test_start_handoff_claims_opaque_token_and_requests_contact():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start opaque-token-value-123456789"))
+    assert backend.claimed == [("opaque-token-value-123456789", 101, 101)]
+    assert service.pending_handoffs[(101, 101)]["purpose"] == "register"
+    assert telegram.sent[-1][1] == "DocNear'da davom etish uchun telefon raqamingizni yuboring."
+    assert telegram.sent[-1][2]["keyboard"][0][0]["request_contact"] is True
+
+
+def test_handoff_contact_uses_backend_completion_without_legacy_otp_calls():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start opaque-token-value-123456789"))
+    backend.handoff_result = {"purpose": "register"}
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    assert backend.linked == []
+    assert backend.code_requests == []
+    assert telegram.sent[-1][1] == (
+        "Telefon raqamingiz tasdiqlandi.\nRo'yxatdan o'tish kodi Telegram orqali yuborildi."
+    )
+    assert (101, 101) not in service.pending_handoffs
+
+
+def test_explicit_register_handoff_never_falls_back_to_login():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start opaque-token-value-123456789"))
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    assert backend.linked == []
+    assert backend.code_requests == []
+    assert telegram.sent[-1][1] == "not found"
+
+
+def test_register_handoff_existing_account_has_correct_message_and_no_fallback():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start opaque-token-value-123456789"))
+    backend.handoff_result = None
+    original_complete = backend.complete_handoff
+
+    def existing_account(payload):
+        del payload
+        raise BotServiceError("technical detail", "account_already_exists")
+
+    backend.complete_handoff = existing_account
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    backend.complete_handoff = original_complete
+    assert backend.linked == [] and backend.code_requests == []
+    assert telegram.sent[-1][1] == ACCOUNT_ALREADY_EXISTS_MESSAGE
+    assert telegram.sent[-1][2] == {"remove_keyboard": True}
+
+
+def test_handoff_rejects_contact_that_does_not_match_claimed_phone():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start opaque-token-value-123456789"))
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000002"}))
+    assert backend.linked == []
+    assert backend.code_requests == []
+    assert telegram.sent[-1][1] == (
+        "Sayt yoki ilovada kiritilgan telefon raqamiga tegishli kontaktni yuboring."
+    )
+
+
+def test_link_phone_remains_backward_compatible():
+    service, telegram, _ = bot()
     service.handle_update(update("/link_phone"))
     assert telegram.sent[-1][2]["keyboard"][0][0]["request_contact"] is True
 
 
-def test_own_contact_links_and_foreign_contact_is_rejected():
+def test_valid_own_contact_links_and_requests_login_code_automatically():
     service, telegram, backend = bot()
     service.handle_update(update(contact={"user_id": 101, "phone_number": "998 90 000 00 01"}))
     assert backend.linked[0] == {
@@ -78,10 +176,50 @@ def test_own_contact_links_and_foreign_contact_is_rejected():
         "contact_user_id": 101,
         "sender_user_id": 101,
     }
-    assert "muvaffaqiyatli ulandi" in telegram.sent[-1][1]
+    assert backend.codes == [(101, "login")]
+    assert backend.code_requests == [(101, "login")]
+    assert telegram.sent[-1][1] == "Telefon raqamingiz tasdiqlandi.\nKirish kodi Telegram orqali yuborildi."
+    assert telegram.sent[-1][2] == {"remove_keyboard": True}
+
+
+def test_plain_start_account_unavailable_requires_app_registration():
+    service, telegram, backend = bot()
+    backend.code_errors["login"] = BotServiceError("account unavailable", "telegram_account_unavailable")
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    assert backend.linked
+    assert backend.codes == []
+    assert backend.code_requests == [(101, "login")]
+    assert telegram.sent[-1][1] == REGISTER_FROM_APP_MESSAGE
+    assert telegram.sent[-1][2] == {"remove_keyboard": True}
+
+
+def test_other_person_contact_is_rejected_without_otp_request():
+    service, telegram, backend = bot()
     service.handle_update(update(contact={"user_id": 999, "phone_number": "+998900000002"}))
-    assert len(backend.linked) == 1
+    assert backend.linked == []
+    assert backend.codes == []
+    assert backend.code_requests == []
     assert telegram.sent[-1][1] == "Faqat o‘zingizga tegishli kontaktni ulashingiz mumkin."
+
+
+def test_phone_link_error_does_not_request_otp():
+    service, telegram, backend = bot()
+    backend.link_error = BotServiceError("Telefon raqamini ulab bo‘lmadi.")
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    assert backend.linked == []
+    assert backend.codes == []
+    assert backend.code_requests == []
+    assert telegram.sent[-1][1] == "Telefon raqamini ulab bo‘lmadi."
+
+
+def test_full_happy_path_does_not_require_code_command():
+    service, telegram, backend = bot()
+    service.handle_update(update("/start"))
+    service.handle_update(update(contact={"user_id": 101, "phone_number": "+998900000001"}))
+    assert backend.linked
+    assert backend.codes == [(101, "login")]
+    assert all("/code" not in message for _, message, _ in telegram.sent)
+    assert telegram.sent[-1][2] == {"remove_keyboard": True}
 
 
 def test_code_and_unlink_commands_use_backend_source_of_truth():
