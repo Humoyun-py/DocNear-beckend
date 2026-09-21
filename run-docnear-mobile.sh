@@ -9,19 +9,9 @@ AVD_NAME="${DOCNEAR_AVD:-Pixel_9_Pro_XL}"
 EMULATOR_PORT="${DOCNEAR_EMULATOR_PORT:-5554}"
 SERIAL="emulator-$EMULATOR_PORT"
 APP_ID=com.docnear.app
-FLUTTER_APP="$ROOT_DIR/DocNear-Mobile"
+FLUTTER_APP="$ROOT_DIR/mobile/flutter"
 APK_OUTPUT="$FLUTTER_APP/build/app/outputs/flutter-apk/app-debug.apk"
 API_BASE_URL="${API_BASE_URL:-http://10.0.2.2:8001/api/v1/}"
-TELEGRAM_BOT_USERNAME="${TELEGRAM_BOT_USERNAME:-}"
-if [[ -z "$TELEGRAM_BOT_USERNAME" && -n "${DOCNEAR_ENV_FILE:-}" && -r "$DOCNEAR_ENV_FILE" ]]; then
-  TELEGRAM_BOT_USERNAME="$("$ROOT_DIR/.venv/bin/python" - "$DOCNEAR_ENV_FILE" <<'PY'
-from dotenv import dotenv_values
-import sys
-
-print(dotenv_values(sys.argv[1]).get("TELEGRAM_BOT_USERNAME", ""))
-PY
-)"
-fi
 
 if [[ ! -x "$ADB" || ! -x "$EMULATOR" ]]; then
   echo "Android SDK topilmadi. ANDROID_SDK_ROOT ni sozlang." >&2
@@ -62,10 +52,9 @@ fi
 # Reduce the high-resolution Pixel display's memory use. Restore with wm size/density reset.
 timeout 15s "$ADB" -s "$SERIAL" shell wm size 720x1600
 timeout 15s "$ADB" -s "$SERIAL" shell wm density 320
-echo "Flutter debug APK joriy API va Telegram konfiguratsiyasi bilan build qilinmoqda..."
+echo "Flutter debug APK joriy API konfiguratsiyasi bilan build qilinmoqda..."
 (cd "$FLUTTER_APP" && flutter build apk --debug \
-  --dart-define="API_BASE_URL=$API_BASE_URL" \
-  --dart-define="TELEGRAM_BOT_USERNAME=$TELEGRAM_BOT_USERNAME")
+  --dart-define="API_BASE_URL=$API_BASE_URL")
 timeout 240s "$ADB" -s "$SERIAL" install --no-streaming -r "$APK_OUTPUT"
 timeout 10s "$ADB" -s "$SERIAL" shell input keyevent KEYCODE_WAKEUP
 timeout 10s "$ADB" -s "$SERIAL" shell wm dismiss-keyguard

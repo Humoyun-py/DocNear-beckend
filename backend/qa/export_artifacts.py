@@ -165,7 +165,7 @@ def request_item(path, method, name=None, token=None, body=None, status=None, ex
     selected_token = token or bearer(path, method)
     request = {'method':method, 'url':raw, 'header':[{'key':'Accept','value':'application/json'}],
                'auth':{'type':'bearer','bearer':[{'key':'token','value':'{{'+selected_token+'}}','type':'string'}]} if selected_token else {'type':'noauth'},
-               'description':'Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See Docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.'}
+               'description':'Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.'}
     if allowed_roles(path, method) is None:
         request['header'] += [{'key':'X-Telegram-Bot-Secret','value':'{{telegram_bot_secret}}'},{'key':'X-Telegram-User-Id','value':'{{telegram_user_id}}'}]
     payload = body if body is not None else body_for(path, method)
@@ -250,8 +250,8 @@ def main():
                     'if (!pm.environment.get("date")) { const day=new Date(Date.now()+86400000+5*3600000); pm.environment.set("date",day.toISOString().slice(0,10)); pm.environment.set("booking_weekday",(day.getUTCDay()+6)%7); }']}}], 'item':folders}
     dump(ROOT/'postman/DocNear.postman_collection.json', collection)
     dump(ROOT/'postman/DocNear.local.postman_environment.json', {'name':'DocNear local QA','_postman_variable_scope':'environment','values':[{'key':key,'value':value,'enabled':True,'type':'secret' if ('token' in key or 'password' in key or 'secret' in key or key == 'otp_test_code') else 'default'} for key,value in VARIABLES.items()]})
-    dump(ROOT/'Docs/qa/endpoints.json',[{'path':path,'method':method,'module':module(path),'allowed_roles':sorted(allowed_roles(path,method)) if allowed_roles(path,method) is not None else None} for path,method in ops])
-    (ROOT/'Docs/qa/API_ENDPOINTS.md').write_text('\n'.join(inventory)+'\n')
+    dump(ROOT/'docs/qa/endpoints.json',[{'path':path,'method':method,'module':module(path),'allowed_roles':sorted(allowed_roles(path,method)) if allowed_roles(path,method) is not None else None} for path,method in ops])
+    (ROOT/'docs/qa/API_ENDPOINTS.md').write_text('\n'.join(inventory)+'\n')
     print(f'Exported {len(ops)} operations and {len(folders[0]["item"])} E2E requests; no credentials embedded.')
 
 if __name__=='__main__':

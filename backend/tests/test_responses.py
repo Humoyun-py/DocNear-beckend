@@ -72,7 +72,7 @@ def test_inventory_matches_export_and_postman_contains_every_operation():
     from pathlib import Path
     from qa.endpoints import endpoints
     root = Path(__file__).resolve().parents[2]
-    inventory = json.loads((root/'Docs/qa/endpoints.json').read_text())
+    inventory = json.loads((root/'docs/qa/endpoints.json').read_text())
     assert {(e['path'],e['method']) for e in inventory} == set(endpoints())
     collection = json.loads((root/'postman/DocNear.postman_collection.json').read_text())
     items = [item for folder in collection['item'][1:] for item in folder['item']]

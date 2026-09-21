@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: docnear-api
+    runtime: docker
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/
+    preDeployCommand: python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: OTP_SMS_PROVIDER
+        value: http
+      - key: SMS_API_URL
+        sync: false
+      - key: SMS_API_KEY
+        sync: false
+      - key: TELEGRAM_OTP_ENABLED
+        value: "false"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: TRUSTED_PROXY_COUNT
+        value: "1"
+      - key: LEGACY_PASSWORD_AUTH_ENABLED
+        value: "false"

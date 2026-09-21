@@ -55,13 +55,13 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 (cd "$ROOT_DIR/backend" && exec setsid "$PYTHON" manage.py runserver "0.0.0.0:$BACKEND_PORT" --noreload) &
 PIDS+=("$!")
-(cd "$ROOT_DIR/DocNear-web-frontend-main(2)/DocNear-web-frontend-main" && exec setsid env PORT="$WEB_PORT" npm run dev) &
+(cd "$ROOT_DIR/web/patient" && exec setsid env PORT="$WEB_PORT" npm run dev) &
 PIDS+=("$!")
-(cd "$ROOT_DIR/DocNear-Doctor-panel-main(2)/DocNear-Doctor-panel-main" && exec setsid npm run dev -- --port "$DOCTOR_PORT" --strictPort) &
+(cd "$ROOT_DIR/web/doctor" && exec setsid npm run dev -- --port "$DOCTOR_PORT" --strictPort) &
 PIDS+=("$!")
-(cd "$ROOT_DIR/DocNear-admin-panel" && exec setsid npm run dev -- --port "$ADMIN_PORT" --strictPort) &
+(cd "$ROOT_DIR/web/admin" && exec setsid npm run dev -- --port "$ADMIN_PORT" --strictPort) &
 PIDS+=("$!")
-(cd "$ROOT_DIR/DocNear-clinic-owner-panel" && exec setsid npm run dev -- --port "$OWNER_PORT" --strictPort) &
+(cd "$ROOT_DIR/web/clinic-owner" && exec setsid npm run dev -- --port "$OWNER_PORT" --strictPort) &
 PIDS+=("$!")
 echo "API: http://127.0.0.1:$BACKEND_PORT"
 echo "Patient web: http://localhost:$WEB_PORT"

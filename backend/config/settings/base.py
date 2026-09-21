@@ -100,7 +100,7 @@ LOGGING = {
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "DocNear API",
-    "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see Docs/api-contract.md.",
+    "DESCRIPTION": "Shared patient, doctor, owner, admin and Telegram API. JSON responses wrap payloads in success/data; see docs/api-contract.md.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
