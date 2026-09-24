@@ -26,7 +26,8 @@ INSTALLED_APPS = [
     "telegram_support",
 )]
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware", "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -56,6 +57,10 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
 MEDIA_ROOT = BASE_DIR / "media"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
@@ -150,4 +155,4 @@ if os.getenv("AWS_STORAGE_BUCKET_NAME"):
         "bucket_name": os.environ["AWS_STORAGE_BUCKET_NAME"], "default_acl": None,
         "querystring_auth": True, "file_overwrite": False,
         "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL") or None,
-    }}, "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
+    }}, "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}}

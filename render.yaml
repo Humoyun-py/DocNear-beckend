@@ -6,7 +6,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health/
-    preDeployCommand: python manage.py migrate --noinput && python manage.py collectstatic --noinput
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
