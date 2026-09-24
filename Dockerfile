@@ -9,9 +9,10 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY backend /app/backend
 COPY deploy /app/deploy
 RUN mkdir -p /app/backend/staticfiles /app/backend/media \
+    && chmod 0755 /app/deploy/render/start.sh \
     && chown -R docnear:docnear /app
 USER docnear
 WORKDIR /app/backend
 
 EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--config", "/app/deploy/gunicorn.conf.py"]
+CMD ["/app/deploy/render/start.sh"]
