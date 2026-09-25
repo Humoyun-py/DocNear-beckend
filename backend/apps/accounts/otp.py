@@ -142,16 +142,6 @@ def _eligible_user(
     return None
 
 
-def handoff_account_error(phone_number: str, purpose: str) -> APIException | None:
-    user = User.objects.filter(phone_number=phone_number).first()
-    if purpose == PhoneOTP.Purpose.REGISTER:
-        if user and (user.is_verified or user.is_active or user.role != User.Role.PATIENT):
-            return AccountAlreadyExists()
-    elif not user or not user.is_active or not user.is_verified or user.role != User.Role.PATIENT:
-        return AccountNotFound()
-    return None
-
-
 def request_code(*, request, phone_number: str, purpose: str, channel: str, **names) -> str:
     if channel == PhoneOTP.Channel.TELEGRAM and not settings.TELEGRAM_OTP_ENABLED:
         raise TelegramOtpDisabled()

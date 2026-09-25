@@ -1,5 +1,6 @@
 import hashlib
 from datetime import timedelta
+from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -11,7 +12,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from drf_spectacular.utils import extend_schema
 from apps.appointments.models import Appointment
 from apps.accounts.models import TelegramAuthHandoff, User
-from apps.accounts.otp import TelegramNotLinked, request_code
+from apps.accounts.otp import TelegramNotLinked, TelegramOtpDisabled, request_code
 from apps.accounts.serializers import PhoneNumberField
 from common.permissions import IsPatient
 from apps.appointments.views import PatientAppointmentViewSet
@@ -167,6 +168,8 @@ class TelegramHandoffClaimView(generics.GenericAPIView):
     @transaction.atomic
     def post(self, request):
         verify_bot(request)
+        if not settings.TELEGRAM_OTP_ENABLED:
+            raise TelegramOtpDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -174,7 +177,7 @@ class TelegramHandoffClaimView(generics.GenericAPIView):
         handoff = TelegramAuthHandoff.objects.select_for_update().filter(token_hash=token_hash).first()
         if not handoff or handoff.used_at or handoff.expires_at <= timezone.now():
             raise TelegramHandoffInvalid()
-        if handoff.telegram_user_id not in (None, data["telegram_user_id"]):
+        if handoff.telegram_user_id is not None:
             raise TelegramHandoffInvalid()
         handoff.telegram_user_id = data["telegram_user_id"]
         handoff.telegram_chat_id = data["telegram_chat_id"]
@@ -196,6 +199,8 @@ class TelegramHandoffCompleteView(generics.GenericAPIView):
     @transaction.atomic
     def post(self, request):
         verify_bot(request)
+        if not settings.TELEGRAM_OTP_ENABLED:
+            raise TelegramOtpDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
