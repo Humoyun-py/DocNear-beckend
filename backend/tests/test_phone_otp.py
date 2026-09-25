@@ -1,4 +1,5 @@
 from datetime import timedelta
+import hashlib
 import re
 from urllib.parse import parse_qs, urlsplit
 
@@ -83,7 +84,9 @@ def test_telegram_handoff_login_is_opaque_and_stores_only_hash(client, settings)
     bot_url, token = create_handoff(client, settings, phone)
     handoff = TelegramAuthHandoff.objects.get()
     assert token not in handoff.token_hash
+    assert handoff.token_hash == hashlib.sha256(token.encode()).hexdigest()
     assert len(handoff.token_hash) == 64
+    assert 299 <= (handoff.expires_at - handoff.created_at).total_seconds() <= 301
     assert phone not in bot_url
     assert "docnear_test_bot" in bot_url
 
@@ -121,47 +124,56 @@ def test_register_handoff_stores_names_outside_bot_url(client, settings):
     assert "Ali" not in bot_url and "Valiyev" not in bot_url and handoff.phone_number not in bot_url
 
 
-def test_register_handoff_rejects_existing_active_verified_account(client, settings):
-    phone = "+998901234576"
-    otp_user(phone)
+@pytest.mark.parametrize("purpose", ["login", "register"])
+@pytest.mark.parametrize("account_exists", [False, True])
+def test_initial_handoff_does_not_enumerate_accounts(client, settings, purpose, account_exists):
+    phone = f"+9989012345{int(account_exists)}{0 if purpose == 'login' else 1}"
+    if account_exists:
+        otp_user(phone)
     settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
-    response = client.post("/api/v1/auth/telegram-handoff/", {
-        "phone_number": phone,
-        "purpose": "register",
-        "first_name": "Existing",
-    })
-    result = error(response, 400)
-    assert result["code"] == "account_already_exists"
-    assert "allaqachon mavjud" in result["message"]
-    assert "patient" not in result["message"].lower()
-    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+    payload = {"phone_number": phone, "purpose": purpose}
+    if purpose == "register":
+        payload["first_name"] = "Enumeration safe"
+
+    response = client.post("/api/v1/auth/telegram-handoff/", payload)
+
+    result = data(response)
+    assert set(result) == {"bot_url"}
+    assert TelegramAuthHandoff.objects.filter(phone_number=phone, purpose=purpose).exists()
+    assert not PhoneOTP.objects.exists()
 
 
-@pytest.mark.parametrize("role", [User.Role.DOCTOR, User.Role.ADMIN, User.Role.OWNER])
-def test_register_handoff_rejects_existing_privileged_roles_without_disclosure(client, settings, role):
-    phone = "+998901234575"
-    User.objects.create_user(
-        phone_number=phone, first_name="Existing", role=role, is_active=True, is_verified=True,
-    )
+def test_disabled_handoff_is_generic_and_creates_nothing(client, settings):
+    existing = "+998901234570"
+    missing = "+998901234571"
+    otp_user(existing)
+    settings.TELEGRAM_OTP_ENABLED = False
     settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
-    result = error(client.post("/api/v1/auth/telegram-handoff/", {
-        "phone_number": phone,
-        "purpose": "register",
-        "first_name": "Existing",
-    }), 400)
-    assert result["code"] == "account_already_exists"
-    assert role not in result["message"].lower()
-    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+
+    responses = [
+        client.post("/api/v1/auth/telegram-handoff/", {
+            "phone_number": existing, "purpose": "login",
+        }),
+        client.post("/api/v1/auth/telegram-handoff/", {
+            "phone_number": missing, "purpose": "register", "first_name": "New",
+        }),
+    ]
+
+    bodies = [error(response, 503) for response in responses]
+    assert bodies[0] == bodies[1]
+    assert bodies[0]["code"] == "telegram_otp_disabled"
+    assert not TelegramAuthHandoff.objects.exists()
 
 
-def test_login_handoff_missing_account_returns_account_not_found(client, settings):
-    settings.TELEGRAM_BOT_USERNAME = "docnear_test_bot"
-    result = error(client.post("/api/v1/auth/telegram-handoff/", {
-        "phone_number": "+998901234574",
-        "purpose": "login",
-    }), 400)
-    assert result["code"] == "account_not_found"
-    assert not TelegramAuthHandoff.objects.exists() and not PhoneOTP.objects.exists()
+def test_disabled_handoff_cannot_be_claimed(client, settings):
+    _, token = create_handoff(client, settings, "+998901234572", "register", first_name="Disabled")
+    headers = bot_headers(settings)
+    settings.TELEGRAM_OTP_ENABLED = False
+
+    result = error(claim_handoff(client, headers, token), 503)
+
+    assert result["code"] == "telegram_otp_disabled"
+    assert TelegramAuthHandoff.objects.get().telegram_user_id is None
 
 
 def test_register_handoff_claim_returns_full_registration_context(client, settings):
@@ -179,15 +191,23 @@ def test_register_handoff_claim_returns_full_registration_context(client, settin
     }
 
 
-def test_expired_and_used_handoff_tokens_are_rejected(client, settings):
+def test_expired_reused_and_wrong_user_handoff_tokens_are_rejected(client, settings):
     headers = bot_headers(settings)
     _, expired = create_handoff(client, settings, "+998901234582")
     TelegramAuthHandoff.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
     assert error(claim_handoff(client, headers, expired), 400)["code"] == "telegram_handoff_invalid"
+
     TelegramAuthHandoff.objects.all().delete()
-    _, used = create_handoff(client, settings, "+998901234583")
-    TelegramAuthHandoff.objects.update(used_at=timezone.now())
-    assert error(claim_handoff(client, headers, used), 400)["code"] == "telegram_handoff_invalid"
+    _, claimed = create_handoff(client, settings, "+998901234583")
+    private_chat_rejected = client.post("/api/v1/telegram/handoff/claim/", {
+        "token": claimed, "telegram_user_id": 501, "telegram_chat_id": -100123,
+    }, format="json", **headers)
+    assert private_chat_rejected.status_code == 400
+    assert claim_handoff(client, headers, claimed, 501).status_code == 200
+    assert error(claim_handoff(client, headers, claimed, 501), 400)["code"] == "telegram_handoff_invalid"
+    assert error(claim_handoff(client, headers, claimed, 502), 400)["code"] == "telegram_handoff_invalid"
+    handoff = TelegramAuthHandoff.objects.get()
+    assert (handoff.telegram_user_id, handoff.telegram_chat_id) == (501, 501)
 
 
 def test_handoff_contact_mismatch_and_other_contact_do_not_consume(client, settings):

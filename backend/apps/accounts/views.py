@@ -23,7 +23,7 @@ from .models import TelegramAuthHandoff, User
 from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer, ChangePasswordSerializer,
                           ForgotPasswordSerializer, ResetPasswordSerializer, LogoutSerializer,
                           RequestOTPSerializer, TelegramHandoffSerializer, VerifyOTPSerializer)
-from .otp import handoff_account_error, request_code, verify_code
+from .otp import TelegramOtpDisabled, request_code, verify_code
 
 
 class PasswordAuthDisabled(APIException):
@@ -78,13 +78,10 @@ class TelegramHandoffView(AuthView):
     throttle_scope = "otp_request"
 
     def post(self, request):
+        if not settings.TELEGRAM_OTP_ENABLED:
+            raise TelegramOtpDisabled()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        account_error = handoff_account_error(
-            serializer.validated_data["phone_number"], serializer.validated_data["purpose"],
-        )
-        if account_error:
-            raise account_error
         username = settings.TELEGRAM_BOT_USERNAME
         if not re.fullmatch(r"[A-Za-z0-9_]{5,32}", username):
             raise ValidationError("Telegram bot hozircha sozlanmagan.")
