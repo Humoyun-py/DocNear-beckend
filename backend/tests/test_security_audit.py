@@ -159,7 +159,7 @@ def test_legacy_group_link_cannot_receive_otp(settings, monkeypatch):
     {}, {'SECRET_KEY': 'a' * 60}, {'SECRET_KEY': 'development-only-change-this-before-deploying-docnear'},
     {'ALLOWED_HOSTS': '*'}, {'ALLOWED_HOSTS': ' '}, {'DEBUG': 'true'},
     {'CORS_ALLOWED_ORIGINS': 'https://*'}, {'CORS_ALLOWED_ORIGINS': 'https://example.test/path'},
-    {'SMS_API_URL': 'http://sms.example.test/send'}, {'REDIS_URL': ''},
+    {'SMS_API_URL': 'http://sms.example.test/send'}, {'SMS_API_URL': ''}, {'SMS_API_KEY': ''}, {'REDIS_URL': ''},
     {'OTP_SMS_PROVIDER': 'console'}, {'DATABASE_URL': ''}, {'OTP_MAX_ATTEMPTS': '99'},
 ])
 def test_production_configuration_fails_closed(override):
@@ -170,7 +170,7 @@ def test_production_configuration_fails_closed(override):
         'SECRET_KEY': 'safe-test-fixture-not-for-deployment-1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'DATABASE_URL': 'postgresql://test:test@localhost/test', 'ALLOWED_HOSTS': 'example.test',
         'CORS_ALLOWED_ORIGINS': 'https://example.test', 'REDIS_URL': 'redis://localhost:6379/0',
-        'OTP_SMS_PROVIDER': 'http', 'SMS_API_URL': 'https://sms.example.test/send', 'SMS_API_KEY': 'test-only',
+        'SMS_OTP_ENABLED': 'true', 'OTP_SMS_PROVIDER': 'http', 'SMS_API_URL': 'https://sms.example.test/send', 'SMS_API_KEY': 'test-only',
         'CSRF_TRUSTED_ORIGINS': 'https://example.test',
         'TELEGRAM_BOT_TOKEN': 'dummy-ci-token', 'TELEGRAM_BOT_USERNAME': 'dummy_bot',
         'TELEGRAM_BOT_WEBHOOK_SECRET': 'dummy-ci-secret', 'TELEGRAM_OTP_ENABLED': 'false',
@@ -178,3 +178,26 @@ def test_production_configuration_fails_closed(override):
     env.update(override)
     result = subprocess.run([sys.executable, '-c', 'import config.settings.production'], env=env, capture_output=True)
     assert (result.returncode == 0) == (not override)
+
+
+def test_production_sms_disabled_does_not_require_provider_credentials():
+    env = {key: value for key, value in os.environ.items() if key in {"PATH", "LANG", "HOME"}}
+    env.update({
+        "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
+        "DJANGO_SETTINGS_MODULE": "config.settings.production",
+        "SECRET_KEY": "safe-test-fixture-not-for-deployment-1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "DATABASE_URL": "postgresql://test:test@localhost/test",
+        "ALLOWED_HOSTS": "example.test",
+        "CORS_ALLOWED_ORIGINS": "https://example.test",
+        "CSRF_TRUSTED_ORIGINS": "https://example.test",
+        "REDIS_URL": "redis://localhost:6379/0",
+        "SMS_OTP_ENABLED": "false",
+        "TELEGRAM_OTP_ENABLED": "false",
+    })
+
+    result = subprocess.run(
+        [sys.executable, "-c", "import config.settings.production"],
+        env=env, capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr.decode()

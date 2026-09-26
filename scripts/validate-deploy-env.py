@@ -31,9 +31,8 @@ REQUIRED = (
     "CORS_ALLOWED_ORIGINS",
     "CSRF_TRUSTED_ORIGINS",
     "REDIS_URL",
+    "SMS_OTP_ENABLED",
     "OTP_SMS_PROVIDER",
-    "SMS_API_URL",
-    "SMS_API_KEY",
     "POSTGRES_PASSWORD",
 )
 def parse_env(path: Path) -> tuple[dict[str, str], list[str]]:
@@ -127,13 +126,21 @@ def validate(path: Path) -> list[str]:
         elif any(not valid_https_origin(origin) for origin in origins):
             errors.append(f"{name}: every entry must be an explicit HTTPS origin")
 
-    if values.get("OTP_SMS_PROVIDER", "").lower() != "http":
-        errors.append("OTP_SMS_PROVIDER: deployment requires the http provider")
-    sms_url = urlsplit(values.get("SMS_API_URL", ""))
-    if values.get("SMS_API_URL") and (
-        sms_url.scheme != "https" or not sms_url.hostname or sms_url.username or sms_url.password
-    ):
-        errors.append("SMS_API_URL: must be HTTPS with no embedded credentials")
+    sms_enabled_value = values.get("SMS_OTP_ENABLED", "").lower()
+    if sms_enabled_value not in {"false", "0", "true", "1"}:
+        errors.append("SMS_OTP_ENABLED: must be true or false")
+    sms_enabled = sms_enabled_value in {"true", "1"}
+    if sms_enabled:
+        if values.get("OTP_SMS_PROVIDER", "").lower() != "http":
+            errors.append("OTP_SMS_PROVIDER: enabled SMS OTP requires the http provider")
+        for name in ("SMS_API_URL", "SMS_API_KEY"):
+            if not values.get(name, "").strip():
+                errors.append(f"{name}: required when SMS OTP is enabled")
+        sms_url = urlsplit(values.get("SMS_API_URL", ""))
+        if values.get("SMS_API_URL") and (
+            sms_url.scheme != "https" or not sms_url.hostname or sms_url.username or sms_url.password
+        ):
+            errors.append("SMS_API_URL: must be HTTPS with no embedded credentials")
 
     telegram_enabled = values.get("TELEGRAM_OTP_ENABLED", "false").lower() in {"1", "true", "yes", "on"}
     if telegram_enabled:

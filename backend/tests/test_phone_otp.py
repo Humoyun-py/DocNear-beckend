@@ -380,6 +380,21 @@ def test_phone_cannot_be_relinked_to_another_telegram_user(client, settings):
     assert link.telegram_chat_id == 101
 
 
+def test_sms_otp_disabled_returns_unavailable_without_persisting_or_sending(client, settings, monkeypatch):
+    user = otp_user("+998901234572")
+    settings.SMS_OTP_ENABLED = False
+
+    def unexpected_provider():
+        pytest.fail("SMS provider must not be initialized while SMS OTP is disabled")
+
+    monkeypatch.setattr("apps.accounts.otp.get_sms_provider", unexpected_provider)
+
+    response = request_otp(client, user.phone_number, channel="sms")
+
+    assert error(response, 503)["code"] == "sms_otp_disabled"
+    assert not PhoneOTP.objects.exists()
+
+
 def test_telegram_otp_can_be_disabled_without_affecting_sms(client, settings):
     user = otp_user("+998901234573")
     settings.TELEGRAM_OTP_ENABLED = False

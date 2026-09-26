@@ -1,8 +1,7 @@
 # DocNear production deployment
 
 Production authentication is phone OTP for patients and staff. Deploy PostgreSQL
-16, an HTTPS API origin, the four web origins, a secret manager, a real SMS
-provider and the Telegram bot worker.
+16, an HTTPS API origin, the four web origins, a secret manager, and only the authentication delivery channels explicitly enabled for the deployment.
 
 ## Required backend environment
 
@@ -12,9 +11,10 @@ SECRET_KEY=<at least 50 random characters>
 DATABASE_URL=<managed PostgreSQL URL>
 ALLOWED_HOSTS=api.docnear.uz
 CORS_ALLOWED_ORIGINS=https://docnear.uz,https://doctor.docnear.uz,https://admin.docnear.uz,https://owner.docnear.uz
+SMS_OTP_ENABLED=false
 OTP_SMS_PROVIDER=http
-SMS_API_URL=<provider HTTPS endpoint>
-SMS_API_KEY=<secret>
+SMS_API_URL=<required only when SMS_OTP_ENABLED=true>
+SMS_API_KEY=<required only when SMS_OTP_ENABLED=true>
 SMS_SENDER_NAME=DocNear
 OTP_EXPIRE_MINUTES=5
 OTP_MAX_ATTEMPTS=5
@@ -31,8 +31,9 @@ DOCNEAR_API_BASE_URL=https://api.docnear.uz/api/v1
 LEGACY_PASSWORD_AUTH_ENABLED=false
 ```
 
-Production settings reject the console SMS provider, missing credentials for an
-enabled Telegram OTP channel, and enabled legacy password authentication. Adapt `HttpSmsProvider`
+Production settings require the HTTP SMS provider and real HTTPS credentials only when
+`SMS_OTP_ENABLED=true`. Disabled SMS never creates an OTP or initializes a provider.
+Production settings also reject missing credentials for an enabled Telegram OTP channel, and enabled legacy password authentication. Adapt `HttpSmsProvider`
 payload/response handling to the selected vendor and verify it in staging before
 release. Do not put `OTP_TEST_CODE` in a production environment.
 
