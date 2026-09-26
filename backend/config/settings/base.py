@@ -144,6 +144,7 @@ OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "5"))
 OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
 OTP_PHONE_REQUEST_LIMIT = int(os.getenv("OTP_PHONE_REQUEST_LIMIT", "3"))
 OTP_IP_REQUEST_LIMIT = int(os.getenv("OTP_IP_REQUEST_LIMIT", "20"))
+SMS_OTP_ENABLED = os.getenv("SMS_OTP_ENABLED", "false").lower() == "true"
 OTP_SMS_PROVIDER = os.getenv("OTP_SMS_PROVIDER", "console")
 OTP_TEST_MODE = False
 SMS_API_URL = os.getenv("SMS_API_URL", "")

@@ -23,12 +23,10 @@ services:
         sync: false
       - key: CSRF_TRUSTED_ORIGINS
         sync: false
+      - key: SMS_OTP_ENABLED
+        value: "false"
       - key: OTP_SMS_PROVIDER
         value: http
-      - key: SMS_API_URL
-        sync: false
-      - key: SMS_API_KEY
-        sync: false
       - key: TELEGRAM_OTP_ENABLED
         value: "false"
       - key: TRUST_PROXY

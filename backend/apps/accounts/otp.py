@@ -36,6 +36,12 @@ class OtpDeliveryFailed(APIException):
     default_detail = "Tasdiqlash kodini yuborib bo‘lmadi. Keyinroq qayta urinib ko‘ring."
 
 
+class SmsOtpDisabled(APIException):
+    status_code = 503
+    default_code = "sms_otp_disabled"
+    default_detail = "SMS orqali tasdiqlash kodi vaqtincha mavjud emas."
+
+
 class TelegramOtpDisabled(APIException):
     status_code = 503
     default_code = "telegram_otp_disabled"
@@ -143,6 +149,8 @@ def _eligible_user(
 
 
 def request_code(*, request, phone_number: str, purpose: str, channel: str, **names) -> str:
+    if channel == PhoneOTP.Channel.SMS and not settings.SMS_OTP_ENABLED:
+        raise SmsOtpDisabled()
     if channel == PhoneOTP.Channel.TELEGRAM and not settings.TELEGRAM_OTP_ENABLED:
         raise TelegramOtpDisabled()
     ip = client_ip(request)

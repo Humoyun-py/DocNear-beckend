@@ -17,13 +17,14 @@ if any(not host.strip() or "*" in host or "/" in host for host in ALLOWED_HOSTS)
     raise ValueError("Production ALLOWED_HOSTS requires explicit hostnames.")
 if not REDIS_URL:  # noqa: F405
     raise ValueError("Production requires shared REDIS_URL for throttling.")
-if OTP_SMS_PROVIDER != "http":  # noqa: F405
-    raise ValueError("Production requires OTP_SMS_PROVIDER=http.")
-if not SMS_API_URL or not SMS_API_KEY:  # noqa: F405
-    raise ValueError("Production requires SMS_API_URL and SMS_API_KEY.")
-sms_url = urlsplit(SMS_API_URL)  # noqa: F405
-if sms_url.scheme != "https" or not sms_url.hostname or sms_url.username or sms_url.password:
-    raise ValueError("Production SMS_API_URL requires HTTPS without embedded credentials.")
+if SMS_OTP_ENABLED:  # noqa: F405
+    if OTP_SMS_PROVIDER != "http":  # noqa: F405
+        raise ValueError("Enabled production SMS OTP requires OTP_SMS_PROVIDER=http.")
+    if not SMS_API_URL or not SMS_API_KEY:  # noqa: F405
+        raise ValueError("Enabled production SMS OTP requires SMS_API_URL and SMS_API_KEY.")
+    sms_url = urlsplit(SMS_API_URL)  # noqa: F405
+    if sms_url.scheme != "https" or not sms_url.hostname or sms_url.username or sms_url.password:
+        raise ValueError("Production SMS_API_URL requires HTTPS without embedded credentials.")
 if TELEGRAM_OTP_ENABLED and (not TELEGRAM_BOT_TOKEN or not TELEGRAM_BOT_SECRET):  # noqa: F405
     raise ValueError("Enabled Telegram OTP requires Telegram credentials.")
 if LEGACY_PASSWORD_AUTH_ENABLED:  # noqa: F405
