@@ -1,6 +1,6 @@
 from unittest.mock import patch
 import pytest
-from django.urls import path
+from django.urls import path, resolve
 from django.test import override_settings
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -56,6 +56,10 @@ def test_health_database_failure_is_sanitized(client):
 
 
 def test_documentation_is_accessible_and_bot_security_is_declared(client):
+    # Documentation must remain available when the shared Redis throttle cache
+    # is unavailable. These read-only public views do not need API rate limits.
+    assert resolve("/api/schema/").func.view_initkwargs["throttle_classes"] == []
+    assert resolve("/api/docs/").func.view_initkwargs["throttle_classes"] == []
     response = client.get('/api/schema/', HTTP_ACCEPT='application/vnd.oai.openapi+json')
     assert response.status_code == 200
     import json
