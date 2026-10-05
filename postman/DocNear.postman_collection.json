@@ -33410,6 +33410,99 @@
               "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
             }
           ]
+        },
+        {
+          "name": "POST /api/v1/telegram/webhook/",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/telegram/webhook/",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Telegram-Bot-Api-Secret-Token",
+                "value": "{{telegram_bot_secret}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"update_id\": 1,\n  \"message\": {\n    \"message_id\": 1,\n    \"from\": {\n      \"id\": \"{{telegram_user_id}}\"\n    },\n    \"chat\": {\n      \"id\": \"{{telegram_user_id}}\",\n      \"type\": \"private\"\n    },\n    \"text\": \"/start\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP status\", () => pm.expect([200]).to.include(pm.response.code));",
+                  "const result = pm.response.json();",
+                  "pm.test(\"Response envelope\", () => pm.expect(result.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Expected 200 (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{base_url}}/api/v1/telegram/webhook/",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Telegram-Bot-Api-Secret-Token",
+                    "value": "{{telegram_bot_secret}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "description": "Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"update_id\": 1,\n  \"message\": {\n    \"message_id\": 1,\n    \"from\": {\n      \"id\": \"{{telegram_user_id}}\"\n    },\n    \"chat\": {\n      \"id\": \"{{telegram_user_id}}\",\n      \"type\": \"private\"\n    },\n    \"text\": \"/start\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {}\n}"
+            }
+          ]
         }
       ]
     }

@@ -3324,6 +3324,12 @@
     ]
   },
   {
+    "path": "/api/v1/telegram/webhook/",
+    "method": "POST",
+    "module": "Telegram",
+    "allowed_roles": null
+  },
+  {
     "path": "/api/v1/waitlists/",
     "method": "GET",
     "module": "Patient",

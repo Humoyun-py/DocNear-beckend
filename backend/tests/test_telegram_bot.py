@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 from urllib.parse import parse_qs
 from urllib.error import HTTPError
@@ -261,6 +262,118 @@ def test_run_command_clears_webhook_without_dropping_updates(settings, monkeypat
     )
     call_command("run_telegram_bot", once=True)
     assert calls == [False]
+
+
+def webhook_settings(settings):
+    settings.TELEGRAM_OTP_ENABLED = True
+    settings.TELEGRAM_BOT_TOKEN = "test-bot-token"
+    settings.TELEGRAM_BOT_WEBHOOK_SECRET = "test_webhook_secret-123"
+    settings.TELEGRAM_BOT_SECRET = settings.TELEGRAM_BOT_WEBHOOK_SECRET
+    settings.DOCNEAR_API_BASE_URL = "https://api.example.test/api/v1"
+    return settings.TELEGRAM_BOT_WEBHOOK_SECRET
+
+
+def test_valid_webhook_calls_existing_handle_update(client, settings, monkeypatch):
+    secret = webhook_settings(settings)
+    telegram_update = update("/start")
+    handled = []
+    monkeypatch.setattr(DocNearTelegramBot, "handle_update", lambda self, value: handled.append(value))
+
+    response = client.post(
+        "/api/v1/telegram/webhook/",
+        data=json.dumps(telegram_update),
+        content_type="application/json",
+        HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN=secret,
+    )
+
+    assert response.status_code == 200
+    assert handled == [telegram_update]
+
+
+@pytest.mark.parametrize("provided_secret", [None, "wrong-secret"])
+def test_webhook_rejects_missing_or_wrong_secret(client, settings, monkeypatch, provided_secret):
+    webhook_settings(settings)
+    handled = []
+    monkeypatch.setattr(DocNearTelegramBot, "handle_update", lambda self, value: handled.append(value))
+    headers = {}
+    if provided_secret is not None:
+        headers["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] = provided_secret
+
+    response = client.post(
+        "/api/v1/telegram/webhook/",
+        data=json.dumps(update("/start")),
+        content_type="application/json",
+        **headers,
+    )
+
+    assert response.status_code == 403
+    assert handled == []
+
+
+def test_webhook_handles_malformed_json_safely(client, settings):
+    secret = webhook_settings(settings)
+    response = client.post(
+        "/api/v1/telegram/webhook/",
+        data="{not-json",
+        content_type="application/json",
+        HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN=secret,
+    )
+    assert response.status_code == 400
+
+
+def test_disabled_webhook_does_not_handle_update(client, settings, monkeypatch):
+    secret = webhook_settings(settings)
+    settings.TELEGRAM_OTP_ENABLED = False
+    handled = []
+    monkeypatch.setattr(DocNearTelegramBot, "handle_update", lambda self, value: handled.append(value))
+
+    response = client.post(
+        "/api/v1/telegram/webhook/",
+        data=json.dumps(update("/start")),
+        content_type="application/json",
+        HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN=secret,
+    )
+
+    assert response.status_code == 503
+    assert handled == []
+
+
+def test_webhook_does_not_log_credentials_or_update_data(client, settings, monkeypatch, caplog, capsys):
+    secret = webhook_settings(settings)
+    token = settings.TELEGRAM_BOT_TOKEN
+    private_marker = "private-patient-data"
+    monkeypatch.setattr(DocNearTelegramBot, "handle_update", lambda self, value: None)
+
+    response = client.post(
+        "/api/v1/telegram/webhook/",
+        data=json.dumps(update(private_marker)),
+        content_type="application/json",
+        HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN=secret,
+    )
+
+    assert response.status_code == 200
+    captured = capsys.readouterr()
+    observable = caplog.text + captured.out + captured.err
+    assert secret not in observable
+    assert token not in observable
+    assert private_marker not in observable
+
+
+def test_set_webhook_command_registers_secure_default(settings, monkeypatch, capsys):
+    secret = webhook_settings(settings)
+    calls = []
+    monkeypatch.setattr(
+        "apps.telegram_support.management.commands.set_telegram_webhook.TelegramApi.set_webhook",
+        lambda self, url, secret_token: calls.append((url, secret_token)),
+    )
+
+    call_command("set_telegram_webhook")
+
+    assert calls == [("https://docnear-api.onrender.com/api/v1/telegram/webhook/", secret)]
+    output = capsys.readouterr().out
+    assert "https://docnear-api.onrender.com/api/v1/telegram/webhook/" in output
+    assert secret not in output
+    assert settings.TELEGRAM_BOT_TOKEN not in output
 
 
 def test_telegram_status_never_prints_token(settings, monkeypatch, capsys):

@@ -1,13 +1,15 @@
 import hashlib
+import secrets
 from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import generics, serializers
+from rest_framework import generics, serializers, status
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
 from rest_framework.throttling import ScopedRateThrottle
 from drf_spectacular.utils import extend_schema
 from apps.appointments.models import Appointment
@@ -18,6 +20,44 @@ from common.permissions import IsPatient
 from apps.appointments.views import PatientAppointmentViewSet
 from .authentication import TelegramAuthentication, verify_bot
 from .models import TelegramLink, TelegramLinkCode, TelegramPhoneLink
+from .bot import BackendClient, BotServiceError, DocNearTelegramBot, TelegramApi
+
+
+class TelegramWebhookUnavailable(APIException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_code = "telegram_webhook_unavailable"
+    default_detail = "Telegram webhook is unavailable."
+
+
+class TelegramWebhookView(generics.GenericAPIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
+    parser_classes = [JSONParser]
+    serializer_class = serializers.Serializer
+
+    @extend_schema(auth=[], request=dict, responses={200: dict, 403: dict, 503: dict})
+    def post(self, request):
+        expected_secret = settings.TELEGRAM_BOT_WEBHOOK_SECRET
+        provided_secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        secret_matches = secrets.compare_digest(provided_secret, expected_secret)
+        if not expected_secret or not secret_matches:
+            raise PermissionDenied("Webhook authentication failed.")
+        if (not settings.TELEGRAM_OTP_ENABLED or not settings.TELEGRAM_BOT_TOKEN
+                or not settings.TELEGRAM_BOT_SECRET):
+            raise TelegramWebhookUnavailable()
+        if not isinstance(request.data, dict):
+            raise ValidationError("Telegram update must be a JSON object.")
+
+        bot = DocNearTelegramBot(
+            TelegramApi(settings.TELEGRAM_BOT_TOKEN),
+            BackendClient(settings.DOCNEAR_API_BASE_URL, settings.TELEGRAM_BOT_SECRET),
+        )
+        try:
+            bot.handle_update(request.data)
+        except BotServiceError:
+            raise TelegramWebhookUnavailable() from None
+        return Response({"accepted": True})
 
 
 class LinkCodeSerializer(serializers.Serializer):

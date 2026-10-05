@@ -47,8 +47,24 @@ python backend/manage.py collectstatic --noinput --settings=config.settings.prod
 gunicorn config.wsgi:application --chdir backend --bind 0.0.0.0:8000 --workers 3
 ```
 
-Run the Django bot command as a separate supervised process with the same API
-base URL, bot token and webhook secret:
+On Render, the existing web service can receive Telegram updates without a
+separate background worker. After deploying the webhook endpoint and setting
+the Telegram environment variables, register it once:
+
+```bash
+python backend/manage.py set_telegram_webhook --settings=config.settings.production
+```
+
+The default registered URL is
+`https://docnear-api.onrender.com/api/v1/telegram/webhook/`. Telegram sends the
+configured secret in `X-Telegram-Bot-Api-Secret-Token`; requests with a missing
+or incorrect secret are rejected. Never place the bot token or webhook secret
+in the URL.
+
+Long polling remains available for local development or hosts that run a
+separate supervised process. A webhook must be deleted before polling can
+receive updates; set `TELEGRAM_DELETE_WEBHOOK_ON_START=true` only when that
+switch is intentional, then run:
 
 ```bash
 python backend/manage.py run_telegram_bot --settings=config.settings.production
