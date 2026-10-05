@@ -14,6 +14,7 @@ from apps.appointments.waitlist import WaitlistViewSet
 from apps.favorites.views import FavoriteDoctorView, FavoriteClinicView, FavoriteDoctorMutationView, FavoriteClinicMutationView
 from apps.reviews.views import ReviewViewSet
 from apps.notifications.views import NotificationViewSet
+from apps.telegram_support.views import TelegramWebhookView
 
 
 def health(request):
@@ -60,7 +61,9 @@ urlpatterns = [path("admin/", admin.site.urls), path("health/", health),
     path("api/v1/favorites/clinics/", FavoriteClinicView.as_view()),
     path("api/v1/favorites/clinics/<int:pk>/", FavoriteClinicMutationView.as_view()),
     path("api/v1/doctor-panel/", include("apps.doctor_panel.urls")), path("api/v1/admin-panel/", include("apps.admin_panel.urls")),
-    path("api/v1/clinic-owner/", include("apps.clinic_owner_panel.urls")), path("api/v1/telegram/", include("apps.telegram_support.urls")),
+    path("api/v1/clinic-owner/", include("apps.clinic_owner_panel.urls")),
+    path("api/v1/telegram/webhook/", TelegramWebhookView.as_view(), name="telegram-webhook"),
+    path("api/v1/telegram/", include("apps.telegram_support.urls")),
     path("api/v1/", include(router.urls))]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

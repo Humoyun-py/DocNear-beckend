@@ -101,6 +101,9 @@ def body_for(path, method):
             'contact_user_id':'{{telegram_user_id}}',
             'sender_user_id':'{{telegram_user_id}}',
         }
+    if path == '/api/telegram/webhook/':
+        return {'update_id': 1, 'message': {'message_id': 1, 'from': {'id': '{{telegram_user_id}}'},
+                'chat': {'id': '{{telegram_user_id}}', 'type': 'private'}, 'text': '/start'}}
     if path.endswith('/reschedule/'):
         return {'date':'{{date}}','time':'{{next_time}}'}
     if path.endswith('/cancel/') or path.endswith('/reject/'):
@@ -167,7 +170,10 @@ def request_item(path, method, name=None, token=None, body=None, status=None, ex
                'auth':{'type':'bearer','bearer':[{'key':'token','value':'{{'+selected_token+'}}','type':'string'}]} if selected_token else {'type':'noauth'},
                'description':'Expected success requires valid QA IDs and the appropriate record state. Examples are illustrative, not captured production data. See docs/qa/API_TESTING_REPORT.md. Do not run mutation folders against production.'}
     if allowed_roles(path, method) is None:
-        request['header'] += [{'key':'X-Telegram-Bot-Secret','value':'{{telegram_bot_secret}}'},{'key':'X-Telegram-User-Id','value':'{{telegram_user_id}}'}]
+        if path.endswith('/telegram/webhook/'):
+            request['header'].append({'key':'X-Telegram-Bot-Api-Secret-Token','value':'{{telegram_bot_secret}}'})
+        else:
+            request['header'] += [{'key':'X-Telegram-Bot-Secret','value':'{{telegram_bot_secret}}'},{'key':'X-Telegram-User-Id','value':'{{telegram_user_id}}'}]
     payload = body if body is not None else body_for(path, method)
     if '/clinic-images/' in path and method in {'POST','PATCH'}:
         request['body'] = {'mode':'formdata','formdata': ([{'key':'clinic','value':'{{clinic_id}}','type':'text'}, {'key':'image','type':'file','src':[]}] if method == 'POST' else [{'key':'order','value':'1','type':'text'}])}

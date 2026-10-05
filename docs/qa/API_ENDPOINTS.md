@@ -2,7 +2,7 @@
 
 Generated from the Django URL resolver. Base URL: `http://127.0.0.1:8000`.
 
-372 API method/path combinations. `HEAD`/`OPTIONS` and router format suffix aliases are omitted. `/health/`, Django `/admin/`, and router navigation roots are listed separately below.
+373 API method/path combinations. `HEAD`/`OPTIONS` and router format suffix aliases are omitted. `/health/`, Django `/admin/`, and router navigation roots are listed separately below.
 
 Pagination: `data.results`, `data.count`, `data.next`, `data.previous`; page size defaults to 20 (maximum 100). All appointment times use Asia/Tashkent.
 
@@ -421,6 +421,7 @@ Personal routes are role-scoped. Super admins have platform-wide record access t
 - `POST /api/v1/telegram/phone-link/` — Bot secret + linked patient.
 - `POST /api/v1/telegram/request-otp/` — Bot secret + linked patient.
 - `GET /api/v1/telegram/search/` — Public.
+- `POST /api/v1/telegram/webhook/` — Bot secret + linked patient.
 
 ## Infrastructure and navigation
 

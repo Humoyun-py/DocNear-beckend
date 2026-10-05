@@ -29,6 +29,14 @@ services:
         value: http
       - key: TELEGRAM_OTP_ENABLED
         value: "false"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: TELEGRAM_BOT_WEBHOOK_SECRET
+        sync: false
+      - key: DOCNEAR_API_BASE_URL
+        value: https://docnear-api.onrender.com/api/v1
       - key: TRUST_PROXY
         value: "true"
       - key: TRUSTED_PROXY_COUNT

@@ -58,6 +58,14 @@ class TelegramApi:
     def delete_webhook(self, *, drop_pending_updates: bool = False) -> None:
         self._call("deleteWebhook", {"drop_pending_updates": drop_pending_updates})
 
+    def set_webhook(self, url: str, secret_token: str) -> None:
+        self._call("setWebhook", {
+            "url": url,
+            "secret_token": secret_token,
+            "allowed_updates": ["message"],
+            "drop_pending_updates": False,
+        })
+
     def send_text(self, chat_id: int, text: str, reply_markup: dict | None = None) -> None:
         payload = {"chat_id": chat_id, "text": text}
         if reply_markup:
